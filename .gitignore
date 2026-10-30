@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+out/
+work/
+*.img
+*.bin
+*.zip
+.pytest_cache/
+*.egg-info/
+data/catalog.json
+data/ota-pulse-ref/

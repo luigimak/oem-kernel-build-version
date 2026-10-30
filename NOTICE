@@ -1,0 +1,11 @@
+oneplus-kernel-build-version
+
+This project contains code derived from OTA Pulse
+(https://github.com/RemuruSama/OTA-Pulse), Copyright 2026 OTA Pulse,
+licensed under the Apache License 2.0:
+  - src/opkv/ota_query.py  (da Request.kt, Crypto.kt, Data.kt, RegionData.kt)
+  - src/opkv/resolver.py   (da OtaResolver.kt)
+The derived files were translated from Kotlin to Python and modified.
+
+The payload.bin (CrAU) format and protobuf field numbers follow AOSP's update_metadata.proto
+(Apache License 2.0).
