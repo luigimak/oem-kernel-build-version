@@ -6,7 +6,7 @@ import os
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from . import catalog
+from . import catalog, normalize
 from .extract import extract
 
 
@@ -23,6 +23,7 @@ def _save(path: str, rows: dict) -> None:
     with open(tmp, "w", encoding="utf-8") as f:
         for r in rows.values():
             r.pop("source_url", None)          # never persist URLs
+            normalize.row(r)                   # fix catalog typos / naming (idempotent)
         json.dump(sorted(rows.values(), key=lambda r: (r["device"], r["model"], r.get("build_timestamp", ""))),
                   f, indent=1, ensure_ascii=False)
     os.replace(tmp, path)
@@ -169,7 +170,7 @@ def _uniq(items):
 
 def cmd_report(a):
     """Markdown table; rows of the same device sharing kernel + build are merged."""
-    rows = [r for r in json.load(open(a.results, encoding="utf-8")) if r["ok"]]
+    rows = [normalize.row(r) for r in json.load(open(a.results, encoding="utf-8")) if r["ok"]]
     rows.sort(key=lambda r: (r["device"], r["build_timestamp"], r["model"], r["region"]))
     groups: dict[tuple, list] = {}
     for r in rows:                                   # dict keeps first-seen order = oldest build first
