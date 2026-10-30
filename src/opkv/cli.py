@@ -163,15 +163,26 @@ def cmd_discover(a):
     return 0
 
 
+def _uniq(items):
+    return list(dict.fromkeys(items))
+
+
 def cmd_report(a):
+    """Markdown table; rows of the same device sharing kernel + build are merged."""
     rows = [r for r in json.load(open(a.results, encoding="utf-8")) if r["ok"]]
-    rows.sort(key=lambda r: (r["device"], r["model"], r["build_timestamp"]), reverse=False)
-    out = ["| Device | Model | Region | FW version | Kernel | Build |", "|---|---|---|---|---|---|"]
-    for r in rows:
-        out.append(f"| {r['device']} | {r['model']} | {r['region']} | {r['version']} | `{r['kernel_release']}` | {r['build']} |")
+    rows.sort(key=lambda r: (r["device"], r["build_timestamp"], r["model"], r["region"]))
+    groups: dict[tuple, list] = {}
+    for r in rows:                                   # dict keeps first-seen order = oldest build first
+        groups.setdefault((r["device"], r["kernel_release"], r["build"]), []).append(r)
+    out = ["| Device | Models | Regions | FW versions | Kernel | Build |", "|---|---|---|---|---|---|"]
+    for (device, kernel, build), g in groups.items():
+        models = "<br>".join(sorted(set(r["model"] for r in g)))
+        regions = "<br>".join(sorted(set(r["region"] for r in g)))
+        versions = "<br>".join(_uniq(r["version"] for r in g))
+        out.append(f"| {device} | {models} | {regions} | {versions} | `{kernel}` | {build} |")
     with open(a.out, "w", encoding="utf-8") as f:
         f.write("\n".join(out) + "\n")
-    print(f"{len(rows)} rows -> {a.out}")
+    print(f"{len(rows)} firmware -> {len(groups)} rows -> {a.out}")
     return 0
 
 

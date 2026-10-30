@@ -60,13 +60,15 @@ def decompress_kernel(k: bytes) -> list[bytes]:
 def find_linux_version(boot: bytes) -> str | None:
     span = kernel_span(boot[:4096])
     kernel = boot[span[0]: span[0] + span[1]] if span else boot
-    for blob in [kernel, *decompress_kernel(kernel)]:
-        # banner appears multiple times (e.g. proc_banner fmt string "%s version %s"); take full one
+    # Decompressed candidates first: in a compressed stream the banner can show up split by
+    # literal runs, so a raw match may be truncated. Raw kernel last.
+    blobs = [*decompress_kernel(kernel), kernel]
+    partial: str | None = None
+    for blob in blobs:
         for m in BANNER_RE.finditer(blob):
             s = m.group().decode("ascii", "replace").strip()
-            if "(" in s and "#" in s:
+            if "(" in s and re.search(r"#\d+ ", s):      # complete banner: release (user@host) (toolchain) #N ...
                 return s
-        m = BANNER_RE.search(blob)
-        if m:
-            return m.group().decode("ascii", "replace").strip()
-    return None
+            if partial is None or len(s) > len(partial):
+                partial = s
+    return partial
