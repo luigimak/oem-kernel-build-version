@@ -7,7 +7,7 @@ import urllib.request
 
 import re
 
-OLD_RE = re.compile(r"^OP (\d|1\d{0,0}\b)(?!\d)|^OP NORD (N\d+|2|CE|CE 2)\b(?!\d)|^OP NORD$|^OP 9")
+OLD_RE = re.compile(r"^OP (\d(?!\d)|NORD( 2| CE| N10| N100| N200)?$)")
 
 
 def load(src: str) -> list[dict]:
