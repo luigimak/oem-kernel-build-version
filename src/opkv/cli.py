@@ -42,7 +42,8 @@ def cmd_fetch(a):
         live = json.load(r)
     live_rel = live["releases"] if isinstance(live, dict) else live
     local = {"api_version": "1", "releases": []}
-    if os.path.exists(a.out):
+    existed = os.path.exists(a.out)
+    if existed:
         with open(a.out, encoding="utf-8") as f:
             local = json.load(f)
     by_id = {r["id"]: r for r in local["releases"]}
@@ -54,9 +55,15 @@ def cmd_fetch(a):
     with open(a.out, "w", encoding="utf-8") as f:
         json.dump(local, f, ensure_ascii=False)
     new_op = [r for r in new if catalog.is_oneplus(r)]
-    print(f"{a.out}: {len(local['releases'])} release totali, {len(new)} nuove ({len(new_op)} OnePlus)")
-    for r in sorted(new_op, key=lambda r: r["build_timestamp"])[:50]:
+    if not existed:
+        print(f"{a.out}: catalog initialized with {len(local['releases'])} releases ({len(new_op)} OnePlus)")
+        return 0
+    print(f"{a.out}: {len(local['releases'])} releases in total, {len(new)} new ({len(new_op)} OnePlus)")
+    shown = sorted(new_op, key=lambda r: r["build_timestamp"])
+    for r in shown[:20]:
         print(f"  + {r['device']:<16} {r['region']:<4} {r['version']}")
+    if len(shown) > 20:
+        print(f"  ... and {len(shown) - 20} more")
     return 0
 
 
@@ -75,6 +82,7 @@ def cmd_discover(a):
         with open(a.catalog, encoding="utf-8") as f:
             cat = json.load(f)
     by_id = {r["id"]: r for r in cat["releases"]}
+    done_ids = set(_load_results(a.results))       # already processed: not "new"
     known = {(r["model"], r["ota_version"], r["region"]): r["id"] for r in cat["releases"]}
     letters: dict[str, set[str]] = {}          # model -> track letters seen in the catalog (11.<L>.)
     for r in cat["releases"]:
@@ -139,6 +147,8 @@ def cmd_discover(a):
                 m = re.search(r"_(\d{12})$", c["ota_version"])
                 ts = f"{m.group(1)[:4]}-{m.group(1)[4:6]}-{m.group(1)[6:8]}T{m.group(1)[8:10]}:{m.group(1)[10:12]}:00" if m else ""
                 rid = "q-" + hashlib.sha1("|".join(key).encode()).hexdigest()[:20]
+                if rid in done_ids:
+                    continue
                 by_id[rid] = {"id": rid, "device": name.upper().replace("ONEPLUS", "OP"), "region": disp,
                               "model": model, "version": c["version"], "ota_version": c["ota_version"],
                               "build_timestamp": ts, "security_patch": c["security_patch"],
@@ -208,7 +218,7 @@ def main(argv=None):
     f.add_argument("--out", default="data/catalog.json"); f.set_defaults(fn=cmd_fetch)
     dsc = sub.add_parser("discover", help="native OTA query: find firmware missing from the catalog")
     dsc.add_argument("--devices", default="https://raw.githubusercontent.com/RemuruSama/OTA-Pulse/main/devices/oneplus.json")
-    dsc.add_argument("--catalog", default="data/catalog.json"); dsc.add_argument("--workers", type=int, default=4)
+    dsc.add_argument("--catalog", default="data/catalog.json"); dsc.add_argument("--results", default="data/results.json"); dsc.add_argument("--workers", type=int, default=4)
     dsc.set_defaults(fn=cmd_discover)
     g = sub.add_parser("report", help="results.json -> markdown table")
     g.add_argument("--results", default="data/results.json"); g.add_argument("--out", default="data/results.md")
