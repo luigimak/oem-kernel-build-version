@@ -7,7 +7,27 @@ import urllib.request
 
 import re
 
-OLD_RE = re.compile(r"^OP (\d(?!\d)|NORD( 2| CE| N10| N100| N200)?$)")
+OLD_RE = re.compile(r"^OP (\d(?!\d)|ONE$|X$|NORD( 2| CE| N10| N100| N200)?$)")
+
+MIN_ANDROID = 14                                  # only firmware from Android 14 onward
+_VER = re.compile(r"^[A-Za-z0-9]+_(\d+)\.\d")     # CPH2653_16.0.10.600(EX01) -> 16
+
+
+def os_major(version: str) -> int | None:
+    """OS major of a firmware version string (OxygenOS/ColorOS 14+ = Android 14+); None for old formats."""
+    m = _VER.match(version or "")
+    return int(m.group(1)) if m else None
+
+
+def wanted_version(version: str, android: str | None = None) -> bool:
+    """True if the firmware is Android 14 or newer (Android from OTA metadata if known)."""
+    if android:
+        try:
+            return int(android) >= MIN_ANDROID
+        except ValueError:
+            pass
+    major = os_major(version)
+    return major is not None and major >= MIN_ANDROID
 
 
 def load(src: str) -> list[dict]:
@@ -33,6 +53,8 @@ def oneplus_releases(src: str) -> list[dict]:
     seen, out = set(), []
     for r in load(src):
         if not is_oneplus(r) or not r.get("source_url", "").startswith("http"):
+            continue
+        if not wanted_version(r.get("version", "")):
             continue
         key = r["id"]
         if key in seen:

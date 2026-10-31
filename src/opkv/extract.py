@@ -21,6 +21,7 @@ class Result:
     compiler: str | None = None         # e.g. Android (...) clang version 12.0.5 ..., LLD 12.0.5
     source: str | None = None       # "payload.bin" | "boot.img"
     android_version: str | None = None  # e.g. 16 (from META-INF/com/android/metadata)
+    size: int | None = None         # package size in bytes (Content-Range of the remote file)
     bytes_fetched: int = 0
     requests: int = 0
     error: str | None = None
@@ -66,7 +67,9 @@ def extract_android(url: str) -> Result:
     """Cheap pass: read only the OTA metadata (a few KB) to get the Android version."""
     res = Result()
     try:
-        zf = zipfile.ZipFile(RangeFile(resolver.resolve(url)))
+        rf = RangeFile(resolver.resolve(url))
+        res.size = rf.size
+        zf = zipfile.ZipFile(rf)
         res.android_version = _android(zf)
         res.ok = res.android_version is not None
         if not res.ok:
@@ -81,6 +84,7 @@ def extract(url: str) -> Result:
     try:
         url = resolver.resolve(url)
         rf = RangeFile(url)
+        res.size = rf.size
         zf = zipfile.ZipFile(rf)
         names = {i.filename: i for i in zf.infolist()}
         res.android_version = _android(zf)
