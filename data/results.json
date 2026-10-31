@@ -9463,6 +9463,25 @@
   "error": null
  },
  {
+  "id": "q-9504957856e5b0aed98a",
+  "device": "OP NORD CE 3 LITE",
+  "region": "EU",
+  "model": "CPH2465",
+  "version": "CPH2465_14.0.0.1320(EX01)",
+  "ota_version": "CPH2465_11.C.57_1570_202411082236",
+  "build_timestamp": "2024-11-08T22:36:00",
+  "md5": "491ab62848691583c3b3700371528710",
+  "size": 5320726813,
+  "origin": "ota-query",
+  "ok": true,
+  "linux_version": "Linux version 5.4.254-qgki-g849401d39e56 (root@dg02-pool07-kvm51) (Android (6877366 based on r383902b1) clang version 11.0.2 (https://android.googlesource.com/toolchain/llvm-project b397f81060ce6d701042b782172ed13bee898b79), LLD 11.0.2 (https://android.googlesource.com/toolchain/llvm-project b397f81060ce6d701042b782172ed13bee898b79)) #1 SMP PREEMPT Thu Oct 24 16:28:48 CST 2024",
+  "kernel_release": "5.4.254-qgki-g849401d39e56",
+  "build": "#1 SMP PREEMPT Thu Oct 24 16:28:48 CST 2024",
+  "compiler": "Android (6877366 based on r383902b1) clang version 11.0.2 (https://android.googlesource.com/toolchain/llvm-project b397f81060ce6d701042b782172ed13bee898b79), LLD 11.0.2 (https://android.googlesource.com/toolchain/llvm-project b397f81060ce6d701042b782172ed13bee898b79)",
+  "source": "payload.bin",
+  "error": null
+ },
+ {
   "id": "q-559b561bdc87f40e6286",
   "device": "OP NORD CE 3 LITE",
   "region": "GLO",
