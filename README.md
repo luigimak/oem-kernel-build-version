@@ -20,6 +20,7 @@ default: set the repository variable `AUTO_UPDATE=true` to enable them; manual r
 ## Notes
 - Firmware URLs are never stored or logged.
 - Full OTAs only; incremental ones return an error. OTAs without `payload.bin` fall back to `boot.img` in the zip.
+- The Android version comes from `META-INF/com/android/metadata` in each OTA (a few KB); if it is missing, it is inferred from the OS version (OxygenOS/ColorOS 13+ major = Android release). `run` backfills it for rows that lack it.
 - Beta tracks (`taste`) cannot be found by `discover`; they depend on the catalog.
 
 ## License and attribution

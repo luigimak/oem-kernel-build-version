@@ -20,3 +20,9 @@ def test_device_spacing():
     assert n.device("OP NORD CE4 LITE") == "OP NORD CE 4 LITE"
     assert n.device("OP NORD CE 3") == "OP NORD CE 3"
     assert n.device("OP 13S") == "OP 13S"
+
+
+def test_android_fallback():
+    assert n.android({"android_version": "16", "version": "X_16.0.1.1"}) == "16"
+    assert n.android({"android_version": None, "version": "CPH2465_14.0.0.1320(EX01)"}) == "14"
+    assert n.android({"android_version": None, "version": "NE2213_11_A.17"}) is None

@@ -26,3 +26,15 @@ def device(name: str) -> str:
 def row(r: dict) -> dict:
     r["model"], r["version"], r["device"] = model(r["model"]), version(r["version"]), device(r["device"])
     return r
+
+
+def android(r: dict) -> str | None:
+    """Android release of a firmware row: from the OTA metadata, else inferred from the OS version.
+
+    Fallback: for OxygenOS/ColorOS 13+ the major number of the version string (CPH2465_14.0.0.1320)
+    equals the Android release; this held for every firmware that has OTA metadata.
+    """
+    if r.get("android_version"):
+        return r["android_version"]
+    m = re.match(r"^[A-Z0-9]+_(1[3-9])\.\d", r.get("version", ""))
+    return m.group(1) if m else None

@@ -33,3 +33,11 @@ def test_prefers_complete_banner_over_truncated_raw_match():
     k = b"\x02\x21\x4c\x18" + struct.pack("<I", len(comp)) + comp
     k += b"junk Linux version 6.12.58-x (kleaf@build-host) (A<\x00\xf0"
     assert bootimg.find_linux_version(_boot(k)).endswith("2026")
+
+
+def test_android_from_metadata():
+    from opkv.extract import android_from_metadata as f
+    assert f("post-build=OnePlus/CPH2653EEA/OP5D55L1:16/BP2A.250605.015/V.R4T3:user/release-keys\npost-sdk-level=36") == "16"
+    assert f("post-build=OnePlus/PLK110/OP60FFL1:17/CP2A.260605.016/B.3bd:user/release-keys") == "17"
+    assert f("post-sdk-level=33") == "13"
+    assert f("nothing=here") is None

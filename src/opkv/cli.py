@@ -7,7 +7,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from . import catalog, normalize
-from .extract import extract
+from .extract import extract, extract_android
 
 
 def _load_results(path: str) -> dict:
@@ -148,15 +148,14 @@ def cmd_discover(a):
                 m = re.search(r"_(\d{12})$", c["ota_version"])
                 ts = f"{m.group(1)[:4]}-{m.group(1)[4:6]}-{m.group(1)[6:8]}T{m.group(1)[8:10]}:{m.group(1)[10:12]}:00" if m else ""
                 rid = "q-" + hashlib.sha1("|".join(key).encode()).hexdigest()[:20]
-                if rid in done_ids:
-                    continue
                 by_id[rid] = {"id": rid, "device": name.upper().replace("ONEPLUS", "OP"), "region": disp,
                               "model": model, "version": c["version"], "ota_version": c["ota_version"],
                               "build_timestamp": ts, "security_patch": c["security_patch"],
                               "source_url": c["source_url"], "md5": c["md5"], "size": c["size"],
                               "is_latest": True, "origin": "ota-query"}
-                added += 1
-                print(f"  + {name} {disp} {c['version']}", file=sys.stderr)
+                if rid not in done_ids:                  # already processed ones stay in the catalog (backfills) but are not "new"
+                    added += 1
+                    print(f"  + {name} {disp} {c['version']}", file=sys.stderr)
     cat["releases"] = list(by_id.values())
     with open(a.catalog, "w", encoding="utf-8") as f:
         json.dump(cat, f, ensure_ascii=False)
@@ -175,12 +174,15 @@ def cmd_report(a):
     groups: dict[tuple, list] = {}
     for r in rows:                                   # dict keeps first-seen order = oldest build first
         groups.setdefault((r["device"], r["kernel_release"], r["build"]), []).append(r)
-    out = ["| Device | Models | Regions | FW versions | Kernel | Build |", "|---|---|---|---|---|---|"]
+    out = ["| Device | Models | Regions | Android version | FW versions | Kernel | Build |",
+           "|---|---|---|---|---|---|---|"]
     for (device, kernel, build), g in groups.items():
         models = "<br>".join(sorted(set(r["model"] for r in g)))
         regions = "<br>".join(sorted(set(r["region"] for r in g)))
-        versions = "<br>".join(_uniq(r["version"] for r in g))
-        out.append(f"| {device} | {models} | {regions} | {versions} | `{kernel}` | {build} |")
+        pairs = list(dict.fromkeys((r["version"], normalize.android(r)) for r in g))   # one line per FW version
+        versions = "<br>".join(v for v, _ in pairs)
+        androids = "<br>".join(f"A{an}" if an else "?" for _, an in pairs)                   # same order as FW versions
+        out.append(f"| {device} | {models} | {regions} | {androids} | {versions} | `{kernel}` | `{build}` |")
     with open(a.out, "w", encoding="utf-8") as f:
         f.write("\n".join(out) + "\n")
     print(f"{len(rows)} firmware -> {len(groups)} rows -> {a.out}")
@@ -208,7 +210,8 @@ def cmd_run(a):
                 "version": rel["version"], "ota_version": rel["ota_version"],
                 "build_timestamp": rel.get("build_timestamp", ""), "md5": rel.get("md5", ""),
                 "size": rel.get("size", 0), "origin": rel.get("origin", "catalog"),
-                "ok": res.ok, "linux_version": res.linux_version, "kernel_release": res.kernel_release,
+                "ok": res.ok, "android_version": res.android_version or rows.get(rel["id"], {}).get("android_version"),
+                "linux_version": res.linux_version, "kernel_release": res.kernel_release,
                 "build": res.build, "compiler": res.compiler,
                 "source": res.source, "error": res.error,
             }
@@ -217,6 +220,24 @@ def cmd_run(a):
             if n % 10 == 0:
                 _save(a.out, rows)
     _save(a.out, rows)
+
+    # backfill: rows extracted before the Android version column existed (metadata-only pass, a few KB each)
+    by_id = {r["id"]: r for r in rels}
+    fill = [i for i, r in rows.items() if r.get("ok") and i in by_id
+            and ("android_version" not in r or (r["android_version"] is None and a.retry_failed))]
+    if fill:
+        print(f"Android version backfill: {len(fill)}", file=sys.stderr)
+
+        def work_android(i):
+            return i, extract_android(by_id[i]["source_url"])
+
+        with ThreadPoolExecutor(a.workers) as ex:
+            for n, (i, res) in enumerate(ex.map(work_android, fill), 1):
+                rows[i]["android_version"] = res.android_version
+                if n % 50 == 0:
+                    print(f"  [{n}/{len(fill)}]", file=sys.stderr)
+                    _save(a.out, rows)
+        _save(a.out, rows)
     return 0
 
 
