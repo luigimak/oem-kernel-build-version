@@ -94,8 +94,8 @@ def cmd_discover(a):
     jobs = []
     for d in devices:
         name = d.get("name", "")
-        if re.match(r"OnePlus (\d|Nord N|Nord \d?$)", name) and not re.match(r"OnePlus (1\d|Nord \d\d)", name):
-            continue                                   # OnePlus 9 and older
+        if not catalog.is_oneplus({"device": name.upper().replace("ONEPLUS", "OP")}):
+            continue                                   # OnePlus 9 and older (same rule as the catalog)
         base = d.get("variants") or []
         for grp, val in (d.get("firmwareGroups") or {}).items():
             rui = oq.rui_from_group(grp)
