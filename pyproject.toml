@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Estrae 'Linux version' dal boot.img degli OTA OnePlus via HTTP Range."
 license = {text = "Apache-2.0"}
 requires-python = ">=3.10"
-dependencies = ["lz4", "zstandard", "cryptography"]
+dependencies = ["lz4", "zstandard", "py7zr", "cryptography"]
 
 [project.optional-dependencies]
 dev = ["pytest"]
