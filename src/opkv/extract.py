@@ -20,6 +20,7 @@ class Result:
     build: str | None = None            # e.g. #1 SMP PREEMPT Mon Jun 27 16:41:59 UTC 2022
     compiler: str | None = None         # e.g. Android (...) clang version 12.0.5 ..., LLD 12.0.5
     source: str | None = None       # "payload.bin" | "boot.img"
+    android_version: str | None = None  # e.g. 16 (from META-INF/com/android/metadata)
     bytes_fetched: int = 0
     requests: int = 0
     error: str | None = None
@@ -39,6 +40,42 @@ def _data_offset(rf: RangeFile, zi: zipfile.ZipInfo) -> int:
     return zi.header_offset + 30 + n + m
 
 
+_SDK_TO_ANDROID = {30: "11", 31: "12", 32: "12", 33: "13", 34: "14", 35: "15", 36: "16", 37: "17"}
+
+
+def android_from_metadata(text: str) -> str | None:
+    """Android release from an OTA metadata file: post-build release, else post-sdk-level."""
+    kv = dict(l.split("=", 1) for l in text.splitlines() if "=" in l)
+    m = re.search(r":(\d+(?:\.\d+)?)/", kv.get("post-build", ""))
+    if m:
+        return m.group(1)
+    try:
+        return _SDK_TO_ANDROID.get(int(kv.get("post-sdk-level", "")))
+    except ValueError:
+        return None
+
+
+def _android(zf: zipfile.ZipFile) -> str | None:
+    try:
+        return android_from_metadata(zf.read("META-INF/com/android/metadata").decode("utf-8", "replace"))
+    except KeyError:
+        return None
+
+
+def extract_android(url: str) -> Result:
+    """Cheap pass: read only the OTA metadata (a few KB) to get the Android version."""
+    res = Result()
+    try:
+        zf = zipfile.ZipFile(RangeFile(resolver.resolve(url)))
+        res.android_version = _android(zf)
+        res.ok = res.android_version is not None
+        if not res.ok:
+            res.error = "no Android version in OTA metadata"
+    except Exception as e:  # noqa: BLE001
+        res.error = redact(f"{type(e).__name__}: {e}")
+    return res
+
+
 def extract(url: str) -> Result:
     res = Result()   # the URL is never stored in the result
     try:
@@ -46,6 +83,7 @@ def extract(url: str) -> Result:
         rf = RangeFile(url)
         zf = zipfile.ZipFile(rf)
         names = {i.filename: i for i in zf.infolist()}
+        res.android_version = _android(zf)
         if "payload.bin" in names:
             zi = names["payload.bin"]
             if zi.compress_type != zipfile.ZIP_STORED:
