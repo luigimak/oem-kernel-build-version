@@ -217,6 +217,46 @@ def cmd_report(a):
     return 0
 
 
+def cmd_archive(a):
+    """Add Android 14+ firmware missing from the results, from the spike0en archive (boot.7z assets)."""
+    import hashlib
+    from . import archive
+    rows = _load_results(a.out)
+    have = {(r["version"], r["region"]) for r in rows.values()}
+    device_of = {r["version"].split("_")[0]: r["device"] for r in rows.values()}
+    todo = []
+    for rel in archive.releases(os.environ.get("GITHUB_TOKEN")):
+        v = normalize.version(rel["version"])
+        if (v, rel["region"]) in have or v.split("_")[0] not in device_of:
+            continue
+        todo.append({**rel, "version": v})
+    if a.limit:
+        todo = todo[: a.limit]
+    print(f"archive: {len(todo)} missing firmware", file=sys.stderr)
+    if a.dry_run:
+        for t in todo:
+            print(f"  {device_of[t['version'].split('_')[0]]} {t['version']} {t['region']}")
+        return 0
+    with ThreadPoolExecutor(a.workers) as ex:
+        futs = {ex.submit(archive.extract_asset, t["asset_url"]): t for t in todo}
+        for n, fu in enumerate(as_completed(futs), 1):
+            t, res = futs[fu], fu.result()
+            code = t["version"].split("_")[0]
+            rid = "sp-" + hashlib.sha1(f"{t['version']}|{t['region']}".encode()).hexdigest()[:10]
+            rows[rid] = {
+                "id": rid, "device": device_of[code], "region": t["region"], "model": code, "version": t["version"],
+                "ota_version": t["version"], "build_timestamp": "", "md5": "", "size": 0, "origin": "spike0en-archive",
+                "ok": res.ok, "android_version": str(catalog.os_major(t["version"])),
+                "linux_version": res.linux_version, "kernel_release": res.kernel_release, "build": res.build,
+                "compiler": res.compiler, "source": res.source, "error": res.error,
+            }
+            print(f"[{n}/{len(todo)}] {t['version']} {t['region']}: {res.kernel_release or res.error}", file=sys.stderr)
+            if n % 10 == 0:
+                _save(a.out, rows)
+    _save(a.out, rows)
+    return 0
+
+
 def cmd_run(a):
     rels = catalog.oneplus_releases(a.catalog)
     rows = _load_results(a.out)
@@ -302,6 +342,10 @@ def main(argv=None):
     dsc.add_argument("--no-ou", action="store_true", help="skip the Oxygen Updater source")
     dsc.add_argument("--catalog", default="data/catalog.json"); dsc.add_argument("--results", default="data/results.json"); dsc.add_argument("--workers", type=int, default=4)
     dsc.set_defaults(fn=cmd_discover)
+    ar = sub.add_parser("archive", help="add Android 14+ firmware missing from the results (spike0en archive, boot.7z)")
+    ar.add_argument("--out", default="data/results.json"); ar.add_argument("--workers", type=int, default=3)
+    ar.add_argument("--limit", type=int, default=0); ar.add_argument("--dry-run", action="store_true")
+    ar.set_defaults(fn=cmd_archive)
     g = sub.add_parser("report", help="results.json -> markdown table")
     g.add_argument("--results", default="data/results.json"); g.add_argument("--out", default="data/results.md")
     g.set_defaults(fn=cmd_report)

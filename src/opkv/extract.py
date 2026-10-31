@@ -79,6 +79,20 @@ def extract_android(url: str) -> Result:
     return res
 
 
+def fill_banner(res: Result, boot: bytes) -> None:
+    """Parse the Linux version banner of a (possibly truncated) boot.img into res."""
+    ver = bootimg.find_linux_version(boot)
+    if not ver:
+        raise ValueError("Linux version string not found")
+    res.linux_version = ver
+    m = re.match(r"Linux version (\S+)", ver)
+    res.kernel_release = m.group(1) if m else None
+    b = re.search(r"(#\d+ .*)$", ver)
+    res.build = b.group(1).strip() if b else None
+    c = re.search(r"\((?:[^()]*@[^()]*)\) \((.*)\) #\d+ ", ver)
+    res.compiler = c.group(1) if c else None
+
+
 def extract(url: str) -> Result:
     res = Result()   # the URL is never stored in the result
     try:
@@ -110,16 +124,7 @@ def extract(url: str) -> Result:
                 sp = bootimg.kernel_span(head)
                 need = (sp[0] + sp[1]) if sp else zi.file_size
                 boot = head + f.read(max(0, need - len(head)))
-        ver = bootimg.find_linux_version(boot)
-        if not ver:
-            raise ValueError("Linux version string not found")
-        res.linux_version = ver
-        m = re.match(r"Linux version (\S+)", ver)
-        res.kernel_release = m.group(1) if m else None
-        b = re.search(r"(#\d+ .*)$", ver)
-        res.build = b.group(1).strip() if b else None
-        c = re.search(r"\((?:[^()]*@[^()]*)\) \((.*)\) #\d+ ", ver)
-        res.compiler = c.group(1) if c else None
+        fill_banner(res, boot)
         res.ok = True
         res.bytes_fetched, res.requests = rf.bytes_fetched, rf.requests
     except Exception as e:  # noqa: BLE001 - report per-URL, keep batch going

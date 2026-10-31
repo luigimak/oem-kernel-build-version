@@ -10,6 +10,7 @@ python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'
 opkv fetch      # update the local release catalog (roms.danielspringer.at API)
 opkv discover   # find firmware missing from the catalog: OTA servers + Oxygen Updater (--no-ou to skip)
 opkv run        # extract kernel/build of new firmware -> data/results.json
+opkv archive   # add older Android 14+ firmware missing from the results (spike0en archive, boot.7z)
 opkv report     # data/results.md
 opkv url <URL>  # a single OTA zip
 ```
@@ -34,4 +35,5 @@ and modified. The model list (OTA Pulse `devices/oneplus.json`) is downloaded at
 - [roms.danielspringer.at](https://roms.danielspringer.at) — release catalog (`opkv fetch`).
 - OTA Pulse protocol and model list — OTA server queries (`opkv discover`).
 - [Oxygen Updater](https://github.com/oxygen-updater/os-updater) API — extra full-OTA releases, md5 and size.
+- [spike0en/oneplus_archive](https://github.com/spike0en/oneplus_archive) — historical firmware: the `boot.7z` asset of each release is downloaded temporarily and read (`opkv archive`). Its `ROW` region is recorded as `GLO`.
 - [OnePlus-antirollchecker](https://github.com/Bartixxx32/OnePlus-antirollchecker) `database.json` — md5 checksums.
