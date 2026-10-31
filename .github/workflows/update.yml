@@ -57,7 +57,13 @@ jobs:
           print(sum(1 for r in new if r["id"] not in o))
           PY
           )
-          branch="auto/results-$(date -u +%Y%m%d)"
+          # do not pile up PRs: wait until the previous automatic one is merged or closed
+          open_prs=$(gh pr list --state open --json headRefName --jq '[.[] | select(.headRefName | startswith("auto/results-"))] | length')
+          if [ "$open_prs" != "0" ]; then
+            echo "an automatic PR is still open; skipping"; exit 0
+          fi
+          # unique per run: a same-day rerun must not collide with an existing branch
+          branch="auto/results-$(date -u +%Y%m%d)-${GITHUB_RUN_ID}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$branch"
