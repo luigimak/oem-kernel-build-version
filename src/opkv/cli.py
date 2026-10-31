@@ -21,6 +21,8 @@ def _save(path: str, rows: dict) -> None:
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
+        for i in [i for i, r in rows.items() if not catalog.wanted_version(r["version"], r.get("android_version"))]:
+            del rows[i]                        # only Android 14+ firmware is kept
         for r in rows.values():
             r.pop("source_url", None)          # never persist URLs
             normalize.row(r)                   # fix catalog typos / naming (idempotent)
@@ -136,6 +138,8 @@ def cmd_discover(a):
                         else "no public update for this track")
                 print(f"  ! {name} {disp} {model} (rui {q.rui}, {q.req_mode}): {kind}", file=sys.stderr)
             for c in comps:
+                if not catalog.wanted_version(c["version"]):
+                    continue                             # Android 13 and older
                 key = (model, c["ota_version"], disp)
                 if key in known:                         # already known: refresh the link (it may have expired)
                     rel = by_id[known[key]]
@@ -156,10 +160,33 @@ def cmd_discover(a):
                 if rid not in done_ids:                  # already processed ones stay in the catalog (backfills) but are not "new"
                     added += 1
                     print(f"  + {name} {disp} {c['version']}", file=sys.stderr)
+    ou_added = ou_known = 0
+    if not a.no_ou:
+        from . import sources
+        # same firmware = same (model, firmware version, region), whatever the source or its id
+        have = {(r["model"], r["version"], r["region"]) for r in list(by_id.values()) + list(_load_results(a.results).values())}
+        for rel in sources.ou_releases(a.workers):
+            key = (rel["model"], rel["ota_version"], rel["region"])
+            if (rel["model"], rel["version"], rel["region"]) in have and key not in known:
+                continue
+            if key in known:                             # same firmware already in the catalog: complete missing metadata
+                old = by_id[known[key]]
+                old["md5"] = old.get("md5") or rel["md5"]
+                old["size"] = old.get("size") or rel["size"]
+                ou_known += 1
+                continue
+            if rel["id"] in by_id or key in seen:
+                continue
+            seen.add(key)
+            by_id[rel["id"]] = rel
+            if rel["id"] not in done_ids:
+                ou_added += 1
+                print(f"  + {rel['device']} {rel['region']} {rel['version']}  [oxygen-updater]", file=sys.stderr)
     cat["releases"] = list(by_id.values())
     with open(a.catalog, "w", encoding="utf-8") as f:
         json.dump(cat, f, ensure_ascii=False)
-    print(f"new releases from OTA query: {added}  links refreshed: {len(refreshed)}  (queries without answer: {sum(errs.values())})")
+    print(f"new releases from OTA query: {added}  from Oxygen Updater: {ou_added}  links refreshed: {len(refreshed)}  "
+          f"(queries without answer: {sum(errs.values())})")
     return 0
 
 
@@ -169,7 +196,8 @@ def _uniq(items):
 
 def cmd_report(a):
     """Markdown table; rows of the same device sharing kernel + build are merged."""
-    rows = [normalize.row(r) for r in json.load(open(a.results, encoding="utf-8")) if r["ok"]]
+    rows = [normalize.row(r) for r in json.load(open(a.results, encoding="utf-8"))
+            if r["ok"] and catalog.wanted_version(r["version"], r.get("android_version"))]
     rows.sort(key=lambda r: (r["device"], r["build_timestamp"], r["model"], r["region"]))
     groups: dict[tuple, list] = {}
     for r in rows:                                   # dict keeps first-seen order = oldest build first
@@ -209,7 +237,7 @@ def cmd_run(a):
                 "id": rel["id"], "device": rel["device"], "region": rel["region"], "model": rel["model"],
                 "version": rel["version"], "ota_version": rel["ota_version"],
                 "build_timestamp": rel.get("build_timestamp", ""), "md5": rel.get("md5", ""),
-                "size": rel.get("size", 0), "origin": rel.get("origin", "catalog"),
+                "size": rel.get("size") or res.size or 0, "origin": rel.get("origin", "catalog"),
                 "ok": res.ok, "android_version": res.android_version or rows.get(rel["id"], {}).get("android_version"),
                 "linux_version": res.linux_version, "kernel_release": res.kernel_release,
                 "build": res.build, "compiler": res.compiler,
@@ -221,21 +249,41 @@ def cmd_run(a):
                 _save(a.out, rows)
     _save(a.out, rows)
 
-    # backfill: rows extracted before the Android version column existed (metadata-only pass, a few KB each)
+    # metadata pass for rows that miss Android version, size or md5 (a few KB per row, no full extraction)
     by_id = {r["id"]: r for r in rels}
-    fill = [i for i, r in rows.items() if r.get("ok") and i in by_id
-            and ("android_version" not in r or (r["android_version"] is None and a.retry_failed))]
-    if fill:
-        print(f"Android version backfill: {len(fill)}", file=sys.stderr)
+    need = [i for i, r in rows.items() if r.get("ok") and (
+        ("android_version" not in r or (r["android_version"] is None and a.retry_failed))
+        or not r.get("size") or not r.get("md5"))]
+    if need:
+        print(f"metadata pass: {len(need)} rows", file=sys.stderr)
+        arb = None
+        if any(not rows[i].get("md5") for i in need):
+            try:
+                from . import sources
+                arb = sources.arb_index()
+            except Exception as e:  # noqa: BLE001 - the md5 index is optional
+                print(f"  antirollchecker index unavailable: {type(e).__name__}", file=sys.stderr)
 
-        def work_android(i):
-            return i, extract_android(by_id[i]["source_url"])
+        def work_meta(i):
+            rel, r = by_id.get(i), rows[i]
+            res = extract_android(rel["source_url"]) if rel and (
+                "android_version" not in r or not r.get("size")) else None
+            return i, res
 
         with ThreadPoolExecutor(a.workers) as ex:
-            for n, (i, res) in enumerate(ex.map(work_android, fill), 1):
-                rows[i]["android_version"] = res.android_version
+            for n, (i, res) in enumerate(ex.map(work_meta, need), 1):
+                r, rel = rows[i], by_id.get(i)
+                if res is not None:
+                    if "android_version" not in r or res.android_version:
+                        r["android_version"] = res.android_version or r.get("android_version")
+                    if not r.get("size") and res.size:
+                        r["size"] = res.size
+                if not r.get("size") and rel and rel.get("size"):
+                    r["size"] = rel["size"]
+                if not r.get("md5"):
+                    r["md5"] = (rel or {}).get("md5") or (arb or {}).get((r["version"], r["region"]), "")
                 if n % 50 == 0:
-                    print(f"  [{n}/{len(fill)}]", file=sys.stderr)
+                    print(f"  [{n}/{len(need)}]", file=sys.stderr)
                     _save(a.out, rows)
         _save(a.out, rows)
     return 0
@@ -251,6 +299,7 @@ def main(argv=None):
     f.add_argument("--out", default="data/catalog.json"); f.set_defaults(fn=cmd_fetch)
     dsc = sub.add_parser("discover", help="native OTA query: find firmware missing from the catalog")
     dsc.add_argument("--devices", default="https://raw.githubusercontent.com/RemuruSama/OTA-Pulse/main/devices/oneplus.json")
+    dsc.add_argument("--no-ou", action="store_true", help="skip the Oxygen Updater source")
     dsc.add_argument("--catalog", default="data/catalog.json"); dsc.add_argument("--results", default="data/results.json"); dsc.add_argument("--workers", type=int, default=4)
     dsc.set_defaults(fn=cmd_discover)
     g = sub.add_parser("report", help="results.json -> markdown table")
