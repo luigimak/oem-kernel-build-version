@@ -1,11 +1,33 @@
 oneplus-kernel-build-version
+Copyright 2026 luigimak
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+== Third-party code included (modified) ==
 
 This project contains code derived from OTA Pulse
-(https://github.com/RemuruSama/OTA-Pulse), Copyright 2026 OTA Pulse,
-licensed under the Apache License 2.0:
-  - src/opkv/ota_query.py  (da Request.kt, Crypto.kt, Data.kt, RegionData.kt)
-  - src/opkv/resolver.py   (da OtaResolver.kt)
-The derived files were translated from Kotlin to Python and modified.
+(https://github.com/RemuruSama/OTA-Pulse), licensed under the Apache License 2.0
+(Copyright 2026 OTA Pulse; the upstream repository ships no NOTICE file):
+  - src/opkv/ota_query.py  (from Request.kt, Crypto.kt, Data.kt, RegionData.kt)
+  - src/opkv/resolver.py   (from OtaResolver.kt)
+The derived files were translated from Kotlin to Python and modified; each carries
+a notice to that effect in its header.
 
 The payload.bin (CrAU) format and protobuf field numbers follow AOSP's update_metadata.proto
-(Apache License 2.0).
+(Apache License 2.0, The Android Open Source Project). No AOSP source code is copied.
+
+== Third-party services and data (no code included) ==
+
+No source code of the following projects is copied or redistributed. They are queried at
+runtime and only the factual metadata listed below is stored in data/results.*.
+Some of them publish no license; this project is not affiliated with any of them.
+  - OTA Pulse devices/oneplus.json (model list): downloaded at runtime, not redistributed.
+  - roms.danielspringer.at (release catalog API): release names/versions/regions.
+  - Oxygen Updater API (https://oxygenupdater.com): release version, md5, size.
+  - spike0en/oneplus_archive (https://github.com/spike0en/oneplus_archive): the boot.7z
+    release assets are downloaded temporarily to read the kernel version string and are
+    not redistributed.
+  - Bartixxx32/OnePlus-antirollchecker database.json: md5 checksums.
+
+Firmware is the property of OnePlus / OPPO; no firmware image is stored or redistributed
+here, only the "Linux version ..." string extracted from boot.img.
