@@ -51,8 +51,11 @@ class _Handler(BaseHTTPRequestHandler):
             self.server.sent[self.path.split("?")[0]] += len(body)
             self.wfile.write(body)
 
-    do_GET = lambda self: self._serve(False)  # noqa: E731
-    do_HEAD = lambda self: self._serve(True)  # noqa: E731
+    def do_GET(self):
+        self._serve(False)
+
+    def do_HEAD(self):
+        self._serve(True)
 
 
 @pytest.fixture

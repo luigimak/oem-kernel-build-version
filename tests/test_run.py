@@ -1,4 +1,4 @@
-from helpers import release, result, row
+from helpers import release, row
 
 from opkv import cli, sources
 from opkv.extract import Result

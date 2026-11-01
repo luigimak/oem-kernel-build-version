@@ -86,6 +86,7 @@ def cmd_discover(a):
     import hashlib
     import re
     import urllib.request
+
     from . import ota_query as oq
 
     with urllib.request.urlopen(a.devices, timeout=60) as r:
@@ -129,10 +130,10 @@ def cmd_discover(a):
     print(f"OTA queries: {len(jobs)}", file=sys.stderr)
 
     def work(j):
-        name, disp, model, q = j
+        _, _, model, q = j
         err = None
         # OTA Pulse letter first, then the ones seen in the catalog for the same model
-        tries = [q.letter] + sorted(letters.get(model, set()) - {q.letter})
+        tries = [q.letter, *sorted(letters.get(model, set()) - {q.letter})]
         for L in tries:
             q.letter = L
             try:
@@ -230,7 +231,11 @@ def cmd_report(a):
 def cmd_archive(a):
     """Add Android 14+ firmware missing from the results, from the spike0en archive (boot.7z assets)."""
     import hashlib
+    import importlib.util
+
     from . import archive
+    if not a.dry_run and importlib.util.find_spec("py7zr") is None:
+        raise SystemExit("opkv archive needs py7zr: pip install 'opkv[archive]'")
     rows = _load_results(a.out)
     have = {normalize.firmware_key(r) for r in rows.values() if r["ok"]}       # a failed row is tried again
     device_of = normalize.labels_by_model(rows.values())
@@ -357,7 +362,8 @@ def main(argv=None):
     dsc = sub.add_parser("discover", help="native OTA query: find firmware missing from the catalog")
     dsc.add_argument("--devices", default="https://raw.githubusercontent.com/RemuruSama/OTA-Pulse/main/devices/oneplus.json")
     dsc.add_argument("--no-ou", action="store_true", help="skip the Oxygen Updater source")
-    dsc.add_argument("--catalog", default="data/catalog.json"); dsc.add_argument("--results", default="data/results.json"); dsc.add_argument("--workers", type=int, default=4)
+    dsc.add_argument("--catalog", default="data/catalog.json"); dsc.add_argument("--results", default="data/results.json")
+    dsc.add_argument("--workers", type=int, default=4)
     dsc.set_defaults(fn=cmd_discover)
     ar = sub.add_parser("archive", help="add Android 14+ firmware missing from the results (spike0en archive, boot.7z)")
     ar.add_argument("--out", default="data/results.json"); ar.add_argument("--workers", type=int, default=3)

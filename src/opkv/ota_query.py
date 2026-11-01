@@ -13,6 +13,7 @@ import hashlib
 import json
 import os
 import time
+import urllib.error
 import urllib.request
 from dataclasses import dataclass
 
@@ -141,10 +142,10 @@ def query(q: Query, timeout: float = 30) -> dict:
         "androidVersion": android, "colorOSVersion": cos,
         "isRealme": "0", "time": now,
     }
-    body = {k: (props[k] if k in props else v) for k, v in DEFAULT_BODY.items()}
+    body = {k: props.get(k, v) for k, v in DEFAULT_BODY.items()}
     if q.beta:
         body["mode"] = "1"
-    headers = {k: (props[k] if k in props else v) for k, v in DEFAULT_HEADERS.items()}
+    headers = {k: props.get(k, v) for k, v in DEFAULT_HEADERS.items()}
     headers["version"] = "2"
     headers["mode"] = q.req_mode
 
@@ -162,6 +163,8 @@ def query(q: Query, timeout: float = 30) -> dict:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             raw = r.read().decode()
     except Exception as e:  # noqa: BLE001
+        if isinstance(e, urllib.error.HTTPError):
+            e.close()                                   # the error holds the connection
         raise OtaQueryError(f"http: {type(e).__name__}") from None
     try:
         outer = json.loads(raw)

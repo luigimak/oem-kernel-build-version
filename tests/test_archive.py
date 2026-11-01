@@ -1,4 +1,5 @@
 import json
+import sys
 
 import pytest
 from builders import boot_7z, boot_image
@@ -128,3 +129,20 @@ def test_releases_are_listed_across_pages_and_row_becomes_glo(monkeypatch):
                                                           ("PLK110_16.0.5.702(CN01)", "CN")]
     assert got[0]["asset_url"] == "https://example.invalid/CPH2653_16.0.0.210(EX01)_ROW/x-image-boot.7z"
     assert [t for _, t in seen] == ["tok"] * 3 and seen[0][0].endswith("releases?per_page=100&page=1")
+
+
+@pytest.mark.parametrize("url", ["file:///etc/hostname", "ftp://example.invalid/boot.7z"])
+def test_asset_url_must_be_http(url):
+    res = archive.extract_asset(url)
+    assert not res.ok and "unsupported URL scheme" in res.error
+
+
+def test_archive_command_explains_the_missing_optional_dependency(archive_run, monkeypatch):
+    monkeypatch.setitem(sys.modules, "py7zr", None)               # as if the `archive` extra was not installed
+    with pytest.raises(SystemExit, match=r"opkv\[archive\]"):
+        archive_run([row("a", version="CPH2653_15.0.0.100(EX01)")], [rel()])
+
+
+def test_dry_run_does_not_need_the_optional_dependency(archive_run, monkeypatch):
+    monkeypatch.setitem(sys.modules, "py7zr", None)
+    assert archive_run([row("a", version="CPH2653_15.0.0.100(EX01)")], [rel()], "--dry-run")[0] == []

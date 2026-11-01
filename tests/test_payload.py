@@ -4,7 +4,8 @@ import struct
 
 import pytest
 import zstandard
-from builders import boot_image, payload as build_payload
+from builders import boot_image
+from builders import payload as build_payload
 
 from opkv import payload
 

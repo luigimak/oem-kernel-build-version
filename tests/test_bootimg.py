@@ -1,4 +1,5 @@
 import struct
+
 from opkv import bootimg
 
 
@@ -99,7 +100,7 @@ def test_gzip_banner():
 
 
 def test_prefers_complete_banner_over_truncated_raw_match():
-    import lz4.block, struct
+    import lz4.block
     banner = b"Linux version 6.12.69-x (a@b) (clang 19) #1 SMP PREEMPT Wed Jul 15 11:18:49 UTC 2026\n"
     comp = lz4.block.compress(b"\0" * 32 + banner, store_size=False)
     # legacy lz4 container whose compressed bytes also contain a truncated raw copy of the banner

@@ -1,6 +1,7 @@
 """Android boot.img header parsing + 'Linux version' extraction."""
 from __future__ import annotations
 
+import contextlib
 import re
 import struct
 import zlib
@@ -51,20 +52,22 @@ def _lz4_legacy(data: bytes) -> bytes:
 def decompress_kernel(k: bytes) -> list[bytes]:
     """Candidate decompressed payloads of a (possibly compressed) kernel blob."""
     outs = []
+    # a decoder that chokes (truncated or foreign data) just gives no candidate; the lz4 bindings raise
+    # their own exception types
     if k[:2] == b"\x1f\x8b":
-        try: outs.append(zlib.decompressobj(31).decompress(k))
-        except zlib.error: pass
+        with contextlib.suppress(zlib.error):
+            outs.append(zlib.decompressobj(31).decompress(k))
     if k[:4] == b"\x02\x21\x4c\x18":
-        try: outs.append(_lz4_legacy(k))
-        except Exception: pass
+        with contextlib.suppress(Exception):
+            outs.append(_lz4_legacy(k))
     if k[:4] == b"\x04\x22\x4d\x18":
-        try: outs.append(lz4.frame.decompress(k))
-        except Exception: pass
+        with contextlib.suppress(Exception):
+            outs.append(lz4.frame.decompress(k))
     # embedded gzip stream (e.g. Image with appended .gz / vmlinuz-like)
     i = k.find(b"\x1f\x8b\x08")
     if i > 0:
-        try: outs.append(zlib.decompressobj(31).decompress(k[i:]))
-        except zlib.error: pass
+        with contextlib.suppress(zlib.error):
+            outs.append(zlib.decompressobj(31).decompress(k[i:]))
     return outs
 
 

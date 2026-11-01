@@ -1,7 +1,7 @@
 """Historical firmware from the spike0en/oneplus_archive releases: boot.7z -> boot.img -> Linux version.
 
 The archive publishes one GitHub release per firmware with an `image-boot.7z` asset (about 50 MB).
-Only releases whose (model, version) is missing from the results are processed.
+Only releases whose (version, region) is missing from the results are processed.
 """
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ import urllib.request
 
 from . import bootimg, catalog
 from .extract import Result, fill_banner
+from .rangehttp import check_scheme
 from .safe import redact
 
 REPO = "spike0en/oneplus_archive"
@@ -29,7 +30,8 @@ def _get(url: str, token: str | None = None) -> bytes:
 
 def releases(token: str | None = None) -> list[dict]:
     """[{version, region, asset_url}] for every archive release that has a boot asset and is Android 14+."""
-    out, page = [], 1
+    out: list[dict] = []
+    page = 1
     while True:
         batch = json.loads(_get(f"https://api.github.com/repos/{REPO}/releases?per_page=100&page={page}", token))
         if not batch:
@@ -48,6 +50,7 @@ def extract_asset(url: str) -> Result:
     import py7zr
     res = Result(source="boot.img")
     try:
+        check_scheme(url)
         with tempfile.TemporaryDirectory() as tmp:
             arc = os.path.join(tmp, "boot.7z")
             with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "opkv"}), timeout=120) as r, \

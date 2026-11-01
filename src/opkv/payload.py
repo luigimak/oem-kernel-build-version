@@ -7,8 +7,9 @@ from __future__ import annotations
 import bz2
 import lzma
 import struct
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
-from typing import Callable, Iterator
+from typing import Any
 
 import zstandard
 
@@ -28,11 +29,12 @@ def _varint(b: bytes, i: int) -> tuple[int, int]:
         s += 7
 
 
-def _fields(b: bytes) -> Iterator[tuple[int, int, object]]:
+def _fields(b: bytes) -> Iterator[tuple[int, int, Any]]:
     i = 0
     while i < len(b):
         tag, i = _varint(b, i)
         fn, wt = tag >> 3, tag & 7
+        v: Any
         if wt == 0:
             v, i = _varint(b, i)
         elif wt == 2:

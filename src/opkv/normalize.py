@@ -54,7 +54,7 @@ def ota_timestamp(ota_version: str) -> str:
     return f"{t[:4]}-{t[4:6]}-{t[6:8]}T{t[8:10]}:{t[10:12]}:00"
 
 
-_MONTHS = {m: i for i, m in enumerate("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(), 1)}
+_MONTHS = {m: i for i, m in enumerate(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], 1)}
 _BUILD_DATE = re.compile(r"([A-Z][a-z]{2}) +(\d{1,2}) (\d\d:\d\d:\d\d) \w+ (\d{4})\s*$")
 
 

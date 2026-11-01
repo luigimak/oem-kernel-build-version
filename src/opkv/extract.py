@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 import struct
 import zipfile
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 
 from . import bootimg, payload, rangehttp, resolver
 from .rangehttp import RangeFile
@@ -45,7 +45,7 @@ _SDK_TO_ANDROID = {30: "11", 31: "12", 32: "12", 33: "13", 34: "14", 35: "15", 3
 
 def android_from_metadata(text: str) -> str | None:
     """Android release from an OTA metadata file: post-build release, else post-sdk-level."""
-    kv = dict(l.split("=", 1) for l in text.splitlines() if "=" in l)
+    kv = dict(line.split("=", 1) for line in text.splitlines() if "=" in line)
     m = re.search(r":(\d+(?:\.\d+)?)/", kv.get("post-build", ""))
     if m:
         return m.group(1)
