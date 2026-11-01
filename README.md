@@ -4,6 +4,8 @@ Extracts the `Linux version …` string (kernel version + build) from the `boot.
 of OnePlus OTA packages, without downloading the firmware: it reads only the needed bytes over HTTP Range
 (about 10 MB per OTA, whose full package is several GB). Results: [`data/results.md`](data/results.md) and
 [`data/results.json`](data/results.json), updated every day by a GitHub Actions workflow.
+A searchable, filterable table of the same data is published with GitHub Pages: <https://luigimak.github.io/oneplus-kernel-build-version/>
+(source in [`docs/`](docs/), deployed by `.github/workflows/pages.yml`; set Settings → Pages → Source to "GitHub Actions" once).
 
 ## Usage
 ```bash

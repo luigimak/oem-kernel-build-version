@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OnePlus kernel build versions</title>
+<meta name="description" content="Linux kernel version and build of OnePlus firmware, extracted from the OTA packages.">
+<style>
+:root {
+  --bg: #fff; --fg: #1b1f24; --muted: #59636e; --line: #d0d7de; --head: #f6f8fa; --hover: #f3f6fa;
+  --accent: #0969da; --bad: #cf222e;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117; --fg: #e6edf3; --muted: #8b949e; --line: #30363d; --head: #161b22; --hover: #151b23;
+    --accent: #58a6ff; --bad: #ff7b72;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45 system-ui, sans-serif; }
+main { max-width: 1400px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 1.4rem; margin: 0 0 4px; }
+.sub { color: var(--muted); margin: 0 0 16px; }
+a { color: var(--accent); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+.controls input[type=search] { flex: 1 1 260px; }
+input, select, button {
+  font: inherit; color: var(--fg); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px;
+}
+label.check { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); }
+#count { color: var(--muted); margin: 0 0 8px; }
+.wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { padding: 6px 10px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+th { background: var(--head); position: sticky; top: 0; white-space: nowrap; cursor: pointer; user-select: none; }
+th[aria-sort=ascending]::after { content: " \25B2"; font-size: .7em; }
+th[aria-sort=descending]::after { content: " \25BC"; font-size: .7em; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--hover); }
+tr.detail { cursor: default; }
+tr.detail:hover { background: none; }
+tr.detail dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 0; }
+tr.detail dt { color: var(--muted); }
+tr.detail dd { margin: 0; overflow-wrap: anywhere; }
+code { font: 13px ui-monospace, monospace; overflow-wrap: anywhere; }
+.bad { color: var(--bad); }
+#msg { padding: 16px; color: var(--muted); }
+footer { color: var(--muted); margin-top: 16px; font-size: .9rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>OnePlus kernel build versions</h1>
+  <p class="sub">Linux kernel and build of OnePlus firmware, read from the OTA packages.
+    <a href="https://github.com/luigimak/oneplus-kernel-build-version">Source and method on GitHub</a>.</p>
+
+  <div class="controls">
+    <input id="q" type="search" placeholder="Search firmware, model, kernel, build…" aria-label="Search">
+    <select id="device" aria-label="Device"></select>
+    <select id="region" aria-label="Region"></select>
+    <select id="android" aria-label="Android version"></select>
+    <select id="branch" aria-label="Kernel branch"></select>
+    <label class="check"><input id="failed" type="checkbox"> show failed</label>
+    <button id="reset" type="button">Reset</button>
+  </div>
+  <p id="count" aria-live="polite"></p>
+
+  <div class="wrap">
+    <table>
+      <thead><tr></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div id="msg">Loading…</div>
+  </div>
+
+  <footer>Click a row for details. Data: <a href="results.json">results.json</a>, refreshed daily.</footer>
+</main>
+
+<script>
+"use strict";
+
+const COLUMNS = [
+  { key: "device", label: "Device" },
+  { key: "model", label: "Model" },
+  { key: "region", label: "Region" },
+  { key: "android", label: "Android" },
+  { key: "version", label: "Firmware" },
+  { key: "kernel", label: "Kernel" },
+  { key: "built", label: "Kernel build" },
+];
+const FILTERS = [
+  { id: "device", all: "All devices" },
+  { id: "region", all: "All regions" },
+  { id: "android", all: "All Android" },
+  { id: "branch", all: "All kernels" },
+];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+
+const $ = (id) => document.getElementById(id);
+const state = { rows: [], sort: "built", dir: -1, open: null };
+
+const ZONES = { UTC: "+0000", CST: "+0800" };   // CST: China Standard Time, as in the CN builds
+
+// "#1 SMP PREEMPT Mon Dec 25 12:31:09 UTC 2023" -> epoch ms, NaN when it does not match
+function buildTime(build) {
+  const m = /([A-Z][a-z]{2}) +(\d{1,2}) (\d\d:\d\d:\d\d) ([A-Z]{2,4}) (\d{4})/.exec(build || "");
+  if (!m || !MONTHS.includes(m[1]) || !(m[4] in ZONES)) return NaN;
+  return Date.parse(`${m[1]} ${m[2]} ${m[5]} ${m[3]} ${ZONES[m[4]]}`);
+}
+
+function prepare(r) {
+  const kernel = r.kernel_release || "";
+  const branch = /^\d+\.\d+/.exec(kernel);
+  return {
+    raw: r,
+    device: r.device || "",
+    model: r.model || "",
+    region: r.region || "",
+    android: r.android_version || "",
+    version: r.version || "",
+    kernel,
+    build: r.build || "",
+    builtMs: buildTime(r.build),
+    branch: branch ? branch[0] : "",
+    ok: r.ok === true,
+    haystack: [r.device, r.model, r.region, r.version, r.ota_version, kernel, r.build]
+      .join(" ").toLowerCase(),
+  };
+}
+
+function sortValue(row, key) {
+  return key === "built" ? row.builtMs : row[key];
+}
+
+function compare(a, b) {
+  const x = sortValue(a, state.sort), y = sortValue(b, state.sort);
+  // rows without a value go last whatever the direction
+  const xe = x === "" || Number.isNaN(x), ye = y === "" || Number.isNaN(y);
+  if (xe || ye) return xe === ye ? 0 : xe ? 1 : -1;
+  const c = typeof x === "number" ? x - y : collator.compare(x, y);
+  return c * state.dir || collator.compare(a.version, b.version);
+}
+
+function fillSelect(sel, all, values) {
+  sel.replaceChildren(new Option(all, ""));
+  for (const v of [...new Set(values)].filter(Boolean).sort(collator.compare)) sel.append(new Option(v, v));
+}
+
+function el(tag, text, cls) {
+  const e = document.createElement(tag);
+  if (text !== undefined) e.textContent = text;
+  if (cls) e.className = cls;
+  return e;
+}
+
+function detailRow(row) {
+  const r = row.raw;
+  const tr = el("tr", undefined, "detail");
+  const td = el("td");
+  td.colSpan = COLUMNS.length;
+  const dl = el("dl");
+  const fields = [
+    ["OTA version", r.ota_version],
+    ["OTA built", r.build_timestamp],
+    ["Linux version", r.linux_version],
+    ["Compiler", r.compiler],
+    ["Read from", r.source],
+    ["Size", r.size ? `${(r.size / 2 ** 30).toFixed(2)} GiB` : ""],
+    ["MD5", r.md5],
+    ["Error", r.error],
+  ];
+  for (const [k, v] of fields) {
+    if (!v) continue;
+    dl.append(el("dt", k), el("dd"));
+    const dd = dl.lastChild;
+    dd.append(el("code", v, k === "Error" ? "bad" : ""));
+  }
+  td.append(dl);
+  tr.append(td);
+  return tr;
+}
+
+function render() {
+  const q = $("q").value.trim().toLowerCase();
+  const terms = q ? q.split(/\s+/) : [];
+  const f = { device: $("device").value, region: $("region").value, android: $("android").value, branch: $("branch").value };
+  const showFailed = $("failed").checked;
+
+  const rows = state.rows.filter((r) =>
+    (showFailed || r.ok) &&
+    (!f.device || r.device === f.device) &&
+    (!f.region || r.region === f.region) &&
+    (!f.android || r.android === f.android) &&
+    (!f.branch || r.branch === f.branch) &&
+    terms.every((t) => r.haystack.includes(t)));
+  rows.sort(compare);
+
+  const body = document.querySelector("tbody");
+  body.replaceChildren();
+  for (const row of rows) {
+    const tr = el("tr");
+    tr.tabIndex = 0;
+    tr.dataset.id = row.raw.id;
+    tr.append(
+      el("td", row.device), el("td", row.model), el("td", row.region), el("td", row.android),
+      el("td", row.version));
+    const k = el("td");
+    k.append(row.kernel ? el("code", row.kernel) : el("span", "failed", "bad"));
+    tr.append(k);
+    const b = el("td");
+    if (row.build) b.append(el("code", row.build));
+    tr.append(b);
+    body.append(tr);
+    if (state.open === row.raw.id) body.append(detailRow(row));
+  }
+
+  const total = state.rows.filter((r) => showFailed || r.ok).length;
+  $("count").textContent = `${rows.length} of ${total} firmware`;
+  $("msg").hidden = rows.length > 0;
+  $("msg").textContent = "No firmware matches.";
+  for (const th of document.querySelectorAll("th")) {
+    th.setAttribute("aria-sort", th.dataset.key === state.sort ? (state.dir > 0 ? "ascending" : "descending") : "none");
+  }
+  saveHash();
+}
+
+// filters and sort live in the URL hash, so a filtered view can be shared
+function saveHash() {
+  const p = new URLSearchParams();
+  if ($("q").value) p.set("q", $("q").value);
+  for (const { id } of FILTERS) if ($(id).value) p.set(id, $(id).value);
+  if ($("failed").checked) p.set("failed", "1");
+  if (state.sort !== "built" || state.dir !== -1) p.set("sort", (state.dir > 0 ? "+" : "-") + state.sort);
+  const s = p.toString();
+  history.replaceState(null, "", s ? `#${s}` : location.pathname + location.search);
+}
+
+function loadHash() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  $("q").value = p.get("q") || "";
+  for (const { id } of FILTERS) {
+    const v = p.get(id) || "";
+    $(id).value = v;
+    if ($(id).value !== v) $(id).value = "";   // a value that is not an option
+  }
+  $("failed").checked = p.get("failed") === "1";
+  const s = /^([+-])(\w+)$/.exec(p.get("sort") || "");
+  if (s && COLUMNS.some((c) => c.key === s[2])) { state.sort = s[2]; state.dir = s[1] === "+" ? 1 : -1; }
+}
+
+function sortBy(key) {
+  if (state.sort === key) state.dir = -state.dir;
+  else { state.sort = key; state.dir = key === "built" ? -1 : 1; }
+  render();
+}
+
+function toggleDetail(tr) {
+  const id = tr.dataset.id;
+  state.open = state.open === id ? null : id;
+  render();
+}
+
+async function main() {
+  const head = document.querySelector("thead tr");
+  for (const c of COLUMNS) {
+    const th = el("th", c.label);
+    th.dataset.key = c.key;
+    th.tabIndex = 0;
+    th.addEventListener("click", () => sortBy(c.key));
+    th.addEventListener("keydown", (e) => { if (e.key === "Enter") sortBy(c.key); });
+    head.append(th);
+  }
+
+  let data;
+  try {
+    const res = await fetch("results.json");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    data = await res.json();
+  } catch (e) {
+    $("msg").textContent = `Could not load results.json (${e.message}).`;
+    return;
+  }
+  state.rows = data.map(prepare);
+
+  fillSelect($("device"), FILTERS[0].all, state.rows.map((r) => r.device));
+  fillSelect($("region"), FILTERS[1].all, state.rows.map((r) => r.region));
+  fillSelect($("android"), FILTERS[2].all, state.rows.map((r) => r.android));
+  fillSelect($("branch"), FILTERS[3].all, state.rows.map((r) => r.branch));
+  loadHash();
+
+  for (const id of ["q", "device", "region", "android", "branch", "failed"]) {
+    $(id).addEventListener("input", render);
+  }
+  $("reset").addEventListener("click", () => {
+    history.replaceState(null, "", location.pathname + location.search);
+    state.sort = "built"; state.dir = -1; state.open = null;
+    loadHash();
+    render();
+  });
+  const body = document.querySelector("tbody");
+  body.addEventListener("click", (e) => {
+    const tr = e.target.closest("tr:not(.detail)");
+    if (tr && !getSelection().toString()) toggleDetail(tr);
+  });
+  body.addEventListener("keydown", (e) => {
+    const tr = e.target.closest("tr:not(.detail)");
+    if (tr && e.key === "Enter") toggleDetail(tr);
+  });
+  render();
+}
+
+main();
+</script>
+</body>
+</html>

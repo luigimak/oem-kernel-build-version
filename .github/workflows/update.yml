@@ -90,3 +90,14 @@ jobs:
             echo "pull or push failed (attempt $attempt), retrying"; sleep 5
           done
           echo "push to $BRANCH failed"; exit 1
+
+  # the site shows data/results.json: publish it again after the daily run
+  pages:
+    name: Publish site
+    needs: update
+    if: needs.update.result == 'success'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml
