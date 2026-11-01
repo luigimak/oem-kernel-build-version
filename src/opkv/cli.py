@@ -194,23 +194,24 @@ def cmd_discover(a):
     return 0
 
 
-def _uniq(items):
-    return list(dict.fromkeys(items))
-
-
 def cmd_report(a):
     """Markdown table; rows of the same device sharing kernel + build are merged."""
-    rows = [normalize.row(r) for r in json.load(open(a.results, encoding="utf-8"))
+    with open(a.results, encoding="utf-8") as f:
+        data = json.load(f)
+    rows = [normalize.row(r) for r in data
             if r["ok"] and catalog.wanted_version(r["version"], r.get("android_version"))]
-    rows.sort(key=lambda r: (r["device"], r["build_timestamp"], r["model"], r["region"]))
+    normalize.relabel(rows)
+    # oldest build first: the OTA build stamp, else the kernel build date (archive rows carry no OTA stamp)
+    rows.sort(key=lambda r: (r["device"], r.get("build_timestamp") or normalize.build_date(r["build"]),
+                             r["model"], r["region"]))
     groups: dict[tuple, list] = {}
     for r in rows:                                   # dict keeps first-seen order = oldest build first
         groups.setdefault((r["device"], r["kernel_release"], r["build"]), []).append(r)
     out = ["| Device | Models | Regions | Android version | FW versions | Kernel | Build |",
            "|---|---|---|---|---|---|---|"]
     for (device, kernel, build), g in groups.items():
-        models = "<br>".join(sorted(set(r["model"] for r in g)))
-        regions = "<br>".join(sorted(set(r["region"] for r in g)))
+        models = "<br>".join(sorted({r["model"] for r in g}))
+        regions = "<br>".join(sorted({r["region"] for r in g}))
         pairs = list(dict.fromkeys((r["version"], normalize.android(r)) for r in g))   # one line per FW version
         versions = "<br>".join(v for v, _ in pairs)
         androids = "<br>".join(f"A{an}" if an else "?" for _, an in pairs)                   # same order as FW versions

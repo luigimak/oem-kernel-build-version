@@ -54,6 +54,19 @@ def ota_timestamp(ota_version: str) -> str:
     return f"{t[:4]}-{t[4:6]}-{t[6:8]}T{t[8:10]}:{t[10:12]}:00"
 
 
+_MONTHS = {m: i for i, m in enumerate("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(), 1)}
+_BUILD_DATE = re.compile(r"([A-Z][a-z]{2}) +(\d{1,2}) (\d\d:\d\d:\d\d) \w+ (\d{4})\s*$")
+
+
+def build_date(build: str) -> str:
+    """Date of a kernel build string ("#1 SMP PREEMPT Mon Dec 25 12:31:09 UTC 2023") as 2023-12-25T12:31:09;
+    empty when there is none. Locale independent."""
+    m = _BUILD_DATE.search(build or "")
+    if not m or m[1] not in _MONTHS:
+        return ""
+    return f"{m[4]}-{_MONTHS[m[1]]:02d}-{int(m[2]):02d}T{m[3]}"
+
+
 def firmware_key(r: dict) -> tuple[str, str]:
     """Identity of a firmware across sources and ids: (version, region).
 
