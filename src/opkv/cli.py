@@ -36,6 +36,10 @@ def _save(path: str, rows: dict) -> None:
     os.replace(tmp, path)
 
 
+def _empty(v) -> bool:
+    return v is None or v == "" or (isinstance(v, int) and not isinstance(v, bool) and v == 0)
+
+
 def cmd_url(a):
     r = extract(a.url)
     print(json.dumps(r.dict(), indent=1))
@@ -56,8 +60,9 @@ def cmd_fetch(a):
             local = json.load(f)
     by_id = {r["id"]: r for r in local["releases"]}
     new = [r for r in live_rel if r["id"] not in by_id]
-    for r in live_rel:                      # also refresh known ones (e.g. is_latest, new links)
-        by_id[r["id"]] = r
+    for r in live_rel:                      # also refresh known ones (e.g. is_latest, new links) ...
+        old = by_id.get(r["id"], {})        # ... but keep the md5/size that only the local copy has
+        by_id[r["id"]] = {**old, **{k: v for k, v in r.items() if not _empty(v) or k not in old}}
     local["releases"] = list(by_id.values())
     os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
     with open(a.out, "w", encoding="utf-8") as f:

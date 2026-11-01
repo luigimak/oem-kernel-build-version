@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from builders import boot_7z, boot_image
 from helpers import BANNER, read_json, result, row, write_json
@@ -100,3 +102,29 @@ def test_asset_without_boot_image_is_reported(http_server, tmp_path):
     http_server.files["/boot.7z"] = boot_7z(tmp_path, {"vendor_boot.img": boot_image()})
     res = archive.extract_asset(http_server.url("/boot.7z"))
     assert not res.ok and "no boot.img" in res.error
+
+
+def page(*tags_with_assets):
+    return json.dumps([{"tag_name": tag, "assets": [{"name": name, "browser_download_url": f"https://example.invalid/{tag}/{name}"}
+                                                    for name in assets]} for tag, assets in tags_with_assets]).encode()
+
+
+def test_releases_are_listed_across_pages_and_row_becomes_glo(monkeypatch):
+    pages = {1: page(("CPH2653_16.0.0.210(EX01)_ROW", ["x-image-boot.7z", "x-other.7z"]),
+                     ("CPH2653_15.0.0.100(EX01)_EU", ["x-boot.7z"]),
+                     ("CPH2449_13.1.0.500(EX01)_EU", ["x-boot.7z"]),          # Android 13: not wanted
+                     ("not-a-firmware-tag", ["x-boot.7z"]),
+                     ("CPH2653_16.0.0.300(EX01)_EU", ["only-system.7z"])),    # no boot asset
+             2: page(("PLK110_16.0.5.702(CN01)_CN", ["a-boot.7z"])), 3: b"[]"}
+    seen = []
+
+    def fake_get(url, token=None):
+        seen.append((url, token))
+        return pages[int(url.rsplit("page=", 1)[1])]
+
+    monkeypatch.setattr(archive, "_get", fake_get)
+    got = archive.releases("tok")
+    assert [(r["version"], r["region"]) for r in got] == [("CPH2653_16.0.0.210(EX01)", "GLO"), ("CPH2653_15.0.0.100(EX01)", "EU"),
+                                                          ("PLK110_16.0.5.702(CN01)", "CN")]
+    assert got[0]["asset_url"] == "https://example.invalid/CPH2653_16.0.0.210(EX01)_ROW/x-image-boot.7z"
+    assert [t for _, t in seen] == ["tok"] * 3 and seen[0][0].endswith("releases?per_page=100&page=1")
