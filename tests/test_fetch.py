@@ -73,3 +73,8 @@ def test_url_command_prints_the_result_as_json(http_server, capsys):
 def test_url_command_fails_on_an_unreachable_package(http_server, capsys):
     assert cli.main(["url", http_server.url("/gone.zip")]) == 1
     assert json.loads(capsys.readouterr().out)["ok"] is False
+
+
+def test_a_link_the_api_no_longer_offers_is_not_kept(fetch):
+    stored = release("a", source_url="https://example.invalid/old.zip")
+    assert fetch({"releases": [release("a", source_url="")]}, stored=[stored])[0]["source_url"] == ""

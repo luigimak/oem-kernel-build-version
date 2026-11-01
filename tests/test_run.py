@@ -80,3 +80,9 @@ def test_failed_extraction_is_stored_with_its_error(run, monkeypatch):
     monkeypatch.setattr(cli, "extract", lambda url: Result(ok=False, error="HTTPError: HTTP Error 404: Not Found"))
     _, rows = run([release("a")], [])
     assert (rows[0]["ok"], rows[0]["error"]) == (False, "HTTPError: HTTP Error 404: Not Found")
+
+
+def test_duplicates_in_the_stored_results_are_resolved_before_retrying(run):
+    # a results file from an older version holding a good and a failed row of one firmware: nothing to retry
+    extracted, rows = run([release("c")], [row("good"), row("bad", ok=False)], "--retry-failed")
+    assert extracted == [] and [r["id"] for r in rows] == ["good"]

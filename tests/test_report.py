@@ -69,3 +69,10 @@ def test_report_uses_one_device_label_per_model(tmp_path):
     rows = [row(f"a{i}", version=f"CPH2653_15.0.0.{i}00(EX01)", device="OP 13", kernel_release=f"6.6.{i}") for i in range(3)]
     rows.append(row("odd", version="CPH2653_16.0.0.210(EX01)", device="OP 13S", kernel_release="6.6.9"))
     assert {line.split(" | ")[0] for line in report(tmp_path, rows)[2:]} == {"| OP 13"}
+
+
+def test_rows_follow_the_kernel_build_date_even_when_the_ota_stamps_disagree(tmp_path):
+    # built first, packaged later (staged rollout): the table lists kernel builds
+    rows = [fw("b", "CPH2653_15.0.0.200(EX01)", "2025-04-01T00:00:00", "6.6.2", "#1 SMP Mon Mar 10 00:00:00 UTC 2025", device="OP 13"),
+            fw("a", "CPH2653_15.0.0.100(EX01)", "2025-05-01T00:00:00", "6.6.1", "#1 SMP Mon Feb 3 00:00:00 UTC 2025", device="OP 13")]
+    assert [line.split(" | ")[5] for line in report(tmp_path, rows)[2:]] == ["`6.6.1`", "`6.6.2`"]

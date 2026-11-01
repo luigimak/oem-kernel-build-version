@@ -18,9 +18,9 @@ opkv url <URL>  # a single OTA zip
 OnePlus only (`OP …`), from the 10 series onward, and only firmware from Android 14 onward (older rows are dropped). `run` is resumable.
 
 The workflow `.github/workflows/update.yml` runs `fetch`, `discover`, `run --retry-failed` and `report` every day at 05:17 UTC and commits
-the updated results to the default branch (`archive` is a manual command). Scheduled runs are off until the repository variable
+the updated results to the default branch (`archive` is a manual command; `archive --retry-failed` downloads again the assets that failed before). Scheduled runs are off until the repository variable
 `AUTO_UPDATE` is set to `true` (so a fork does not run them); manual runs always work. The workflow installs the hash-pinned
-[`requirements.txt`](requirements.txt) and gives the commit step alone the token it needs to push.
+[`requirements.txt`](requirements.txt), runs `python -m opkv` from the checkout, and gives the commit step alone the token it needs to push.
 
 ## Results
 `data/results.json` is a list of rows, one per firmware, sorted by device, model and build time:
@@ -36,7 +36,7 @@ the updated results to the default branch (`archive` is a manual command). Sched
 | `source` | where the banner was read: `payload.bin` or `boot.img` |
 | `md5`, `size` | of the OTA package, when known |
 
-`data/results.md` groups the rows of a device that share kernel and build, oldest first.
+`data/results.md` groups the rows of a device that share kernel and build, oldest kernel build first.
 
 ## Notes
 - Firmware URLs are never stored or logged (error messages are redacted).

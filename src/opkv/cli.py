@@ -13,7 +13,9 @@ from .extract import extract, extract_android
 def _load_results(path: str) -> dict:
     if os.path.exists(path):
         with open(path, encoding="utf-8") as f:
-            return {r["id"]: r for r in json.load(f)}
+            rows = {r["id"]: r for r in json.load(f)}
+        normalize.dedupe(rows)             # a file written by an older version can hold one firmware twice
+        return rows
     return {}
 
 
@@ -61,8 +63,12 @@ def cmd_fetch(a):
     by_id = {r["id"]: r for r in local["releases"]}
     new = [r for r in live_rel if r["id"] not in by_id]
     for r in live_rel:                      # also refresh known ones (e.g. is_latest, new links) ...
-        old = by_id.get(r["id"], {})        # ... but keep the md5/size that only the local copy has
-        by_id[r["id"]] = {**old, **{k: v for k, v in r.items() if not _empty(v) or k not in old}}
+        old = by_id.get(r["id"], {})
+        merged = {**old, **r}
+        for k in ("md5", "size"):           # ... but keep the md5/size that only the local copy has (other sources complete them)
+            if _empty(r.get(k)) and not _empty(old.get(k)):
+                merged[k] = old[k]
+        by_id[r["id"]] = merged
     local["releases"] = list(by_id.values())
     os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
     with open(a.out, "w", encoding="utf-8") as f:
@@ -207,9 +213,10 @@ def cmd_report(a):
     rows = [normalize.row(r) for r in data
             if r["ok"] and catalog.wanted_version(r["version"], r.get("android_version"))]
     normalize.relabel(rows)
-    # oldest build first: the OTA build stamp, else the kernel build date (archive rows carry no OTA stamp)
-    rows.sort(key=lambda r: (r["device"], r.get("build_timestamp") or normalize.build_date(r["build"]),
-                             r["model"], r["region"]))
+    # oldest build first: the table lists kernel builds, so by the kernel build date (archive rows carry no OTA
+    # stamp), then by OTA stamp
+    rows.sort(key=lambda r: (r["device"], normalize.build_date(r["build"]) or r.get("build_timestamp") or "",
+                             r.get("build_timestamp") or "", r["model"], r["region"]))
     groups: dict[tuple, list] = {}
     for r in rows:                                   # dict keeps first-seen order = oldest build first
         groups.setdefault((r["device"], r["kernel_release"], r["build"]), []).append(r)
@@ -237,7 +244,9 @@ def cmd_archive(a):
     if not a.dry_run and importlib.util.find_spec("py7zr") is None:
         raise SystemExit("opkv archive needs py7zr: pip install 'opkv[archive]'")
     rows = _load_results(a.out)
-    have = {normalize.firmware_key(r) for r in rows.values() if r["ok"]}       # a failed row is tried again
+    # a failed row is tried from the archive, unless it already failed there (--retry-failed downloads it again)
+    have = {normalize.firmware_key(r) for r in rows.values()
+            if r["ok"] or (r.get("origin") == "spike0en-archive" and not a.retry_failed)}
     device_of = normalize.labels_by_model(rows.values())
     todo, seen = [], set()
     for rel in archive.releases(os.environ.get("GITHUB_TOKEN")):
@@ -368,6 +377,7 @@ def main(argv=None):
     ar = sub.add_parser("archive", help="add Android 14+ firmware missing from the results (spike0en archive, boot.7z)")
     ar.add_argument("--out", default="data/results.json"); ar.add_argument("--workers", type=int, default=3)
     ar.add_argument("--limit", type=int, default=0); ar.add_argument("--dry-run", action="store_true")
+    ar.add_argument("--retry-failed", action="store_true", help="download again the archive assets that failed before")
     ar.set_defaults(fn=cmd_archive)
     g = sub.add_parser("report", help="results.json -> markdown table")
     g.add_argument("--results", default="data/results.json"); g.add_argument("--out", default="data/results.md")

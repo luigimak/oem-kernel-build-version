@@ -146,3 +146,15 @@ def test_archive_command_explains_the_missing_optional_dependency(archive_run, m
 def test_dry_run_does_not_need_the_optional_dependency(archive_run, monkeypatch):
     monkeypatch.setitem(sys.modules, "py7zr", None)
     assert archive_run([row("a", version="CPH2653_15.0.0.100(EX01)")], [rel()], "--dry-run")[0] == []
+
+
+def test_failed_archive_row_is_not_downloaded_again_by_default(archive_run):
+    failed = row("sp-1", version=V, region="EU", ok=False, origin="spike0en-archive")
+    downloaded, out = archive_run([failed], [rel()])
+    assert downloaded == [] and [r["id"] for r in out] == ["sp-1"]
+
+
+def test_retry_failed_downloads_failed_archive_rows_again(archive_run):
+    failed = row("sp-1", version=V, region="EU", ok=False, origin="spike0en-archive")
+    downloaded, out = archive_run([failed], [rel()], "--retry-failed")
+    assert len(downloaded) == 1 and [(r["version"], r["ok"]) for r in out] == [(V, True)]
