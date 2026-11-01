@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 concurrency:
   group: update-results
@@ -22,6 +21,9 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
+        with:
+          # always work on the default branch, even for manual runs started from another ref
+          ref: ${{ github.event.repository.default_branch }}
 
       - uses: actions/setup-python@v7
         with:
@@ -42,9 +44,7 @@ jobs:
       - name: Regenerate table
         run: opkv report
 
-      - name: Open draft PR if results changed
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Commit results to the default branch
         run: |
           if git diff --quiet -- data/results.json data/results.md; then
             echo "nothing new"; exit 0
@@ -57,32 +57,15 @@ jobs:
           print(sum(1 for r in new if r["id"] not in o))
           PY
           )
-          # do not pile up PRs: wait until the previous automatic one is merged or closed
-          open_prs=$(gh pr list --state open --json headRefName --jq '[.[] | select(.headRefName | startswith("auto/results-"))] | length')
-          if [ "$open_prs" != "0" ]; then
-            echo "an automatic PR is still open; skipping"; exit 0
-          fi
-          # unique per run: a same-day rerun must not collide with an existing branch
-          branch="auto/results-$(date -u +%Y%m%d)-${GITHUB_RUN_ID}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b "$branch"
           git add data/results.json data/results.md
           git commit -m "data: add $n new OnePlus firmware kernel versions"
-          git push origin "$branch"
-          gh pr create --draft --base "${{ github.event.repository.default_branch }}" --head "$branch" \
-            --title "data: $n new OnePlus firmware kernel versions" \
-            --body "$(cat <<EOF
-          ## What
-          $n new OnePlus releases from the roms.danielspringer.at catalog or the OTA query, with \`kernel_release\` and \`build\` extracted from boot.img.
-
-          ## Why
-          Automatic weekly update (\`opkv fetch && opkv discover && opkv run && opkv report\`).
-
-          ## How tested
-          Extraction via HTTP Range from payload.bin on an ubuntu-latest runner, Python 3.12. No device involved.
-
-          ## Risks
-          Expired download links may leave rows with \`ok: false\` (retried on the next run).
-          EOF
-          )"
+          # the run can take a while: rebase on top of anything pushed to main meanwhile
+          branch="${{ github.event.repository.default_branch }}"
+          for attempt in 1 2 3; do
+            git pull --rebase origin "$branch"
+            if git push origin "HEAD:$branch"; then exit 0; fi
+            echo "push rejected (attempt $attempt), retrying"; sleep 5
+          done
+          echo "push to $branch failed"; exit 1
