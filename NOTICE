@@ -11,7 +11,8 @@ This project contains code derived from OTA Pulse
   - src/opkv/ota_query.py  (from Request.kt, Crypto.kt, Data.kt, RegionData.kt)
   - src/opkv/resolver.py   (from OtaResolver.kt)
 The derived files were translated from Kotlin to Python and modified; each carries
-a notice to that effect in its header.
+a notice to that effect in its header. The two HTTP header values in HEADERS
+(src/opkv/rangehttp.py) are taken from OtaResolver.kt as well.
 
 The payload.bin (CrAU) format and protobuf field numbers follow AOSP's update_metadata.proto
 (Apache License 2.0, The Android Open Source Project). No AOSP source code is copied.

@@ -2,28 +2,60 @@
 
 Extracts the `Linux version …` string (kernel version + build) from the `boot.img` inside the `payload.bin`
 of OnePlus OTA packages, without downloading the firmware: it reads only the needed bytes over HTTP Range
-(~130 KB per OTA). Results: [`data/results.md`](data/results.md) and `data/results.json`.
+(about 10 MB per OTA, whose full package is several GB). Results: [`data/results.md`](data/results.md) and
+[`data/results.json`](data/results.json), updated every day by a GitHub Actions workflow.
 
 ## Usage
 ```bash
-python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'
+python3 -m venv .venv && .venv/bin/pip install .       # '.[archive]' adds what `opkv archive` needs
 opkv fetch      # update the local release catalog (roms.danielspringer.at API)
 opkv discover   # find firmware missing from the catalog: OTA servers + Oxygen Updater (--no-ou to skip)
 opkv run        # extract kernel/build of new firmware -> data/results.json
-opkv archive   # add older Android 14+ firmware missing from the results (spike0en archive, boot.7z)
+opkv archive    # add older Android 14+ firmware missing from the results (spike0en archive, boot.7z)
 opkv report     # data/results.md
 opkv url <URL>  # a single OTA zip
 ```
-OnePlus only (`OP …`), from the 10 series onward, and only firmware from Android 14 onward (older rows are dropped). `run` is resumable. A weekly GitHub Actions workflow
-(`.github/workflows/update.yml`, Mondays) runs the sequence and commits the updated results to the default branch. Scheduled runs are off by
-default: set the repository variable `AUTO_UPDATE=true` to enable them; manual runs always work.
+OnePlus only (`OP …`), from the 10 series onward, and only firmware from Android 14 onward (older rows are dropped). `run` is resumable.
+
+The workflow `.github/workflows/update.yml` runs `fetch`, `discover`, `run --retry-failed` and `report` every day at 05:17 UTC and commits
+the updated results to the default branch (`archive` is a manual command). Scheduled runs are off until the repository variable
+`AUTO_UPDATE` is set to `true` (so a fork does not run them); manual runs always work. The workflow installs the hash-pinned
+[`requirements.txt`](requirements.txt) and gives the commit step alone the token it needs to push.
+
+## Results
+`data/results.json` is a list of rows, one per firmware, sorted by device, model and build time:
+
+| Field | Meaning |
+|---|---|
+| `id`, `origin` | row id and where the firmware was found (`catalog`, `ota-query`, `oxygen-updater`, `spike0en-archive`) |
+| `device`, `model`, `region` | device label (`OP 13R`), model code (`CPH2645`), region (`EU`, `GLO`, `IN`, `CN`, `NA`, …) |
+| `version`, `ota_version`, `build_timestamp` | firmware version (`CPH2645_15.0.0.840(EX01)`), OTA version string, OTA build time |
+| `android_version` | Android release, from the OTA metadata |
+| `ok`, `error` | whether the kernel string was extracted, and why not |
+| `linux_version`, `kernel_release`, `build`, `compiler` | the `Linux version …` banner and its parts |
+| `source` | where the banner was read: `payload.bin` or `boot.img` |
+| `md5`, `size` | of the OTA package, when known |
+
+`data/results.md` groups the rows of a device that share kernel and build, oldest first.
 
 ## Notes
-- Firmware URLs are never stored or logged.
+- Firmware URLs are never stored or logged (error messages are redacted).
+- A firmware is identified by `(version, region)`, whichever source or id it came with; each model code gets one device label (the most common one).
 - Full OTAs only; incremental ones return an error. OTAs without `payload.bin` fall back to `boot.img` in the zip.
 - The Android version comes from `META-INF/com/android/metadata` in each OTA (a few KB); if it is missing, it is inferred from the OS version (OxygenOS/ColorOS 13+ major = Android release). `run` backfills it for rows that lack it.
 - Missing `md5`/`size` are filled from Oxygen Updater, the antirollchecker database or the OTA `Content-Length`; rows whose links expired may stay empty.
 - Beta tracks (`taste`) cannot be found by `discover`; they depend on the catalog.
+
+## Development
+```bash
+.venv/bin/pip install -e '.[dev]'
+.venv/bin/pytest                # no network: a local server stands in for the OTA CDN, the OTA servers and Oxygen Updater
+.venv/bin/ruff check .
+.venv/bin/mypy
+```
+CI (`.github/workflows/ci.yml`) runs the tests on Python 3.10, 3.12 and 3.14, ruff and mypy on 3.12, and lints the workflows with actionlint and zizmor.
+`requirements.txt` is generated from `pyproject.toml`: `pip-compile --generate-hashes --strip-extras --annotation-style=line -o requirements.txt pyproject.toml`
+(Dependabot proposes the updates, monthly).
 
 ## License and attribution
 Copyright 2026 luigimak, licensed under the Apache License 2.0 (see [LICENSE](LICENSE) and [NOTICE](NOTICE)).

@@ -8,6 +8,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+# The okhttp User-Agent and the userId value are the ones OTA Pulse sends to the OTA CDN (OtaResolver.kt,
+# Apache-2.0, see NOTICE).
 HEADERS = {
     "User-Agent": "okhttp/3.12.12",
     "userId": "oplus-ota|16002018",
