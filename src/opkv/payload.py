@@ -165,11 +165,14 @@ def stream_partition(url: str, hdr: Header, man: Manifest, name: str) -> Iterato
 
 def read_partition_prefix(url: str, hdr: Header, man: Manifest, name: str,
                           need: Callable[[bytes], int | None]) -> bytes:
-    """Stream partition until need(buf) returns a target length <= len(buf)."""
+    """Stream the partition until as many bytes as need() asks for are in. need() sees the first 4096 bytes
+    (the header), once; when it gives no target the whole partition is returned."""
     buf = bytearray()
+    tgt, asked = None, False
     for chunk in stream_partition(url, hdr, man, name):
         buf += chunk
-        tgt = need(bytes(buf)) if len(buf) >= 4096 else None
+        if not asked and len(buf) >= 4096:
+            asked, tgt = True, need(bytes(buf[:4096]))
         if tgt is not None and len(buf) >= tgt:
             return bytes(buf[:tgt])
     return bytes(buf)

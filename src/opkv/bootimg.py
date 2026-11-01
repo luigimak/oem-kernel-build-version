@@ -25,16 +25,16 @@ def pick_boot_name(names) -> str | None:
 
 def kernel_span(buf: bytes) -> tuple[int, int] | None:
     """(offset, size) of kernel inside boot.img from the first >=4096 bytes."""
-    if buf[:8] != BOOT_MAGIC:
+    if buf[:8] != BOOT_MAGIC or len(buf) < 44:
         return None
     ksize = struct.unpack_from("<I", buf, 8)[0]
-    ver = struct.unpack_from("<I", buf, 40)[0] if len(buf) >= 44 else 0
-    if ver >= 3 and ver < 16:           # v3/v4: fixed 4096 page
+    ver = struct.unpack_from("<I", buf, 40)[0]            # header_version
+    if 3 <= ver < 16:                    # v3/v4 (and what follows): fixed 4096-byte page
         page = 4096
-    else:                                # v0-v2: page_size @36 (header_version @40)
+    elif ver <= 2:                       # v0-v2: page_size @36
         page = struct.unpack_from("<I", buf, 36)[0]
-        if ver > 4:
-            return None
+    else:                                # not a boot image header version
+        return None
     return page, ksize
 
 
