@@ -21,6 +21,14 @@ class _Handler(BaseHTTPRequestHandler):
         srv = self.server
         path = self.path.split("?")[0]
         srv.requests.append((self.command, path, self.headers.get("Range"), self.headers.get("User-Agent", "")))
+        if path in srv.redirects:                      # target None = a redirect without Location
+            self.send_response(302)
+            if srv.redirects[path]:
+                self.send_header("Location", srv.redirects[path])
+            self.send_header("Content-Length", "0")
+            return self.end_headers()
+        if head and srv.head_status:
+            return self._reply(srv.head_status, b"", head=True)
         data = srv.files.get(path)
         if data is None:
             return self._reply(404, b"")
@@ -50,11 +58,12 @@ class _Handler(BaseHTTPRequestHandler):
 @pytest.fixture
 def http_server():
     """Loopback file server: .files {"/path": bytes}, .url(path), .requests [(method, path, range, user agent)],
-    .sent {path: body bytes sent}, and switches .forbid_ua (403 for user agents starting with it) and
-    .ignore_range (always 200 with the whole body)."""
+    .sent {path: body bytes sent}, and switches .forbid_ua (403 for user agents starting with it),
+    .ignore_range (always 200 with the whole body), .redirects {"/path": "/target"} (302; None = no Location)
+    and .head_status (answer HEAD requests with that status)."""
     srv = ThreadingHTTPServer(("127.0.0.1", 0), _Handler)
     srv.files, srv.requests, srv.sent = {}, [], collections.defaultdict(int)
-    srv.forbid_ua, srv.ignore_range = None, False
+    srv.forbid_ua, srv.ignore_range, srv.redirects, srv.head_status = None, False, {}, None
     srv.url = lambda path: f"http://127.0.0.1:{srv.server_port}{path}"
     thread = threading.Thread(target=srv.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True)
     thread.start()

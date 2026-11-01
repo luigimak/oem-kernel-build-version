@@ -40,12 +40,16 @@ def resolve(url: str, timeout: float = 20) -> str:
     for _ in range(MAX_REDIRECTS):
         r = _probe(url, HEADERS, "HEAD", timeout)
         if r.code in (403, 405, 501):
+            r.close()
             r = _probe(url, HEADERS, "GET", timeout)
-        if r.code in (301, 302, 303, 307, 308):
-            loc = r.headers.get("Location")
-            if not loc:
-                raise HttpError("redirect without Location")
-            url = urllib.parse.urljoin(url, loc)
-            continue
-        return url
+        try:
+            if r.code in (301, 302, 303, 307, 308):
+                loc = r.headers.get("Location")
+                if not loc:
+                    raise HttpError("redirect without Location")
+                url = urllib.parse.urljoin(url, loc)
+                continue
+            return url
+        finally:
+            r.close()
     raise HttpError("too many redirects")

@@ -58,7 +58,6 @@ def _open(url: str, rng: str | None, timeout: float):
     check_scheme(url)
     host = urllib.parse.urlparse(url).netloc
     start = _host_profile.get(host, 0)
-    err: Exception | None = None
     for k in range(len(PROFILES)):
         idx = (start + k) % len(PROFILES)
         h = dict(PROFILES[idx])
@@ -69,10 +68,10 @@ def _open(url: str, rng: str | None, timeout: float):
             _host_profile[host] = idx
             return r
         except urllib.error.HTTPError as e:
-            if e.code != 403:
-                raise
-            err = e
-    raise err  # type: ignore[misc]
+            e.close()                           # the error keeps its code and headers, the connection goes
+            if e.code != 403 or k == len(PROFILES) - 1:
+                raise                           # a 403 on every profile is the host's answer
+    raise HttpError("no request profile")       # not reachable: the last profile returns or raises
 
 
 def fetch_range(url: str, start: int, end: int, timeout: float = 60, retries: int = 3) -> bytes:
