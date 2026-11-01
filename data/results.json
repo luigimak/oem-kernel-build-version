@@ -1055,7 +1055,8 @@
   "source": "payload.bin",
   "error": null,
   "android_version": "15",
-  "md5": "34bbda6b42e72c2e9e536087355df1ae"
+  "md5": "34bbda6b42e72c2e9e536087355df1ae",
+  "size": 6360445288
  },
  {
   "id": "345d1a8ce4e434ad1c917cb0",
@@ -2675,7 +2676,8 @@
   "source": "payload.bin",
   "error": null,
   "android_version": "16",
-  "md5": "2f93175745bf530adfaf3f80e0b4945a"
+  "md5": "2f93175745bf530adfaf3f80e0b4945a",
+  "size": 8384321640
  },
  {
   "id": "afd66866b0f296c8f79bd13f",
@@ -6686,7 +6688,8 @@
   "source": "payload.bin",
   "error": null,
   "android_version": "16",
-  "md5": "d4bd922b0f7b55021795751e74bbf009"
+  "md5": "d4bd922b0f7b55021795751e74bbf009",
+  "size": 9413534437
  },
  {
   "id": "9da39eea3e5f5c99558ec427",
@@ -8094,7 +8097,8 @@
   "source": "payload.bin",
   "error": null,
   "android_version": "16",
-  "md5": "8a6301512fb52435b326267dbcda4b1d"
+  "md5": "8a6301512fb52435b326267dbcda4b1d",
+  "size": 7702801217
  },
  {
   "id": "fa4eb50d27203571bc74c456",
@@ -12009,7 +12013,8 @@
   "build": "#1 SMP PREEMPT Thu Oct 24 16:28:48 CST 2024",
   "compiler": "Android (6877366 based on r383902b1) clang version 11.0.2 (https://android.googlesource.com/toolchain/llvm-project b397f81060ce6d701042b782172ed13bee898b79), LLD 11.0.2 (https://android.googlesource.com/toolchain/llvm-project b397f81060ce6d701042b782172ed13bee898b79)",
   "source": "payload.bin",
-  "error": null
+  "error": null,
+  "android_version": "14"
  },
  {
   "id": "q-559b561bdc87f40e6286",
@@ -13187,7 +13192,8 @@
   "source": "payload.bin",
   "error": null,
   "android_version": "16",
-  "md5": "0969618dfdfaaf6ca8867ac16f3dc32e"
+  "md5": "0969618dfdfaaf6ca8867ac16f3dc32e",
+  "size": 8612624217
  },
  {
   "id": "aeb8b0e2c41b478002ae0027",
@@ -14940,7 +14946,8 @@
   "source": "payload.bin",
   "error": null,
   "android_version": "16",
-  "md5": ""
+  "md5": "",
+  "size": 6318517489
  },
  {
   "id": "603c7395d4b965c7a1490246",
