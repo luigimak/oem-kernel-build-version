@@ -71,6 +71,13 @@ download URL is stored or redistributed. Several of these sources publish no lic
 OnePlus-antirollchecker); this project is not affiliated with them or with OnePlus/OPPO. Firmware remains the property of
 its owners. If you are a source owner and want something changed or removed, open an issue.
 
+## How it talks to the services
+`opkv` only reads public metadata and never logs in. To get answers it has to present itself as the clients those services expect:
+- the OnePlus/OPPO OTA servers (`discover`) are queried the way the OnePlus updater does, with a placeholder device identity (no real IMEI or account) and the protocol implemented by OTA Pulse; the OTA CDN (`run`) is read with the headers of that client, a few hundred KB to some MB per package, never the whole firmware;
+- the Oxygen Updater API is called with the User-Agent of the Oxygen Updater app, which is the only one it accepts.
+
+Volume is low (about 300 requests a day, one per firmware and region) and read-only. This may not match the terms of use of those services; if you run it, you do so on your own responsibility, and if you maintain one of them and object, open an issue.
+
 ## Sources
 - [roms.danielspringer.at](https://roms.danielspringer.at) — release catalog (`opkv fetch`).
 - [OTA Pulse](https://github.com/RemuruSama/OTA-Pulse) (Apache-2.0) protocol and model list — OTA server queries (`opkv discover`).
