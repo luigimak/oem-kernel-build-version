@@ -100,4 +100,4 @@ jobs:
       contents: read
       pages: write
       id-token: write
-    uses: ./.github/workflows/pages.yml
+    uses: ./.github/workflows/pages.yml  # zizmor: ignore[self-repository] -- actionlint does not accept the $/ syntax
