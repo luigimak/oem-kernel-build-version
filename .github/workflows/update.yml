@@ -60,7 +60,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/results.json data/results.md
-          git commit -m "data: add $n new OnePlus firmware kernel versions"
+          if [ "$n" = "0" ]; then
+            msg="data: update metadata of existing OnePlus firmware entries"
+          else
+            msg="data: add $n new OnePlus firmware kernel versions"
+          fi
+          git commit -m "$msg"
           # the run can take a while: rebase on top of anything pushed to main meanwhile
           branch="${{ github.event.repository.default_branch }}"
           for attempt in 1 2 3; do
