@@ -18,6 +18,7 @@ from dataclasses import dataclass
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.serialization import load_der_public_key
 
@@ -70,8 +71,10 @@ def _ctr(data: bytes, key: bytes, iv: bytes) -> bytes:
 
 def _protected_key(key_b64: str, pub_b64: str) -> str:
     pub = load_der_public_key(base64.b64decode(pub_b64))
-    ct = pub.encrypt(key_b64.encode(), padding.OAEP(
-        mgf=padding.MGF1(hashes.SHA1()), algorithm=hashes.SHA1(), label=None))
+    if not isinstance(pub, RSAPublicKey):
+        raise OtaQueryError("server key is not an RSA key")
+    ct = pub.encrypt(key_b64.encode(), padding.OAEP(                 # the OTA servers expect OAEP with SHA-1
+        mgf=padding.MGF1(hashes.SHA1()), algorithm=hashes.SHA1(), label=None))  # noqa: S303
     return base64.b64encode(ct).decode()
 
 
@@ -128,7 +131,6 @@ def query(q: Query, timeout: float = 30) -> dict:
     android, cos = _android_cos(q.rui)
     reg_str = {1: "CN", 2: "IN", 3: "EU"}.get(ridx, "GL")
     carrier = {1: "10010111", 3: "01000100"}.get(ridx, "00011011") if nv else "0"
-    carrier = nv if False else carrier
     lang = q.language or ("zh-CN" if ridx == 1 else "en-EN")
     props = {
         "model": q.product, "productName": q.product, "otaVersion": fw,
