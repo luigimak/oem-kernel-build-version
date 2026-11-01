@@ -77,6 +77,12 @@ def http_server():
 
 
 @pytest.fixture(autouse=True)
+def _not_in_github_actions(monkeypatch):
+    """The tests behave the same on a laptop and on a runner (which sets GITHUB_ACTIONS)."""
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+
+
+@pytest.fixture(autouse=True)
 def _no_external_network(monkeypatch):
     """The suite must never reach a real host: only the loopback test servers are allowed."""
     real = urllib.request.urlopen
