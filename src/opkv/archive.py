@@ -11,7 +11,7 @@ import re
 import tempfile
 import urllib.request
 
-from . import catalog
+from . import bootimg, catalog
 from .extract import Result, fill_banner
 from .safe import redact
 
@@ -56,11 +56,11 @@ def extract_asset(url: str) -> Result:
                     f.write(chunk)
                     res.bytes_fetched += len(chunk)
             with py7zr.SevenZipFile(arc) as z:
-                names = [n for n in z.getnames() if n.endswith("boot.img") and "vendor_boot" not in n and "init_boot" not in n]
-                if not names:
+                name = bootimg.pick_boot_name(z.getnames())
+                if not name:
                     raise ValueError("no boot.img in archive")
-                z.extract(path=tmp, targets=names[:1])
-            with open(os.path.join(tmp, names[0]), "rb") as f:
+                z.extract(path=tmp, targets=[name])
+            with open(os.path.join(tmp, name), "rb") as f:
                 fill_banner(res, f.read())
         res.ok = True
     except Exception as e:  # noqa: BLE001 - per-asset error, keep batch going

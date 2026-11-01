@@ -114,10 +114,10 @@ def extract(url: str) -> Result:
             boot = payload.read_partition_prefix(url, hdr, man, pname, _boot_need)
             res.source = "payload.bin"
         else:
-            cand = [n for n in names if n.endswith("boot.img") and "vendor_boot" not in n and "init_boot" not in n]
-            if not cand:
+            name = bootimg.pick_boot_name(names)
+            if not name:
                 raise ValueError("neither payload.bin nor boot.img in zip")
-            zi = names[sorted(cand, key=len)[0]]
+            zi = names[name]
             res.source = "boot.img"
             with zf.open(zi) as f:
                 head = f.read(4096)

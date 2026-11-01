@@ -226,13 +226,15 @@ def cmd_archive(a):
     import hashlib
     from . import archive
     rows = _load_results(a.out)
-    have = {(r["version"], r["region"]) for r in rows.values()}
-    device_of = {r["version"].split("_")[0]: r["device"] for r in rows.values()}
-    todo = []
+    have = {normalize.firmware_key(r) for r in rows.values() if r["ok"]}       # a failed row is tried again
+    device_of = normalize.labels_by_model(rows.values())
+    todo, seen = [], set()
     for rel in archive.releases(os.environ.get("GITHUB_TOKEN")):
         v = normalize.version(rel["version"])
-        if (v, rel["region"]) in have or v.split("_")[0] not in device_of:
+        key = (v, rel["region"])
+        if key in have or key in seen or v.split("_")[0] not in device_of:
             continue
+        seen.add(key)                                  # ROW and GLO tags both end up as GLO
         todo.append({**rel, "version": v})
     if a.limit:
         todo = todo[: a.limit]
@@ -246,7 +248,7 @@ def cmd_archive(a):
         for n, fu in enumerate(as_completed(futs), 1):
             t, res = futs[fu], fu.result()
             code = t["version"].split("_")[0]
-            rid = "sp-" + hashlib.sha1(f"{t['version']}|{t['region']}".encode()).hexdigest()[:10]
+            rid = "sp-" + hashlib.sha1(f"{t['version']}|{t['region']}".encode(), usedforsecurity=False).hexdigest()[:10]
             rows[rid] = {
                 "id": rid, "device": device_of[code], "region": t["region"], "model": code, "version": t["version"],
                 "ota_version": t["version"], "build_timestamp": "", "md5": "", "size": 0, "origin": "spike0en-archive",

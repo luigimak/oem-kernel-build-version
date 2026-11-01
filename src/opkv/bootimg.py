@@ -10,6 +10,17 @@ import lz4.frame
 
 BOOT_MAGIC = b"ANDROID!"
 BANNER_RE = re.compile(rb"Linux version \d+\.\d+[\x20-\x7e]{10,1200}")
+_OTHER_BOOT = ("vendor_boot", "init_boot", "vendor_kernel_boot")      # partitions that carry no kernel
+
+
+def pick_boot_name(names) -> str | None:
+    """The kernel's boot image among the members of an OTA zip or archive: `boot.img`, else the
+    shortest other `*boot.img` that is not a vendor/init boot partition."""
+    names = list(names)
+    plain = [n for n in names if n.rsplit("/", 1)[-1] == "boot.img"]
+    other = [n for n in names if n.endswith("boot.img") and not any(x in n for x in _OTHER_BOOT)]
+    pool = plain or other
+    return min(pool, key=len) if pool else None
 
 
 def kernel_span(buf: bytes) -> tuple[int, int] | None:
