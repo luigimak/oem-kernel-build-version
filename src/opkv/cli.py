@@ -19,15 +19,20 @@ def _load_results(path: str) -> dict:
 
 def _save(path: str, rows: dict) -> None:
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    for i in [i for i, r in rows.items() if not catalog.wanted_version(r["version"], r.get("android_version"))]:
+        del rows[i]                            # only Android 14+ firmware is kept
+    for r in rows.values():
+        r.pop("source_url", None)              # never persist URLs
+        normalize.row(r)                       # fix catalog typos / naming (idempotent)
+    dropped = normalize.dedupe(rows)           # one row per firmware, whatever the ids it came with
+    if dropped:
+        print(f"dropped {len(dropped)} duplicate rows", file=sys.stderr)
+    normalize.relabel(rows.values())           # one device label per model code
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
-        for i in [i for i, r in rows.items() if not catalog.wanted_version(r["version"], r.get("android_version"))]:
-            del rows[i]                        # only Android 14+ firmware is kept
-        for r in rows.values():
-            r.pop("source_url", None)          # never persist URLs
-            normalize.row(r)                   # fix catalog typos / naming (idempotent)
         json.dump(sorted(rows.values(), key=lambda r: (r["device"], r["model"], r.get("build_timestamp", ""))),
                   f, indent=1, ensure_ascii=False)
+        f.write("\n")
     os.replace(tmp, path)
 
 
@@ -85,18 +90,21 @@ def cmd_discover(a):
         with open(a.catalog, encoding="utf-8") as f:
             cat = json.load(f)
     by_id = {r["id"]: r for r in cat["releases"]}
-    done_ids = set(_load_results(a.results))       # already processed: not "new"
-    known = {(r["model"], r["ota_version"], r["region"]): r["id"] for r in cat["releases"]}
+    by_key: dict[tuple[str, str], str] = {}        # firmware -> id of its catalog entry (first wins)
+    for r in cat["releases"]:
+        by_key.setdefault(normalize.firmware_key(r), r["id"])
+    done = {normalize.firmware_key(r) for r in _load_results(a.results).values()}      # already processed: not "new"
+    labels = normalize.labels_by_model(r for r in cat["releases"] if catalog.is_oneplus(r))
     letters: dict[str, set[str]] = {}          # model -> track letters seen in the catalog (11.<L>.)
     for r in cat["releases"]:
         m = re.search(r"_11\.([A-Z])\.", r["ota_version"])
         if m:
             letters.setdefault(r["model"], set()).add(m.group(1))
 
-    jobs = []
+    queries: dict[tuple, tuple] = {}
     for d in devices:
         name = d.get("name", "")
-        if not catalog.is_oneplus({"device": name.upper().replace("ONEPLUS", "OP")}):
+        if not catalog.is_oneplus({"device": normalize.device_from_name(name)}):
             continue                                   # OnePlus 9 and older (same rule as the catalog)
         base = d.get("variants") or []
         for grp, val in (d.get("firmwareGroups") or {}).items():
@@ -109,8 +117,10 @@ def cmd_discover(a):
                 model = v.get("productModel") or v.get("model")
                 if not model:
                     continue
-                jobs.append((name, disp, model, oq.Query(v.get("productName") or model, model, disp, rui,
-                                                       v.get("versionLetter", "A"), v.get("reqMode", "manual"))))
+                q = oq.Query(v.get("productName") or model, model, disp, rui, v.get("versionLetter", "A"), v.get("reqMode", "manual"))
+                # the same query is listed under several groups and devices: ask the server once
+                queries.setdefault((q.product, q.model, q.region_name, q.rui, q.letter, q.req_mode), (name, disp, model, q))
+    jobs = list(queries.values())
     print(f"OTA queries: {len(jobs)}", file=sys.stderr)
 
     def work(j):
@@ -128,7 +138,7 @@ def cmd_discover(a):
                     break
         return j, [], err
 
-    added, errs, seen, refreshed = 0, {}, set(), set()
+    added, errs, new_keys, refreshed = 0, {}, set(), set()
     with ThreadPoolExecutor(a.workers) as ex:
         for j, comps, err in ex.map(work, jobs):
             name, disp, model, q = j
@@ -140,46 +150,40 @@ def cmd_discover(a):
             for c in comps:
                 if not catalog.wanted_version(c["version"]):
                     continue                             # Android 13 and older
-                key = (model, c["ota_version"], disp)
-                if key in known:                         # already known: refresh the link (it may have expired)
-                    rel = by_id[known[key]]
+                key = normalize.firmware_key({"version": c["version"], "region": disp})
+                if key in new_keys:                      # several queries report the same firmware
+                    continue
+                if key in by_key:                        # already known: refresh the link (it may have expired)
+                    rel = by_id[by_key[key]]
                     rel["source_url"], rel["md5"] = c["source_url"], c["md5"] or rel.get("md5", "")
-                    refreshed.add(known[key])
+                    refreshed.add(rel["id"])
                     continue
-                if key in seen:
-                    continue
-                seen.add(key)
-                m = re.search(r"_(\d{12})$", c["ota_version"])
-                ts = f"{m.group(1)[:4]}-{m.group(1)[4:6]}-{m.group(1)[6:8]}T{m.group(1)[8:10]}:{m.group(1)[10:12]}:00" if m else ""
-                rid = "q-" + hashlib.sha1("|".join(key).encode()).hexdigest()[:20]
-                by_id[rid] = {"id": rid, "device": name.upper().replace("ONEPLUS", "OP"), "region": disp,
+                new_keys.add(key)
+                rid = "q-" + hashlib.sha1("|".join((model, c["ota_version"], disp)).encode(), usedforsecurity=False).hexdigest()[:20]
+                by_id[rid] = {"id": rid, "device": labels.get(model) or normalize.device_from_name(name), "region": disp,
                               "model": model, "version": c["version"], "ota_version": c["ota_version"],
-                              "build_timestamp": ts, "security_patch": c["security_patch"],
+                              "build_timestamp": normalize.ota_timestamp(c["ota_version"]),
+                              "security_patch": c["security_patch"],
                               "source_url": c["source_url"], "md5": c["md5"], "size": c["size"],
                               "is_latest": True, "origin": "ota-query"}
-                if rid not in done_ids:                  # already processed ones stay in the catalog (backfills) but are not "new"
+                by_key[key] = rid
+                if key not in done:                      # already processed ones stay in the catalog (retries) but are not "new"
                     added += 1
                     print(f"  + {name} {disp} {c['version']}", file=sys.stderr)
-    ou_added = ou_known = 0
+    ou_added = 0
     if not a.no_ou:
         from . import sources
-        # same firmware = same (model, firmware version, region), whatever the source or its id
-        have = {(r["model"], r["version"], r["region"]) for r in list(by_id.values()) + list(_load_results(a.results).values())}
         for rel in sources.ou_releases(a.workers):
-            key = (rel["model"], rel["ota_version"], rel["region"])
-            if (rel["model"], rel["version"], rel["region"]) in have and key not in known:
-                continue
-            if key in known:                             # same firmware already in the catalog: complete missing metadata
-                old = by_id[known[key]]
+            rel["device"] = labels.get(rel["model"], rel["device"])
+            key = normalize.firmware_key(rel)
+            if key in by_key:                            # same firmware already in the catalog: complete missing metadata
+                old = by_id[by_key[key]]
                 old["md5"] = old.get("md5") or rel["md5"]
                 old["size"] = old.get("size") or rel["size"]
-                ou_known += 1
                 continue
-            if rel["id"] in by_id or key in seen:
-                continue
-            seen.add(key)
             by_id[rel["id"]] = rel
-            if rel["id"] not in done_ids:
+            by_key[key] = rel["id"]
+            if key not in done:                          # already processed ones stay in the catalog (retries) but are not "new"
                 ou_added += 1
                 print(f"  + {rel['device']} {rel['region']} {rel['version']}  [oxygen-updater]", file=sys.stderr)
     cat["releases"] = list(by_id.values())
@@ -260,7 +264,9 @@ def cmd_archive(a):
 def cmd_run(a):
     rels = catalog.oneplus_releases(a.catalog)
     rows = _load_results(a.out)
-    todo = [r for r in rels if r["id"] not in rows or (a.retry_failed and not rows[r["id"]]["ok"])]
+    row_of = {normalize.firmware_key(r): i for i, r in rows.items()}      # firmware -> id of its stored row
+    todo = [r for r in rels
+            if (i := row_of.get(normalize.firmware_key(r))) is None or (a.retry_failed and not rows[i]["ok"])]
     if a.limit:
         todo = todo[: a.limit]
     print(f"OnePlus releases: {len(rels)}  already done: {len(rels) - len(todo)}  to do: {len(todo)}", file=sys.stderr)
@@ -273,12 +279,13 @@ def cmd_run(a):
         futs = [ex.submit(work, r) for r in todo]
         for n, fu in enumerate(as_completed(futs), 1):
             rel, res = fu.result()
-            rows[rel["id"]] = {
-                "id": rel["id"], "device": rel["device"], "region": rel["region"], "model": rel["model"],
+            rid = row_of.get(normalize.firmware_key(rel), rel["id"])      # a retry updates the stored row
+            rows[rid] = {
+                "id": rid, "device": rel["device"], "region": rel["region"], "model": rel["model"],
                 "version": rel["version"], "ota_version": rel["ota_version"],
                 "build_timestamp": rel.get("build_timestamp", ""), "md5": rel.get("md5", ""),
                 "size": rel.get("size") or res.size or 0, "origin": rel.get("origin", "catalog"),
-                "ok": res.ok, "android_version": res.android_version or rows.get(rel["id"], {}).get("android_version"),
+                "ok": res.ok, "android_version": res.android_version or rows.get(rid, {}).get("android_version"),
                 "linux_version": res.linux_version, "kernel_release": res.kernel_release,
                 "build": res.build, "compiler": res.compiler,
                 "source": res.source, "error": res.error,
@@ -290,7 +297,7 @@ def cmd_run(a):
     _save(a.out, rows)
 
     # metadata pass for rows that miss Android version, size or md5 (a few KB per row, no full extraction)
-    by_id = {r["id"]: r for r in rels}
+    rel_of = {normalize.firmware_key(r): r for r in rels}
     need = [i for i, r in rows.items() if r.get("ok") and (
         ("android_version" not in r or (r["android_version"] is None and a.retry_failed))
         or not r.get("size") or not r.get("md5"))]
@@ -305,14 +312,16 @@ def cmd_run(a):
                 print(f"  antirollchecker index unavailable: {type(e).__name__}", file=sys.stderr)
 
         def work_meta(i):
-            rel, r = by_id.get(i), rows[i]
+            r = rows[i]
+            rel = rel_of.get(normalize.firmware_key(r))
             res = extract_android(rel["source_url"]) if rel and (
                 "android_version" not in r or not r.get("size")) else None
             return i, res
 
         with ThreadPoolExecutor(a.workers) as ex:
             for n, (i, res) in enumerate(ex.map(work_meta, need), 1):
-                r, rel = rows[i], by_id.get(i)
+                r = rows[i]
+                rel = rel_of.get(normalize.firmware_key(r))
                 if res is not None:
                     if "android_version" not in r or res.android_version:
                         r["android_version"] = res.android_version or r.get("android_version")

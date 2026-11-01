@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import json
+import re
 import urllib.request
 
-
-import re
+from . import normalize
 
 OLD_RE = re.compile(r"^OP (\d(?!\d)|ONE$|X$|NORD( 2| CE| N10| N100| N200)?$)")
 
@@ -56,7 +56,7 @@ def oneplus_releases(src: str) -> list[dict]:
             continue
         if not wanted_version(r.get("version", "")):
             continue
-        key = r["id"]
+        key = normalize.firmware_key(r)         # the catalog can list one firmware under several ids
         if key in seen:
             continue
         seen.add(key)
