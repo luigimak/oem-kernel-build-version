@@ -1,6 +1,7 @@
 """Synthetic firmware: boot image, payload.bin, OTA zip, boot.7z. No real firmware is needed to test the pipeline."""
 import io
 import lzma
+import random
 import struct
 import zipfile
 
@@ -10,9 +11,10 @@ METADATA = ("post-build=OnePlus/CPH2653EEA/OP5D55L1:16/BP2A.250605.015/V.R4T3:us
             "post-sdk-level=36\n")
 
 
-def boot_image(banner=BANNER, version=4, kernel_prefix=0):
-    """Android boot image: 4096-byte header + a raw kernel whose strings contain the Linux version banner."""
-    kernel = b"\0" * kernel_prefix + banner.encode() + b"\n" + b"\0" * 64
+def boot_image(banner=BANNER, version=4, noise=0):
+    """Android boot image: 4096-byte header + a raw kernel (`noise` incompressible bytes, then the
+    strings with the Linux version banner)."""
+    kernel = random.Random(0).randbytes(noise) + b"\0" + banner.encode() + b"\n" + b"\0" * 64
     header = bytearray(4096)
     header[:8] = b"ANDROID!"
     struct.pack_into("<I", header, 8, len(kernel))

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import io
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -20,6 +21,30 @@ class HttpError(Exception):
     pass
 
 
+def check_scheme(url: str) -> None:
+    """URLs come from third-party catalogs: only http(s) is fetched (urllib would also read file:// and ftp://)."""
+    if urllib.parse.urlparse(url).scheme not in ("http", "https"):
+        raise HttpError("unsupported URL scheme")
+
+
+# bytes really received by the current thread: one extraction runs on one worker thread
+_traffic = threading.local()
+
+
+def reset_traffic() -> None:
+    _traffic.requests = _traffic.bytes = 0
+
+
+def traffic() -> tuple[int, int]:
+    """(requests, bytes) received by the current thread since reset_traffic()."""
+    return getattr(_traffic, "requests", 0), getattr(_traffic, "bytes", 0)
+
+
+def _count(nbytes: int) -> None:
+    _traffic.requests = getattr(_traffic, "requests", 0) + 1
+    _traffic.bytes = getattr(_traffic, "bytes", 0) + nbytes
+
+
 # some hosts (e.g. *-cn.allawnfs.com) answer 403 to the okhttp+userId profile but 206 to neutral UAs
 PROFILES = [
     HEADERS,
@@ -30,6 +55,7 @@ _host_profile: dict[str, int] = {}
 
 
 def _open(url: str, rng: str | None, timeout: float):
+    check_scheme(url)
     host = urllib.parse.urlparse(url).netloc
     start = _host_profile.get(host, 0)
     err: Exception | None = None
@@ -51,6 +77,7 @@ def _open(url: str, rng: str | None, timeout: float):
 
 def fetch_range(url: str, start: int, end: int, timeout: float = 60, retries: int = 3) -> bytes:
     """Fetch bytes [start, end] inclusive."""
+    check_scheme(url)
     last: Exception | None = None
     for i in range(retries):
         try:
@@ -60,6 +87,7 @@ def fetch_range(url: str, start: int, end: int, timeout: float = 60, retries: in
                 data = r.read()
             if len(data) != end - start + 1:
                 raise HttpError(f"short read {len(data)} != {end - start + 1}")
+            _count(len(data))
             return data
         except HttpError as e:
             last = e
@@ -75,6 +103,7 @@ def remote_size(url: str, timeout: float = 30) -> int:
     with _open(url, "bytes=0-0", timeout) as r:
         cr = r.headers.get("Content-Range", "")
         if r.status == 206 and "/" in cr:
+            _count(1)
             return int(cr.rsplit("/", 1)[1])
         raise HttpError(f"no Content-Range (HTTP {r.status})")
 
@@ -86,8 +115,6 @@ class RangeFile(io.RawIOBase):
         self.pos = 0
         self._cache_start = 0
         self._cache = b""
-        self.requests = 0
-        self.bytes_fetched = 0
 
     def readable(self): return True
     def seekable(self): return True
@@ -111,8 +138,6 @@ class RangeFile(io.RawIOBase):
             end = min(self.size, lo + max(n, MIN_FETCH))
             self._cache = fetch_range(self.url, lo, end - 1)
             self._cache_start = lo
-            self.requests += 1
-            self.bytes_fetched += len(self._cache)
             cs = lo
         out = self._cache[lo - cs: hi - cs]
         self.pos = hi

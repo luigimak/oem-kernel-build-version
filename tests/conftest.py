@@ -1,3 +1,4 @@
+import collections
 import re
 import threading
 import urllib.parse
@@ -23,7 +24,7 @@ class _Handler(BaseHTTPRequestHandler):
         data = srv.files.get(path)
         if data is None:
             return self._reply(404, b"")
-        if srv.forbid_ua and self.headers.get("User-Agent", "").startswith(srv.forbid_ua):
+        if srv.forbid_ua is not None and self.headers.get("User-Agent", "").startswith(srv.forbid_ua):
             return self._reply(403, b"")
         m = re.fullmatch(r"bytes=(\d+)-(\d*)", self.headers.get("Range") or "")
         if not m or srv.ignore_range:
@@ -39,6 +40,7 @@ class _Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Range", content_range)
         self.end_headers()
         if not head:
+            self.server.sent[self.path.split("?")[0]] += len(body)
             self.wfile.write(body)
 
     do_GET = lambda self: self._serve(False)  # noqa: E731
@@ -47,12 +49,14 @@ class _Handler(BaseHTTPRequestHandler):
 
 @pytest.fixture
 def http_server():
-    """Loopback file server: .files {"/path": bytes}, .url(path), .requests, and switches
-    .forbid_ua (403 for user agents starting with it) and .ignore_range (always 200 with the whole body)."""
+    """Loopback file server: .files {"/path": bytes}, .url(path), .requests [(method, path, range, user agent)],
+    .sent {path: body bytes sent}, and switches .forbid_ua (403 for user agents starting with it) and
+    .ignore_range (always 200 with the whole body)."""
     srv = ThreadingHTTPServer(("127.0.0.1", 0), _Handler)
-    srv.files, srv.requests, srv.forbid_ua, srv.ignore_range = {}, [], None, False
+    srv.files, srv.requests, srv.sent = {}, [], collections.defaultdict(int)
+    srv.forbid_ua, srv.ignore_range = None, False
     srv.url = lambda path: f"http://127.0.0.1:{srv.server_port}{path}"
-    thread = threading.Thread(target=srv.serve_forever, daemon=True)
+    thread = threading.Thread(target=srv.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True)
     thread.start()
     yield srv
     srv.shutdown()

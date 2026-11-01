@@ -6,8 +6,7 @@ import struct
 import zipfile
 from dataclasses import dataclass, asdict
 
-from . import bootimg, payload
-from . import resolver
+from . import bootimg, payload, rangehttp, resolver
 from .rangehttp import RangeFile
 from .safe import redact
 
@@ -66,6 +65,7 @@ def _android(zf: zipfile.ZipFile) -> str | None:
 def extract_android(url: str) -> Result:
     """Cheap pass: read only the OTA metadata (a few KB) to get the Android version."""
     res = Result()
+    rangehttp.reset_traffic()
     try:
         rf = RangeFile(resolver.resolve(url))
         res.size = rf.size
@@ -76,6 +76,7 @@ def extract_android(url: str) -> Result:
             res.error = "no Android version in OTA metadata"
     except Exception as e:  # noqa: BLE001
         res.error = redact(f"{type(e).__name__}: {e}")
+    res.requests, res.bytes_fetched = rangehttp.traffic()
     return res
 
 
@@ -95,6 +96,7 @@ def fill_banner(res: Result, boot: bytes) -> None:
 
 def extract(url: str) -> Result:
     res = Result()   # the URL is never stored in the result
+    rangehttp.reset_traffic()
     try:
         url = resolver.resolve(url)
         rf = RangeFile(url)
@@ -126,7 +128,7 @@ def extract(url: str) -> Result:
                 boot = head + f.read(max(0, need - len(head)))
         fill_banner(res, boot)
         res.ok = True
-        res.bytes_fetched, res.requests = rf.bytes_fetched, rf.requests
     except Exception as e:  # noqa: BLE001 - report per-URL, keep batch going
         res.error = redact(f"{type(e).__name__}: {e}")
+    res.requests, res.bytes_fetched = rangehttp.traffic()
     return res
