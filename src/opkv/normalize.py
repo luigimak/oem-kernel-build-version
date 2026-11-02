@@ -20,8 +20,11 @@ def version(v: str) -> str:
 
 
 def device(name: str) -> str:
-    """OP PAD2 PRO -> OP PAD 2 PRO, OP NORD CE4 LITE -> OP NORD CE 4 LITE."""
-    return re.sub(r"\b(PAD|CE)(\d)", r"\1 \2", name.strip())
+    """OP PAD2 PRO -> OP PAD 2 PRO, OP NORD CE4 LITE -> OP NORD CE 4 LITE, realme 16 Pro -> Realme 16 PRO."""
+    name = name.strip()
+    if name.upper().startswith("REALME "):          # sources spell it realme / Realme / REALME and the rest any way
+        name = "Realme " + name[7:].upper()
+    return re.sub(r"\b(PAD|CE)(\d)", r"\1 \2", name)
 
 
 def device_from_name(name: str) -> str:

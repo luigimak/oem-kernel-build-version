@@ -1,6 +1,6 @@
 * text=auto eol=lf
 
 # generated files: collapsed in diffs and left out of the language statistics
-data/results.json linguist-generated=true
-data/results.md linguist-generated=true
+data/*.json linguist-generated=true
+data/*.md linguist-generated=true
 requirements.txt linguist-generated=true

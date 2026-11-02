@@ -59,3 +59,9 @@ def test_android_fallback():
     assert n.android({"android_version": "16", "version": "X_16.0.1.1"}) == "16"
     assert n.android({"android_version": None, "version": "CPH2465_14.0.0.1320(EX01)"}) == "14"
     assert n.android({"android_version": None, "version": "NE2213_11_A.17"}) is None
+
+
+def test_realme_labels_are_spelled_one_way():
+    assert {n.device(x) for x in ("realme 16 Pro", "Realme 16 PRO", "REALME 16 Pro")} == {"Realme 16 PRO"}
+    assert n.device_from_name("realme GT7 Pro") == "Realme GT7 PRO"
+    assert n.device_from_name("OPPO Find X10") == "OPPO FIND X10"

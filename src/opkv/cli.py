@@ -6,8 +6,13 @@ import os
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from . import catalog, normalize
+from . import brands, catalog, normalize
+from .brands import Brand
 from .extract import extract, extract_android
+
+
+def _path(a, brand: Brand, ext: str = "json") -> str:
+    return os.path.join(a.data_dir, f"{brand.key}.{ext}")
 
 
 def _load_results(path: str) -> dict:
@@ -73,12 +78,13 @@ def cmd_fetch(a):
     os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
     with open(a.out, "w", encoding="utf-8") as f:
         json.dump(local, f, ensure_ascii=False)
-    new_op = [r for r in new if catalog.is_oneplus(r)]
+    new_brand = [r for r in new if brands.of_release(r)]
+    per_brand = ", ".join(f"{sum(1 for r in new_brand if b.matches(r))} {b.label}" for b in brands.BRANDS.values())
     if not existed:
-        print(f"{a.out}: catalog initialized with {len(local['releases'])} releases ({len(new_op)} OnePlus)")
+        print(f"{a.out}: catalog initialized with {len(local['releases'])} releases ({per_brand})")
         return 0
-    print(f"{a.out}: {len(local['releases'])} releases in total, {len(new)} new ({len(new_op)} OnePlus)")
-    shown = sorted(new_op, key=lambda r: r["build_timestamp"])
+    print(f"{a.out}: {len(local['releases'])} releases in total, {len(new)} new ({per_brand})")
+    shown = sorted(new_brand, key=lambda r: r["build_timestamp"])
     for r in shown[:20]:
         print(f"  + {r['device']:<16} {r['region']:<4} {r['version']}")
     if len(shown) > 20:
@@ -87,16 +93,12 @@ def cmd_fetch(a):
 
 
 def cmd_discover(a):
-    """Query the OTA servers (OTA Pulse protocol) for the current firmware of every OnePlus model
-    and add the ones not yet known to the local catalog."""
-    import hashlib
+    """Query the OTA servers (OTA Pulse protocol) and Oxygen Updater for the current firmware of every model
+    of the selected brands and add the ones not yet known to the local catalog."""
     import re
-    import urllib.request
 
     from . import ota_query as oq
 
-    with urllib.request.urlopen(a.devices, timeout=60) as r:
-        devices = json.load(r)
     cat = {"api_version": "1", "releases": []}
     if os.path.exists(a.catalog):
         with open(a.catalog, encoding="utf-8") as f:
@@ -105,19 +107,31 @@ def cmd_discover(a):
     by_key: dict[tuple[str, str], str] = {}        # firmware -> id of its catalog entry (first wins)
     for r in cat["releases"]:
         by_key.setdefault(normalize.firmware_key(r), r["id"])
-    done = {normalize.firmware_key(r) for r in _load_results(a.results).values()}      # already processed: not "new"
-    labels = normalize.labels_by_model(r for r in cat["releases"] if catalog.is_oneplus(r))
     letters: dict[str, set[str]] = {}          # model -> track letters seen in the catalog (11.<L>.)
     for r in cat["releases"]:
         m = re.search(r"_11\.([A-Z])\.", r["ota_version"])
         if m:
             letters.setdefault(r["model"], set()).add(m.group(1))
 
+    for brand in brands.select(a.brand):
+        _discover_brand(a, brand, cat, by_id, by_key, letters, oq)
+    return 0
+
+
+def _discover_brand(a, brand: Brand, cat: dict, by_id: dict, by_key: dict, letters: dict, oq) -> None:
+    import hashlib
+    import urllib.request
+
+    with urllib.request.urlopen(brand.pulse, timeout=60) as r:
+        devices = json.load(r)
+    done = {normalize.firmware_key(r) for r in _load_results(_path(a, brand)).values()}      # already processed: not "new"
+    labels = normalize.labels_by_model(r for r in cat["releases"] if brand.matches(r))
+
     queries: dict[tuple, tuple] = {}
     for d in devices:
         name = d.get("name", "")
-        if not catalog.is_oneplus({"device": normalize.device_from_name(name)}):
-            continue                                   # OnePlus 9 and older (same rule as the catalog)
+        if not brand.matches({"device": normalize.device_from_name(name)}):
+            continue                                   # old models (same rule as the catalog)
         base = d.get("variants") or []
         for grp, val in (d.get("firmwareGroups") or {}).items():
             rui = oq.rui_from_group(grp)
@@ -133,7 +147,7 @@ def cmd_discover(a):
                 # the same query is listed under several groups and devices: ask the server once
                 queries.setdefault((q.product, q.model, q.region_name, q.rui, q.letter, q.req_mode), (name, disp, model, q))
     jobs = list(queries.values())
-    print(f"OTA queries: {len(jobs)}", file=sys.stderr)
+    print(f"{brand.label}: OTA queries: {len(jobs)}", file=sys.stderr)
 
     def work(j):
         _, _, model, q = j
@@ -150,7 +164,8 @@ def cmd_discover(a):
                     break
         return j, [], err
 
-    added, errs, new_keys, refreshed = 0, {}, set(), set()
+    errs: dict[str, int] = {}
+    added, new_keys, refreshed = 0, set(), set()
     with ThreadPoolExecutor(a.workers) as ex:
         for j, comps, err in ex.map(work, jobs):
             name, disp, model, q = j
@@ -185,7 +200,7 @@ def cmd_discover(a):
     ou_added = 0
     if not a.no_ou:
         from . import sources
-        for rel in sources.ou_releases(a.workers):
+        for rel in sources.ou_releases(brand, a.workers):
             rel["device"] = labels.get(rel["model"], rel["device"])
             key = normalize.firmware_key(rel)
             if key in by_key:                            # same firmware already in the catalog: complete missing metadata
@@ -201,14 +216,22 @@ def cmd_discover(a):
     cat["releases"] = list(by_id.values())
     with open(a.catalog, "w", encoding="utf-8") as f:
         json.dump(cat, f, ensure_ascii=False)
-    print(f"new releases from OTA query: {added}  from Oxygen Updater: {ou_added}  links refreshed: {len(refreshed)}  "
-          f"(queries without answer: {sum(errs.values())})")
-    return 0
+    print(f"{brand.label}: new releases from OTA query: {added}  from Oxygen Updater: {ou_added}  "
+          f"links refreshed: {len(refreshed)}  (queries without answer: {sum(errs.values())})")
 
 
 def cmd_report(a):
-    """Markdown table; rows of the same device sharing kernel + build are merged."""
-    with open(a.results, encoding="utf-8") as f:
+    """Markdown table per brand; rows of the same device sharing kernel + build are merged."""
+    for brand in brands.select(a.brand):
+        if os.path.exists(_path(a, brand)):
+            _report_brand(brand, _path(a, brand), _path(a, brand, "md"))
+        elif a.brand != "all":
+            raise SystemExit(f"{_path(a, brand)} does not exist: run `opkv run --brand {brand.key}` first")
+    return 0
+
+
+def _report_brand(brand: Brand, results: str, out_path: str) -> None:
+    with open(results, encoding="utf-8") as f:
         data = json.load(f)
     rows = [normalize.row(r) for r in data
             if r["ok"] and catalog.wanted_version(r["version"], r.get("android_version"))]
@@ -229,21 +252,32 @@ def cmd_report(a):
         versions = "<br>".join(v for v, _ in pairs)
         androids = "<br>".join(f"A{an}" if an else "?" for _, an in pairs)                   # same order as FW versions
         out.append(f"| {device} | {models} | {regions} | {androids} | {versions} | `{kernel}` | `{build}` |")
-    with open(a.out, "w", encoding="utf-8") as f:
+    with open(out_path, "w", encoding="utf-8") as f:
         f.write("\n".join(out) + "\n")
-    print(f"{len(rows)} firmware -> {len(groups)} rows -> {a.out}")
-    return 0
+    print(f"{brand.label}: {len(rows)} firmware -> {len(groups)} rows -> {out_path}")
 
 
 def cmd_archive(a):
-    """Add Android 14+ firmware missing from the results, from the spike0en archive (boot.7z assets)."""
-    import hashlib
+    """Add Android 14+ firmware missing from the results, from the spike0en archive (boot.7z assets).
+    The archive only has OnePlus firmware."""
     import importlib.util
 
-    from . import archive
     if not a.dry_run and importlib.util.find_spec("py7zr") is None:
         raise SystemExit("opkv archive needs py7zr: pip install 'opkv[archive]'")
-    rows = _load_results(a.out)
+    for brand in brands.select(a.brand):
+        if brand.archive:
+            _archive_brand(a, brand)
+        elif a.brand != "all":
+            print(f"{brand.label}: the spike0en archive has no {brand.label} firmware", file=sys.stderr)
+    return 0
+
+
+def _archive_brand(a, brand: Brand) -> None:
+    import hashlib
+
+    from . import archive
+    out = _path(a, brand)
+    rows = _load_results(out)
     # a failed row is tried from the archive, unless it already failed there (--retry-failed downloads it again)
     have = {normalize.firmware_key(r) for r in rows.values()
             if r["ok"] or (r.get("origin") == "spike0en-archive" and not a.retry_failed)}
@@ -262,7 +296,7 @@ def cmd_archive(a):
     if a.dry_run:
         for t in todo:
             print(f"  {device_of[t['version'].split('_')[0]]} {t['version']} {t['region']}")
-        return 0
+        return
     with ThreadPoolExecutor(a.workers) as ex:
         futs = {ex.submit(archive.extract_asset, t["asset_url"]): t for t in todo}
         for n, fu in enumerate(as_completed(futs), 1):
@@ -278,20 +312,26 @@ def cmd_archive(a):
             }
             print(f"[{n}/{len(todo)}] {t['version']} {t['region']}: {res.kernel_release or res.error}", file=sys.stderr)
             if n % 10 == 0:
-                _save(a.out, rows)
-    _save(a.out, rows)
-    return 0
+                _save(out, rows)
+    _save(out, rows)
 
 
 def cmd_run(a):
-    rels = catalog.oneplus_releases(a.catalog)
-    rows = _load_results(a.out)
+    for brand in brands.select(a.brand):
+        _run_brand(a, brand)
+    return 0
+
+
+def _run_brand(a, brand: Brand) -> None:
+    out = _path(a, brand)
+    rels = catalog.brand_releases(a.catalog, brand.matches)
+    rows = _load_results(out)
     row_of = {normalize.firmware_key(r): i for i, r in rows.items()}      # firmware -> id of its stored row
     todo = [r for r in rels
             if (i := row_of.get(normalize.firmware_key(r))) is None or (a.retry_failed and not rows[i]["ok"])]
     if a.limit:
         todo = todo[: a.limit]
-    print(f"OnePlus releases: {len(rels)}  already done: {len(rels) - len(todo)}  to do: {len(todo)}", file=sys.stderr)
+    print(f"{brand.label} releases: {len(rels)}  already done: {len(rels) - len(todo)}  to do: {len(todo)}", file=sys.stderr)
 
     def work(rel):
         res = extract(rel["source_url"])
@@ -315,8 +355,8 @@ def cmd_run(a):
             print(f"[{n}/{len(todo)}] {rel['device']} {rel['model']} {rel['version']}: "
                   f"{res.kernel_release or res.error}", file=sys.stderr)
             if n % 10 == 0:
-                _save(a.out, rows)
-    _save(a.out, rows)
+                _save(out, rows)
+    _save(out, rows)
 
     # metadata pass for rows that miss Android version, size or md5 (a few KB per row, no full extraction)
     rel_of = {normalize.firmware_key(r): r for r in rels}
@@ -355,36 +395,41 @@ def cmd_run(a):
                     r["md5"] = (rel or {}).get("md5") or (arb or {}).get((r["version"], r["region"]), "")
                 if n % 50 == 0:
                     print(f"  [{n}/{len(need)}]", file=sys.stderr)
-                    _save(a.out, rows)
-        _save(a.out, rows)
-    return 0
+                    _save(out, rows)
+        _save(out, rows)
 
 
 def main(argv=None):
     p = argparse.ArgumentParser(prog="opkv")
     sub = p.add_subparsers(dest="cmd", required=True)
+
+    def common(sp):
+        sp.add_argument("--brand", choices=["all", *brands.BRANDS], default="all")
+        sp.add_argument("--data-dir", default="data", help="where <brand>.json and <brand>.md live")
+
     u = sub.add_parser("url", help="extract Linux version from a single OTA zip (URL)")
     u.add_argument("url"); u.set_defaults(fn=cmd_url)
     f = sub.add_parser("fetch", help="update the local release catalog (roms.danielspringer.at API)")
     f.add_argument("--api", default="https://roms.danielspringer.at/api/ota.php")
     f.add_argument("--out", default="data/catalog.json"); f.set_defaults(fn=cmd_fetch)
     dsc = sub.add_parser("discover", help="native OTA query: find firmware missing from the catalog")
-    dsc.add_argument("--devices", default="https://raw.githubusercontent.com/RemuruSama/OTA-Pulse/main/devices/oneplus.json")
+    common(dsc)
     dsc.add_argument("--no-ou", action="store_true", help="skip the Oxygen Updater source")
-    dsc.add_argument("--catalog", default="data/catalog.json"); dsc.add_argument("--results", default="data/results.json")
+    dsc.add_argument("--catalog", default="data/catalog.json")
     dsc.add_argument("--workers", type=int, default=4)
     dsc.set_defaults(fn=cmd_discover)
-    ar = sub.add_parser("archive", help="add Android 14+ firmware missing from the results (spike0en archive, boot.7z)")
-    ar.add_argument("--out", default="data/results.json"); ar.add_argument("--workers", type=int, default=3)
+    ar = sub.add_parser("archive", help="add Android 14+ OnePlus firmware missing from the results (spike0en archive, boot.7z)")
+    common(ar)
+    ar.add_argument("--workers", type=int, default=3)
     ar.add_argument("--limit", type=int, default=0); ar.add_argument("--dry-run", action="store_true")
     ar.add_argument("--retry-failed", action="store_true", help="download again the archive assets that failed before")
     ar.set_defaults(fn=cmd_archive)
-    g = sub.add_parser("report", help="results.json -> markdown table")
-    g.add_argument("--results", default="data/results.json"); g.add_argument("--out", default="data/results.md")
+    g = sub.add_parser("report", help="<brand>.json -> markdown table")
+    common(g)
     g.set_defaults(fn=cmd_report)
-    r = sub.add_parser("run", help="extract the kernel version of all OnePlus releases not yet processed")
+    r = sub.add_parser("run", help="extract the kernel version of all releases not yet processed")
+    common(r)
     r.add_argument("--catalog", default="data/catalog.json", help="file or URL")
-    r.add_argument("--out", default="data/results.json")
     r.add_argument("--workers", type=int, default=4)
     r.add_argument("--limit", type=int, default=0)
     r.add_argument("--retry-failed", action="store_true")

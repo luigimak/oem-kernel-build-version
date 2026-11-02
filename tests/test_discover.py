@@ -53,15 +53,15 @@ def discover(tmp_path, monkeypatch):
 
     monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
     monkeypatch.setattr(ota_query, "query", fake_query)
-    monkeypatch.setattr(sources, "ou_releases", lambda workers=6: state["ou"])
+    monkeypatch.setattr(sources, "ou_releases", lambda brand, workers=6: state["ou"])
 
     def go(catalog_releases, results_rows, devices=(), answers=None, ou=(), no_ou=True):
         state.update(devices=list(devices), answers=answers or {}, ou=list(ou))
         cat = tmp_path / "catalog.json"
         write_json(cat, {"api_version": "1", "releases": catalog_releases})
-        out = tmp_path / "results.json"
+        out = tmp_path / "oneplus.json"
         write_json(out, results_rows)
-        argv = ["discover", "--devices", "http://localhost/devices.json", "--catalog", str(cat), "--results", str(out)]
+        argv = ["discover", "--brand", "oneplus", "--data-dir", str(tmp_path), "--catalog", str(cat)]
         assert cli.main(argv + (["--no-ou"] if no_ou else [])) == 0
         return read_json(cat)["releases"]
 

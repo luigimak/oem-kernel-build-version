@@ -26,7 +26,7 @@ def fetch(tmp_path, monkeypatch):
 def test_first_fetch_creates_the_catalog(fetch, capsys):
     releases = fetch({"api_version": "1", "releases": [release("a"), release("x", device="Xiaomi 15", version="OS3.0.1")]})
     assert [r["id"] for r in releases] == ["a", "x"]
-    assert "catalog initialized with 2 releases (1 OnePlus)" in capsys.readouterr().out
+    assert "catalog initialized with 2 releases (1 OnePlus, 0 OPPO, 0 Realme)" in capsys.readouterr().out
 
 
 def test_api_answering_with_a_bare_list_is_accepted(fetch):
@@ -37,7 +37,7 @@ def test_releases_the_api_dropped_are_kept_and_new_ones_added(fetch, capsys):
     releases = fetch({"releases": [release("new", version="CPH2645_16.0.0.100(EX01)")]}, stored=[release("old")])
     assert sorted(r["id"] for r in releases) == ["new", "old"]
     out = capsys.readouterr().out
-    assert "2 releases in total, 1 new (1 OnePlus)" in out and "+ OP 13R" in out and "CPH2645_16.0.0.100(EX01)" in out
+    assert "2 releases in total, 1 new (1 OnePlus, 0 OPPO, 0 Realme)" in out and "+ OP 13R" in out and "CPH2645_16.0.0.100(EX01)" in out
 
 
 def test_known_release_is_refreshed_from_the_api(fetch):

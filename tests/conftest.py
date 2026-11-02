@@ -117,9 +117,9 @@ def run(tmp_path, monkeypatch):
 
     def go(releases, rows, *flags):
         cat = write_json(tmp_path / "catalog.json", {"api_version": "1", "releases": releases})
-        out = tmp_path / "results.json"
+        out = tmp_path / "oneplus.json"
         write_json(out, rows)
-        assert cli.main(["run", "--catalog", cat, "--out", str(out), *flags]) == 0
+        assert cli.main(["run", "--brand", "oneplus", "--data-dir", str(tmp_path), "--catalog", cat, *flags]) == 0
         go.path = out
         return extracted, read_json(out)
 

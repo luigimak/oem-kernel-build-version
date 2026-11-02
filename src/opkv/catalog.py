@@ -1,4 +1,4 @@
-"""Load catalog.json (releases list) and keep OnePlus entries only."""
+"""Load catalog.json (releases list) and keep the entries of one brand (OnePlus, OPPO, Realme)."""
 from __future__ import annotations
 
 import json
@@ -49,10 +49,23 @@ def is_oneplus(rel: dict) -> bool:
     return not OLD_RE.match(d)
 
 
+def is_oppo(rel: dict) -> bool:
+    return rel.get("device", "").upper().startswith("OPPO ")
+
+
+def is_realme(rel: dict) -> bool:
+    return rel.get("device", "").upper().startswith("REALME ")
+
+
 def oneplus_releases(src: str) -> list[dict]:
+    return brand_releases(src, is_oneplus)
+
+
+def brand_releases(src: str, matches) -> list[dict]:
+    """Android 14+ releases with a download link whose device `matches`, one per firmware."""
     seen, out = set(), []
     for r in load(src):
-        if not is_oneplus(r) or not r.get("source_url", "").startswith("http"):
+        if not matches(r) or not r.get("source_url", "").startswith("http"):
             continue
         if not wanted_version(r.get("version", "")):
             continue

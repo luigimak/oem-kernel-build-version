@@ -31,9 +31,9 @@ def archive_run(tmp_path, monkeypatch):
 
     def go(rows, releases, *flags):
         listing[:] = releases
-        out = tmp_path / "results.json"
+        out = tmp_path / "oneplus.json"
         write_json(out, rows)
-        assert cli.main(["archive", "--out", str(out), "--workers", "1", *flags]) == 0
+        assert cli.main(["archive", "--brand", "oneplus", "--data-dir", str(tmp_path), "--workers", "1", *flags]) == 0
         return downloaded, read_json(out)
 
     return go

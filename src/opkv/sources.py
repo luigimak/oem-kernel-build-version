@@ -11,6 +11,7 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 from . import catalog, normalize
+from .brands import Brand
 
 OU_BASE = "https://oxygenupdater.com/api/v2.10/"
 OU_HEADERS = {"User-Agent": "Oxygen_updater_7.1.0"}
@@ -30,17 +31,17 @@ def _warn(title: str, msg: str) -> None:
         print(f"warning: {msg}", file=sys.stderr)
 
 
-def ou_releases(workers: int = 6) -> list[dict]:
-    """Latest *full* firmware of every OnePlus device/region known to Oxygen Updater (Android 14+ only)."""
+def ou_releases(brand: Brand, workers: int = 6) -> list[dict]:
+    """Latest *full* firmware of every device/region of the brand known to Oxygen Updater (Android 14+ only)."""
     devices = _get(OU_BASE + "devices/all", OU_HEADERS)
     todo = []
     for d in devices:
         name = d.get("name", "")
-        if not name.lower().startswith("oneplus"):
+        if not name.lower().startswith(brand.ou_prefix):
             continue
         base = re.sub(r"\s*\(.*\)\s*$", "", name)
         device = normalize.device_from_name(base)
-        if not catalog.is_oneplus({"device": device}):
+        if not brand.matches({"device": device}):
             continue
         m = re.search(r"\((.*)\)\s*$", name)
         todo.append((d["id"], device, m.group(1) if m else "GLO"))

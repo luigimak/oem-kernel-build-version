@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OnePlus kernel build versions</title>
-<meta name="description" content="Linux kernel version and build of OnePlus firmware, extracted from the OTA packages.">
+<title>OnePlus, OPPO and Realme kernel build versions</title>
+<meta name="description" content="Linux kernel version and build of OnePlus, OPPO and Realme firmware, extracted from the OTA packages.">
 <style>
 :root {
   --bg: #fff; --fg: #1b1f24; --muted: #59636e; --line: #d0d7de; --head: #f6f8fa; --hover: #f3f6fa;
@@ -51,12 +51,13 @@ footer { color: var(--muted); margin-top: 16px; font-size: .9rem; }
 </head>
 <body>
 <main>
-  <h1>OnePlus kernel build versions</h1>
-  <p class="sub">Linux kernel and build of OnePlus firmware, read from the OTA packages.
+  <h1>OnePlus, OPPO and Realme kernel build versions</h1>
+  <p class="sub">Linux kernel and build of OnePlus, OPPO and Realme firmware, read from the OTA packages.
     <a href="https://github.com/luigimak/oneplus-kernel-build-version">Source and method on GitHub</a>.</p>
 
   <div class="controls">
     <input id="q" type="search" placeholder="Search firmware, model, kernel, build…" aria-label="Search">
+    <select id="brand" aria-label="Brand"></select>
     <select id="device" aria-label="Device"></select>
     <select id="region" aria-label="Region"></select>
     <select id="android" aria-label="Android version"></select>
@@ -64,6 +65,7 @@ footer { color: var(--muted); margin-top: 16px; font-size: .9rem; }
     <label class="check"><input id="failed" type="checkbox"> show failed</label>
     <button id="reset" type="button">Reset</button>
   </div>
+  <p id="warn" class="bad" hidden></p>
   <p id="count" aria-live="polite"></p>
 
   <div class="wrap">
@@ -74,13 +76,20 @@ footer { color: var(--muted); margin-top: 16px; font-size: .9rem; }
     <div id="msg">Loading…</div>
   </div>
 
-  <footer>Click a row for details. Data: <a href="results.json">results.json</a>, refreshed daily.</footer>
+  <footer>Click a row for details. Data: <a href="oneplus.json">oneplus.json</a>, <a href="oppo.json">oppo.json</a>,
+    <a href="realme.json">realme.json</a>, refreshed daily.</footer>
 </main>
 
 <script>
 "use strict";
 
+const BRANDS = [
+  { key: "oneplus", label: "OnePlus" },
+  { key: "oppo", label: "OPPO" },
+  { key: "realme", label: "Realme" },
+];
 const COLUMNS = [
+  { key: "brand", label: "Brand" },
   { key: "device", label: "Device" },
   { key: "model", label: "Model" },
   { key: "region", label: "Region" },
@@ -90,6 +99,7 @@ const COLUMNS = [
   { key: "built", label: "Kernel build" },
 ];
 const FILTERS = [
+  { id: "brand", all: "All brands" },
   { id: "device", all: "All devices" },
   { id: "region", all: "All regions" },
   { id: "android", all: "All Android" },
@@ -110,11 +120,13 @@ function buildTime(build) {
   return Date.parse(`${m[1]} ${m[2]} ${m[5]} ${m[3]} ${ZONES[m[4]]}`);
 }
 
-function prepare(r) {
+function prepare(r, brand) {
   const kernel = r.kernel_release || "";
   const branch = /^\d+\.\d+/.exec(kernel);
   return {
     raw: r,
+    uid: `${brand}:${r.id}`,
+    brand,
     device: r.device || "",
     model: r.model || "",
     region: r.region || "",
@@ -125,7 +137,7 @@ function prepare(r) {
     builtMs: buildTime(r.build),
     branch: branch ? branch[0] : "",
     ok: r.ok === true,
-    haystack: [r.device, r.model, r.region, r.version, r.ota_version, kernel, r.build]
+    haystack: [brand, r.device, r.model, r.region, r.version, r.ota_version, kernel, r.build]
       .join(" ").toLowerCase(),
   };
 }
@@ -185,11 +197,12 @@ function detailRow(row) {
 function render() {
   const q = $("q").value.trim().toLowerCase();
   const terms = q ? q.split(/\s+/) : [];
-  const f = { device: $("device").value, region: $("region").value, android: $("android").value, branch: $("branch").value };
+  const f = { brand: $("brand").value, device: $("device").value, region: $("region").value, android: $("android").value, branch: $("branch").value };
   const showFailed = $("failed").checked;
 
   const rows = state.rows.filter((r) =>
     (showFailed || r.ok) &&
+    (!f.brand || r.brand === f.brand) &&
     (!f.device || r.device === f.device) &&
     (!f.region || r.region === f.region) &&
     (!f.android || r.android === f.android) &&
@@ -202,9 +215,9 @@ function render() {
   for (const row of rows) {
     const tr = el("tr");
     tr.tabIndex = 0;
-    tr.dataset.id = row.raw.id;
+    tr.dataset.id = row.uid;
     tr.append(
-      el("td", row.device), el("td", row.model), el("td", row.region), el("td", row.android),
+      el("td", row.brand), el("td", row.device), el("td", row.model), el("td", row.region), el("td", row.android),
       el("td", row.version));
     const k = el("td");
     k.append(row.kernel ? el("code", row.kernel) : el("span", "failed", "bad"));
@@ -213,7 +226,7 @@ function render() {
     if (row.build) b.append(el("code", row.build));
     tr.append(b);
     body.append(tr);
-    if (state.open === row.raw.id) body.append(detailRow(row));
+    if (state.open === row.uid) body.append(detailRow(row));
   }
 
   const total = state.rows.filter((r) => showFailed || r.ok).length;
@@ -273,24 +286,31 @@ async function main() {
     head.append(th);
   }
 
-  let data;
-  try {
-    const res = await fetch("results.json");
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    data = await res.json();
-  } catch (e) {
-    $("msg").textContent = `Could not load results.json (${e.message}).`;
-    return;
+  const loaded = await Promise.all(BRANDS.map(async (b) => {
+    try {
+      const res = await fetch(`${b.key}.json`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return { b, rows: (await res.json()).map((r) => prepare(r, b.label)) };
+    } catch (e) {
+      return { b, error: `${b.key}.json (${e.message})` };
+    }
+  }));
+  const failedFiles = loaded.filter((l) => l.error).map((l) => l.error);
+  state.rows = loaded.flatMap((l) => l.rows || []);
+  if (failedFiles.length) {
+    $("warn").textContent = `Could not load ${failedFiles.join(", ")}: those firmware are missing from the table.`;
+    $("warn").hidden = false;
+    if (!state.rows.length) { $("msg").textContent = "No data could be loaded."; return; }
   }
-  state.rows = data.map(prepare);
 
-  fillSelect($("device"), FILTERS[0].all, state.rows.map((r) => r.device));
-  fillSelect($("region"), FILTERS[1].all, state.rows.map((r) => r.region));
-  fillSelect($("android"), FILTERS[2].all, state.rows.map((r) => r.android));
-  fillSelect($("branch"), FILTERS[3].all, state.rows.map((r) => r.branch));
+  fillSelect($("brand"), FILTERS[0].all, state.rows.map((r) => r.brand));
+  fillSelect($("device"), FILTERS[1].all, state.rows.map((r) => r.device));
+  fillSelect($("region"), FILTERS[2].all, state.rows.map((r) => r.region));
+  fillSelect($("android"), FILTERS[3].all, state.rows.map((r) => r.android));
+  fillSelect($("branch"), FILTERS[4].all, state.rows.map((r) => r.branch));
   loadHash();
 
-  for (const id of ["q", "device", "region", "android", "branch", "failed"]) {
+  for (const id of ["q", "brand", "device", "region", "android", "branch", "failed"]) {
     $(id).addEventListener("input", render);
   }
   $("reset").addEventListener("click", () => {

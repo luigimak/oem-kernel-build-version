@@ -74,3 +74,23 @@ def test_releases_without_a_download_link_or_older_than_android_14_are_not_liste
     old = _release("old", version="CPH2449_13.1.0.500(EX01)")
     other = {**_release("other"), "device": "Xiaomi 15"}
     assert catalog.oneplus_releases(_catalog(tmp_path, gone, old, other, _release("ok"))) == [_release("ok")]
+
+
+@pytest.mark.parametrize("device,oppo,realme", [
+    ("OPPO FIND X9", True, False), ("OPPO RENO 16 PRO", True, False), ("Realme GT7 PRO", False, True),
+    ("REALME NEO 8", False, True), ("OP 13", False, False), ("OPPO", False, False), ("", False, False)])
+def test_oppo_and_realme_have_no_old_model_cut(device, oppo, realme):
+    assert catalog.is_oppo({"device": device}) is oppo and catalog.is_realme({"device": device}) is realme
+
+
+def test_each_release_belongs_to_one_brand():
+    from opkv import brands
+    pick = lambda d: getattr(brands.of_release({"device": d}), "key", None)  # noqa: E731
+    assert [pick("OP 13"), pick("OPPO FIND X9"), pick("Realme GT7"), pick("OP 9"), pick("Xiaomi 15")] == [
+        "oneplus", "oppo", "realme", None, None]
+
+
+def test_brand_releases_keeps_the_matching_brand_only(tmp_path):
+    oppo = {**_release("oppo"), "device": "OPPO FIND X9", "version": "CPH2659_16.0.0.100(EX01)"}
+    src = _catalog(tmp_path, _release("op"), oppo)
+    assert [r["id"] for r in catalog.brand_releases(src, catalog.is_oppo)] == ["oppo"]

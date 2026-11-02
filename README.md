@@ -1,10 +1,12 @@
 # oneplus-kernel-build-version
 
 Extracts the `Linux version …` string (kernel version + build) from the `boot.img` inside the `payload.bin`
-of OnePlus OTA packages, without downloading the firmware: it reads only the needed bytes over HTTP Range
-(about 10 MB per OTA, whose full package is several GB). Results: [`data/results.md`](data/results.md) and
-[`data/results.json`](data/results.json), updated every day by a GitHub Actions workflow.
-A searchable, filterable table of the same data is published with GitHub Pages: <https://luigimak.github.io/oneplus-kernel-build-version/>
+of OnePlus, OPPO and Realme OTA packages, without downloading the firmware: it reads only the needed bytes over HTTP Range
+(about 10 MB per OTA, whose full package is several GB). Results, one pair of files per brand, updated every day by a GitHub Actions workflow:
+[`data/oneplus.md`](data/oneplus.md) / [`data/oneplus.json`](data/oneplus.json),
+[`data/oppo.md`](data/oppo.md) / [`data/oppo.json`](data/oppo.json),
+[`data/realme.md`](data/realme.md) / [`data/realme.json`](data/realme.json).
+A searchable, filterable table of all of them is published with GitHub Pages: <https://luigimak.github.io/oneplus-kernel-build-version/>
 (source in [`docs/`](docs/), deployed by `.github/workflows/pages.yml`; set Settings → Pages → Source to "GitHub Actions" once).
 
 ## Usage
@@ -12,12 +14,13 @@ A searchable, filterable table of the same data is published with GitHub Pages: 
 python3 -m venv .venv && .venv/bin/pip install .       # '.[archive]' adds what `opkv archive` needs
 opkv fetch      # update the local release catalog (roms.danielspringer.at API)
 opkv discover   # find firmware missing from the catalog: OTA servers + Oxygen Updater (--no-ou to skip)
-opkv run        # extract kernel/build of new firmware -> data/results.json
-opkv archive    # add older Android 14+ firmware missing from the results (spike0en archive, boot.7z)
-opkv report     # data/results.md
+opkv run        # extract kernel/build of new firmware -> data/<brand>.json
+opkv archive    # add older Android 14+ OnePlus firmware missing from the results (spike0en archive, boot.7z)
+opkv report     # data/<brand>.md
 opkv url <URL>  # a single OTA zip
 ```
-OnePlus only (`OP …`), from the 10 series onward, and only firmware from Android 14 onward (older rows are dropped). `run` is resumable.
+`fetch`, `discover`, `run`, `archive` and `report` take `--brand oneplus|oppo|realme|all` (default `all`) and `--data-dir` (default `data`).
+OnePlus (`OP …`) from the 10 series onward, every OPPO and Realme model, and only firmware from Android 14 onward (older rows are dropped). `run` is resumable.
 
 The workflow `.github/workflows/update.yml` runs `fetch`, `discover`, `run --retry-failed` and `report` every day at 05:17 UTC and commits
 the updated results to the default branch (`archive` is a manual command; `archive --retry-failed` downloads again the assets that failed before). Scheduled runs are off until the repository variable
@@ -25,7 +28,7 @@ the updated results to the default branch (`archive` is a manual command; `archi
 [`requirements.txt`](requirements.txt), runs `python -m opkv` from the checkout, and gives the commit step alone the token it needs to push.
 
 ## Results
-`data/results.json` is a list of rows, one per firmware, sorted by device, model and build time:
+`data/<brand>.json` is a list of rows, one per firmware, sorted by device, model and build time:
 
 | Field | Meaning |
 |---|---|
@@ -38,7 +41,7 @@ the updated results to the default branch (`archive` is a manual command; `archi
 | `source` | where the banner was read: `payload.bin` or `boot.img` |
 | `md5`, `size` | of the OTA package, when known |
 
-`data/results.md` groups the rows of a device that share kernel and build, oldest kernel build first.
+`data/<brand>.md` groups the rows of a device that share kernel and build, oldest kernel build first.
 
 ## Notes
 - Firmware URLs are never stored or logged (error messages are redacted).
@@ -46,6 +49,7 @@ the updated results to the default branch (`archive` is a manual command; `archi
 - Full OTAs only; incremental ones return an error. OTAs without `payload.bin` fall back to `boot.img` in the zip.
 - The Android version comes from `META-INF/com/android/metadata` in each OTA (a few KB); if it is missing, it is inferred from the OS version (OxygenOS/ColorOS 13+ major = Android release). `run` backfills it for rows that lack it.
 - Missing `md5`/`size` are filled from Oxygen Updater, the antirollchecker database or the OTA `Content-Length`; rows whose links expired may stay empty.
+- The spike0en archive and `archive` cover OnePlus only; OPPO and Realme come from the catalog, OTA Pulse and Oxygen Updater.
 - Beta tracks (`taste`) cannot be found by `discover`; they depend on the catalog.
 
 ## Development
@@ -67,7 +71,7 @@ Copyright 2026 luigimak, licensed under the Apache License 2.0 (see [LICENSE](LI
 and modified; each file header says so. The model list (OTA Pulse `devices/oneplus.json`) is downloaded at runtime
 and not redistributed here.
 
-No code from the other sources below is copied. They are queried at runtime, and `data/results.*` only contains factual
+No code from the other sources below is copied. They are queried at runtime, and `data/*.json` and `data/*.md` only contain factual
 metadata (versions, regions, md5, size) and the `Linux version …` string extracted from `boot.img`. No firmware image or
 download URL is stored or redistributed. Several of these sources publish no license (Oxygen Updater, spike0en/oneplus_archive,
 OnePlus-antirollchecker); this project is not affiliated with them or with OnePlus/OPPO. Firmware remains the property of
@@ -75,10 +79,10 @@ its owners. If you are a source owner and want something changed or removed, ope
 
 ## How it talks to the services
 `opkv` only reads public metadata and never logs in. To get answers it has to present itself as the clients those services expect:
-- the OnePlus/OPPO OTA servers (`discover`) are queried the way the OnePlus updater does, with a placeholder device identity (no real IMEI or account) and the protocol implemented by OTA Pulse; the OTA CDN (`run`) is read with the headers of that client, about 10 MB per new package, never the whole firmware;
+- the OnePlus/OPPO/Realme OTA servers (`discover`) are queried the way the OnePlus updater does, with a placeholder device identity (no real IMEI or account) and the protocol implemented by OTA Pulse; the OTA CDN (`run`) is read with the headers of that client, about 10 MB per new package, never the whole firmware;
 - the Oxygen Updater API is called with the User-Agent of the Oxygen Updater app, which is the only one it accepts.
 
-Volume is low (a daily run makes roughly 250 OTA queries and 100 Oxygen Updater requests, plus the packages that are new that day) and read-only. This may not match the terms of use of those services; if you run it, you do so on your own responsibility, and if you maintain one of them and object, open an issue.
+Volume is moderate (a daily run makes roughly 1500 OTA queries and a few thousand Oxygen Updater requests, mostly for the many OPPO and Realme models, plus the packages that are new that day) and read-only. This may not match the terms of use of those services; if you run it, you do so on your own responsibility, and if you maintain one of them and object, open an issue.
 
 ## Sources
 - [roms.danielspringer.at](https://roms.danielspringer.at) — release catalog (`opkv fetch`).

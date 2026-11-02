@@ -7,9 +7,9 @@ BUILD = "#1 SMP PREEMPT Mon Jun 2 10:00:00 UTC 2025"
 
 
 def report(tmp_path, rows):
-    res = write_json(tmp_path / "results.json", rows)
-    out = tmp_path / "results.md"
-    assert cli.main(["report", "--results", res, "--out", str(out)]) == 0
+    write_json(tmp_path / "oneplus.json", rows)
+    out = tmp_path / "oneplus.md"
+    assert cli.main(["report", "--brand", "oneplus", "--data-dir", str(tmp_path)]) == 0
     return out.read_text(encoding="utf-8").splitlines()
 
 

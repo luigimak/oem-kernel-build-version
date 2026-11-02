@@ -19,9 +19,9 @@ jobs:
     # manual runs (workflow_dispatch) always work
     if: github.event_name == 'workflow_dispatch' || vars.AUTO_UPDATE == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 90          # the first run after a new brand is added has hundreds of firmware to read
     permissions:
-      contents: write   # commits data/results.* to the default branch
+      contents: write   # commits data/<brand>.json and .md to the default branch
     env:
       BRANCH: ${{ github.event.repository.default_branch }}
       PYTHONPATH: src             # run opkv from the checkout: nothing but the hashed requirements is downloaded
@@ -43,11 +43,11 @@ jobs:
       - name: Install
         run: pip install --require-hashes -r requirements.txt
 
-      # the catalog is not versioned: state lives in data/results.json (already processed firmware)
+      # the catalog is not versioned: state lives in data/<brand>.json (already processed firmware)
       - name: Fetch catalog (API roms.danielspringer.at)
         run: python -m opkv fetch
 
-      - name: Extract Linux version for new OnePlus releases
+      - name: Extract Linux version for new OnePlus, OPPO and Realme releases
         run: |
           python -m opkv discover
           python -m opkv run --retry-failed --workers 6
@@ -59,25 +59,29 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if git diff --quiet -- data/results.json data/results.md; then
+          git add --intent-to-add data/*.json data/*.md       # a brand seen for the first time counts as a change
+          if git diff --quiet -- data/*.json data/*.md; then
             echo "nothing new"; exit 0
           fi
-          n=$(python - <<'PY'
-          import json,subprocess
+          msg=$(python - <<'PY'
+          import glob, json, os, subprocess
           from opkv.normalize import firmware_key
-          old=json.loads(subprocess.check_output(["git","show","HEAD:data/results.json"]))
-          known={firmware_key(r) for r in old}
-          print(sum(1 for r in json.load(open("data/results.json")) if firmware_key(r) not in known))
+          new = {}
+          for path in sorted(glob.glob("data/*.json")):
+              if os.path.basename(path) == "catalog.json":
+                  continue
+              show = subprocess.run(["git", "show", f"HEAD:{path}"], capture_output=True, text=True)
+              known = {firmware_key(r) for r in json.loads(show.stdout)} if show.returncode == 0 else set()
+              new[os.path.basename(path)[:-5]] = sum(1 for r in json.load(open(path)) if firmware_key(r) not in known)
+          label = {"oneplus": "OnePlus", "oppo": "OPPO", "realme": "Realme"}
+          parts = [f"{n} {label.get(b, b)}" for b, n in new.items() if n]
+          print(f"data: add {' + '.join(parts)} new firmware kernel versions" if parts
+                else "data: update metadata of existing firmware entries")
           PY
           )
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/results.json data/results.md
-          if [ "$n" = "0" ]; then
-            msg="data: update metadata of existing OnePlus firmware entries"
-          else
-            msg="data: add $n new OnePlus firmware kernel versions"
-          fi
+          git add data/*.json data/*.md
           git commit -m "$msg"
           # the token goes to git as an HTTP header of the two network commands below and nowhere else
           auth=$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)
@@ -91,7 +95,7 @@ jobs:
           done
           echo "push to $BRANCH failed"; exit 1
 
-  # the site shows data/results.json: publish it again after the daily run
+  # the site shows data/<brand>.json: publish it again after the daily run
   pages:
     name: Publish site
     needs: update
