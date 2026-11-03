@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from . import brands, catalog, normalize
 from .brands import Brand
-from .extract import extract, extract_android
+from .extract import Result, extract, extract_android
 
 
 def _path(a, brand: Brand, ext: str = "json") -> str:
@@ -226,15 +226,13 @@ def _discover_brand(a, brand: Brand, cat: dict, by_id: dict, by_key: dict, lette
     vt_added = 0
     if not a.no_violet:
         from . import sources
-        for rel in sources.violet_releases(brand, skip=lambda r: normalize.firmware_key(r) in read):
+        for rel in sources.violet_releases(brand):
             rel["device"] = labels.get(rel["model"], rel["device"])
             key = normalize.firmware_key(rel)
-            if key in by_key:                            # known firmware (e.g. a failed read): a fresh link is all it needs
-                if rel["source_url"]:
-                    by_id[by_key[key]]["source_url"] = rel["source_url"]
-                    fresh.add(key)
+            if key in read:                              # kernel already read: nothing to look for
                 continue
-            if not rel["source_url"]:                    # listed without a link: nothing to read
+            if key in by_key:                            # known firmware (e.g. a failed read): `run` can ask this source for a link
+                by_id[by_key[key]]["violet"] = rel["violet"]
                 continue
             by_id[rel["id"]] = rel
             by_key[key] = rel["id"]
@@ -411,6 +409,14 @@ def cmd_run(a):
     return 0
 
 
+def _link(rel: dict) -> str:
+    """Download link of a release, asked for now when its source gives links that expire within minutes."""
+    if rel.get("violet"):
+        from . import sources
+        return sources.violet_link(rel["violet"]) or rel.get("source_url", "")
+    return rel.get("source_url", "")
+
+
 def _run_brand(a, brand: Brand) -> None:
     out = _path(a, brand)
     rels = catalog.brand_releases(a.catalog, brand.matches)
@@ -423,8 +429,8 @@ def _run_brand(a, brand: Brand) -> None:
     print(f"{brand.label} releases: {len(rels)}  already done: {len(rels) - len(todo)}  to do: {len(todo)}", file=sys.stderr)
 
     def work(rel):
-        res = extract(rel["source_url"])
-        return rel, res
+        url = _link(rel)
+        return rel, (extract(url) if url else Result(error="no download link"))
 
     with ThreadPoolExecutor(a.workers) as ex:
         futs = [ex.submit(work, r) for r in todo]
@@ -465,7 +471,8 @@ def _run_brand(a, brand: Brand) -> None:
         def work_meta(i):
             r = rows[i]
             rel = rel_of.get(normalize.firmware_key(r))
-            res = extract_android(rel["source_url"]) if rel and (
+            url = _link(rel) if rel else ""
+            res = extract_android(url) if url and (
                 "android_version" not in r or not r.get("size")) else None
             return i, res
 

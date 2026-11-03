@@ -58,10 +58,10 @@ def is_realme(rel: dict) -> bool:
 
 
 def brand_releases(src: str, matches) -> list[dict]:
-    """Android 14+ releases with a download link whose device `matches`, one per firmware."""
+    """Android 14+ releases with a download link (or a reference to ask for one) whose device `matches`, one per firmware."""
     seen, out = set(), []
     for r in load(src):
-        if not matches(r) or not r.get("source_url", "").startswith("http"):
+        if not matches(r) or not (r.get("source_url", "").startswith("http") or r.get("violet")):
             continue
         if not wanted_version(r.get("version", "")):
             continue

@@ -36,7 +36,6 @@ def discover(tmp_path, monkeypatch):
     the (model, region, letter) of every OTA query is left in go.queries.
     """
     state = {"devices": [], "answers": {}, "ou": [], "violet": []}
-    asked = []
     queries = []
 
     def fake_urlopen(req, *args, **kwargs):
@@ -56,8 +55,7 @@ def discover(tmp_path, monkeypatch):
     monkeypatch.setattr(ota_query, "query", fake_query)
     monkeypatch.setattr(sources, "ou_releases", lambda brand, workers=6: state["ou"])
 
-    def fake_violet(brand, skip, pause=0.3):
-        asked.extend(r["version"] for r in state["violet"] if not skip(r))      # a link is only asked for these
+    def fake_violet(brand, pause=0.3):
         return [dict(r) for r in state["violet"]]
 
     monkeypatch.setattr(sources, "violet_releases", fake_violet)
@@ -74,7 +72,6 @@ def discover(tmp_path, monkeypatch):
         return read_json(cat)["releases"]
 
     go.queries = queries
-    go.violet_asked = asked
     return go
 
 
@@ -148,38 +145,34 @@ def test_oxygen_updater_completes_the_metadata_of_a_known_firmware(discover):
     assert [(r["id"], r["md5"], r["size"]) for r in releases] == [("cat1", "e" * 32, 7)]
 
 
-def violet_release(version, device="OPPO FIND N3", url="https://example.invalid/vt.zip"):
+def violet_release(version, device="OPPO FIND N3"):
     model = version.split("_")[0]
     return {"id": "vt-" + model, "device": device, "region": "CN", "model": model, "version": version,
-            "ota_version": version, "build_timestamp": "", "source_url": url, "md5": "", "size": 0,
-            "origin": "violettoolbox"}
+            "ota_version": version, "build_timestamp": "", "source_url": "", "md5": "", "size": 0,
+            "origin": "violettoolbox", "violet": {"brand": "OPPO", "series": "Find", "device": "x", "name": version}}
 
 
-def test_violettoolbox_firmware_is_added_to_the_catalog(discover, capsys):
+def test_violettoolbox_firmware_is_added_to_the_catalog_with_its_reference(discover, capsys):
     v = violet_release("PHN110_14.0.0.850(CN01)")
     releases = discover([], [], violet=[v])
-    assert [(r["id"], r["origin"], r["source_url"]) for r in releases] == [("vt-PHN110", "violettoolbox", v["source_url"])]
+    assert [(r["id"], r["origin"], r["source_url"], r["violet"]) for r in releases] == [
+        ("vt-PHN110", "violettoolbox", "", v["violet"])]
     assert "from VioletToolBox: 1" in capsys.readouterr().out
 
 
-def test_violettoolbox_firmware_already_read_needs_no_link(discover):
+def test_violettoolbox_firmware_already_read_is_left_out(discover):
     v = violet_release("PHN110_14.0.0.850(CN01)")
     done = row("a", version=v["version"], region="CN", device="OPPO FIND N3")
-    discover([], [done], violet=[v])
-    assert discover.violet_asked == []
+    assert discover([], [done], violet=[v]) == []
 
 
-def test_violettoolbox_gives_a_fresh_link_to_a_failed_firmware(discover):
-    v = violet_release("PHN110_14.0.0.850(CN01)", url="https://example.invalid/fresh.zip")
+def test_violettoolbox_reference_is_added_to_a_failed_firmware_the_catalog_knows(discover):
+    v = violet_release("PHN110_14.0.0.850(CN01)")
     old = release("cat1", version=v["version"], region="CN", device="OPPO FIND N3", source_url="https://example.invalid/old.zip")
     failed = row("cat1", version=v["version"], region="CN", device="OPPO FIND N3", ok=False)
     releases = discover([old], [failed], violet=[v])
-    assert [(r["id"], r["source_url"]) for r in releases] == [("cat1", "https://example.invalid/fresh.zip")]
-    assert discover.violet_asked == [v["version"]]
-
-
-def test_violettoolbox_firmware_without_a_link_is_not_added(discover):
-    assert discover([], [], violet=[violet_release("PHN110_14.0.0.850(CN01)", url="")]) == []
+    assert [(r["id"], r["source_url"], r["violet"]) for r in releases] == [
+        ("cat1", "https://example.invalid/old.zip", v["violet"])]
 
 
 def test_failed_firmware_missing_from_every_source_is_searched_letter_by_letter(discover):

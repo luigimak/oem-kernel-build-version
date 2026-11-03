@@ -86,3 +86,29 @@ def test_duplicates_in_the_stored_results_are_resolved_before_retrying(run):
     # a results file from an older version holding a good and a failed row of one firmware: nothing to retry
     extracted, rows = run([release("c")], [row("good"), row("bad", ok=False)], "--retry-failed")
     assert extracted == [] and [r["id"] for r in rows] == ["good"]
+
+
+REF = {"brand": "OPPO", "series": "Find", "device": "d", "name": "v"}
+
+
+def test_violettoolbox_link_is_asked_right_before_the_package_is_read(run, monkeypatch):
+    monkeypatch.setattr(sources, "violet_link", lambda ref: "https://example.invalid/fresh.zip" if ref == REF else "")
+    rel = release("v1", version="PHN110_14.0.0.850(CN01)", region="CN", source_url="", violet=REF)
+    extracted, rows = run([rel], [])
+    assert extracted == ["https://example.invalid/fresh.zip"]
+    assert rows[0]["ok"] is True
+
+
+def test_violettoolbox_release_without_a_link_fails_with_a_clear_error(run, monkeypatch):
+    monkeypatch.setattr(sources, "violet_link", lambda ref: "")
+    rel = release("v1", version="PHN110_14.0.0.850(CN01)", region="CN", source_url="", violet=REF)
+    extracted, rows = run([rel], [])
+    assert extracted == []
+    assert (rows[0]["ok"], rows[0]["error"]) == (False, "no download link")
+
+
+def test_violettoolbox_release_keeps_its_old_link_when_the_service_has_none(run, monkeypatch):
+    monkeypatch.setattr(sources, "violet_link", lambda ref: "")
+    rel = release("v1", version="PHN110_14.0.0.850(CN01)", region="CN", source_url="https://example.invalid/old.zip", violet=REF)
+    extracted, _ = run([rel], [])
+    assert extracted == ["https://example.invalid/old.zip"]

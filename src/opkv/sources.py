@@ -10,7 +10,6 @@ import sys
 import time
 import urllib.parse
 import urllib.request
-from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 
 from . import catalog, normalize
@@ -107,10 +106,11 @@ def violet_device(raw: str) -> str:
     return normalize.device_from_name(re.sub(r"\s+", " ", name).strip())
 
 
-def violet_releases(brand: Brand, skip: Callable[[dict], bool], pause: float = 0.3) -> list[dict]:
-    """Chinese-market firmware (Android 14+) the VioletToolBox community service lists for the brand, with a
-    download link for every one `skip` does not rule out. One request at a time, with a pause: the service asks
-    for moderate use. Unreadable parts are reported and skipped."""
+def violet_releases(brand: Brand, pause: float = 0.3) -> list[dict]:
+    """Chinese-market firmware (Android 14+) the VioletToolBox community service lists for the brand. A release has
+    no link but a `violet` reference: the links last only minutes, so `violet_link` asks for one right before the
+    package is read. One request at a time, with a pause: the service asks for moderate use. Unreadable parts are
+    reported and skipped."""
     def get(path: str, **query):
         time.sleep(pause)
         return _get(f"{VT_BASE}/{path}?{urllib.parse.urlencode(query)}", VT_HEADERS)
@@ -144,10 +144,8 @@ def violet_releases(brand: Brand, skip: Callable[[dict], bool], pause: float = 0
                     rel = {"id": "vt-" + hashlib.sha1(f"{fw['version']}|CN".encode(), usedforsecurity=False).hexdigest()[:20],
                            "device": device, "region": "CN", "model": fw["model"], "version": fw["version"],
                            "ota_version": fw["ota_version"], "build_timestamp": normalize.ota_timestamp(fw["ota_version"]),
-                           "source_url": "", "md5": "", "size": 0, "origin": "violettoolbox"}
-                    if not skip(rel):
-                        time.sleep(pause)
-                        rel["source_url"] = _violet_link(brand, ser, raw, name)
+                           "source_url": "", "md5": "", "size": 0, "origin": "violettoolbox",
+                           "violet": {"brand": brand.violet, "series": ser, "device": raw, "name": name}}
                     out.append(rel)
             except Exception as e:  # noqa: BLE001
                 failed.append(f"{device}: {type(e).__name__}")
@@ -156,10 +154,11 @@ def violet_releases(brand: Brand, skip: Callable[[dict], bool], pause: float = 0
     return out
 
 
-def _violet_link(brand: Brand, series: str, device: str, version: str) -> str:
-    """Download link of one version, or "" when the service has none (it is used in memory only)."""
-    body = json.dumps({"packageType": "full", "brand": brand.violet, "series": series, "device": device,
-                       "version": version}).encode()
+def violet_link(ref: dict) -> str:
+    """Download link of the version a `violet` reference names, or "" when the service has none. The link is used
+    in memory only and expires within minutes."""
+    body = json.dumps({"packageType": "full", "brand": ref["brand"], "series": ref["series"], "device": ref["device"],
+                       "version": ref["name"]}).encode()
     req = urllib.request.Request(VT_BASE + "/download-link", data=body,
                                  headers={**VT_HEADERS, "Content-Type": "application/json"})
     try:
