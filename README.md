@@ -1,4 +1,4 @@
-# oneplus-kernel-build-version
+# oem-kernel-build-version
 
 Extracts the `Linux version …` string (kernel version + build) from the `boot.img` inside the `payload.bin`
 of OnePlus, OPPO and Realme OTA packages, without downloading the firmware: it reads only the needed bytes over HTTP Range
@@ -6,7 +6,7 @@ of OnePlus, OPPO and Realme OTA packages, without downloading the firmware: it r
 [`data/oneplus.md`](data/oneplus.md) / [`data/oneplus.json`](data/oneplus.json),
 [`data/oppo.md`](data/oppo.md) / [`data/oppo.json`](data/oppo.json),
 [`data/realme.md`](data/realme.md) / [`data/realme.json`](data/realme.json).
-A searchable, filterable table of all of them is published with GitHub Pages: <https://luigimak.github.io/oneplus-kernel-build-version/>
+A searchable, filterable table of all of them is published with GitHub Pages: <https://luigimak.github.io/oem-kernel-build-version/>
 (source in [`docs/`](docs/), deployed by `.github/workflows/pages.yml`; set Settings → Pages → Source to "GitHub Actions" once).
 
 ## Usage

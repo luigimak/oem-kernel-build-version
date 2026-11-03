@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "opkv"
 version = "0.1.0"
-description = "Extract the 'Linux version' banner from the boot.img of OnePlus OTA packages via HTTP Range."
+description = "Extract the 'Linux version' banner from the boot.img of OnePlus, OPPO and Realme OTA packages via HTTP Range."
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
