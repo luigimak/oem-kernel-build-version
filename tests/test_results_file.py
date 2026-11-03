@@ -1,4 +1,4 @@
-"""What lands in data/results.json, whatever the command that saved it (checked through `opkv run`)."""
+"""What lands in data/<brand>.json, whatever the command that saved it (checked through `opkv run`)."""
 from helpers import row
 
 
@@ -61,3 +61,19 @@ def test_models_with_a_single_label_are_left_alone(run):
     rows = [row("a", version="CPH2653_15.0.0.100(EX01)", device="OP 13"),
             row("b", version="CPH2723_15.0.0.100(EX01)", device="OP 13S", region="IN")]
     assert {r["device"] for r in saved(run, rows)} == {"OP 13", "OP 13S"}
+
+
+def test_failed_row_without_android_gets_it_from_the_firmware_version(run):
+    r = saved(run, [row("a", version="CPH2841_16.0.10.600(EX01)", ok=False, android_version=None)])[0]
+    assert r["android_version"] == "16"
+
+
+def test_android_read_from_the_ota_is_not_overwritten_by_the_version(run):
+    r = saved(run, [row("a", version="CPH2841_16.0.10.600(EX01)", ok=False, android_version="15")])[0]
+    assert r["android_version"] == "15"
+
+
+def test_ok_row_without_android_is_left_for_the_metadata_pass(run):
+    # the real value is read from the OTA by `run`; a guess would hide that the row still needs it
+    row_ = row("a", version="CPH2841_16.0.10.600(EX01)", android_version=None)
+    assert "android_version" in row_ and run([], [row_])[1][0]["android_version"] is None

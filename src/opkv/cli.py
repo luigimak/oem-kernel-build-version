@@ -31,6 +31,9 @@ def _save(path: str, rows: dict) -> None:
     for r in rows.values():
         r.pop("source_url", None)              # never persist URLs
         normalize.row(r)                       # fix catalog typos / naming (idempotent)
+        if not r["ok"] and not r.get("android_version"):
+            major = catalog.os_major(r["version"])      # no OTA metadata was read: the OS major equals the Android release
+            r["android_version"] = str(major) if major else r.get("android_version")
     dropped = normalize.dedupe(rows)           # one row per firmware, whatever the ids it came with
     if dropped:
         print(f"dropped {len(dropped)} duplicate rows", file=sys.stderr)
