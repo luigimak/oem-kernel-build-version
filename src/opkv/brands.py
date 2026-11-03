@@ -16,13 +16,14 @@ class Brand:
     matches: Callable[[dict], bool]         # does a release / {"device": ...} belong to the brand (and is it wanted)
     pulse: str                              # OTA Pulse model list
     ou_prefix: str                          # Oxygen Updater device names start with it (lower case)
+    violet: str                             # brand name in the VioletToolBox ROM API
     archive: bool = False                   # spike0en/oneplus_archive only has OnePlus firmware
 
 
 BRANDS = {b.key: b for b in (
-    Brand("oneplus", "OnePlus", catalog.is_oneplus, PULSE + "oneplus.json", "oneplus", archive=True),
-    Brand("oppo", "OPPO", catalog.is_oppo, PULSE + "oppo.json", "oppo"),
-    Brand("realme", "Realme", catalog.is_realme, PULSE + "realme.json", "realme"),
+    Brand("oneplus", "OnePlus", catalog.is_oneplus, PULSE + "oneplus.json", "oneplus", "OnePlus", archive=True),
+    Brand("oppo", "OPPO", catalog.is_oppo, PULSE + "oppo.json", "oppo", "OPPO"),
+    Brand("realme", "Realme", catalog.is_realme, PULSE + "realme.json", "realme", "realme"),
 )}
 
 

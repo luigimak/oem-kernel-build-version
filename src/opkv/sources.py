@@ -1,5 +1,5 @@
-"""Extra release sources: Oxygen Updater API (latest firmware per device/region) and
-antirollchecker's database (md5 index + gap check). All public, read-only, low volume."""
+"""Extra release sources: Oxygen Updater API (latest firmware per device/region), the VioletToolBox ROM API
+(older Chinese-market firmware) and antirollchecker's database (md5 index). All public, read-only, low volume."""
 from __future__ import annotations
 
 import hashlib
@@ -7,7 +7,10 @@ import json
 import os
 import re
 import sys
+import time
+import urllib.parse
 import urllib.request
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 
 from . import catalog, normalize
@@ -15,6 +18,8 @@ from .brands import Brand
 
 OU_BASE = "https://oxygenupdater.com/api/v2.10/"
 OU_HEADERS = {"User-Agent": "Oxygen_updater_7.1.0"}
+VT_BASE = "https://violettool.top/rom-api"
+VT_HEADERS = {"User-Agent": "opkv"}
 ARB_DB = "https://raw.githubusercontent.com/Bartixxx32/OnePlus-antirollchecker/main/data/database.json"
 
 
@@ -77,6 +82,92 @@ def ou_releases(brand: Brand, workers: int = 6) -> list[dict]:
         _warn("Oxygen Updater", f"Oxygen Updater: {len(failed)} of {len(todo)} devices could not be read "
                                 f"({'; '.join(sorted(failed))})")
     return found
+
+
+# "ColorOS PHN110_14.0.0.850(CN01) C.22", "RealmeUI RMX5010_15.0.0.500(CN01) A.48", "OPD2601_16.0.10.600(CN01)"
+_VT_VERSION = re.compile(r"(?P<version>(?P<model>[A-Za-z0-9]+)_\d+\.\d+\.\d+\.\d+\(CN\d+\))(?:\s+(?P<letter>[A-Z])\.(?P<build>\d+))?")
+_VT_TAG = re.compile(r"^\[[^\]]*\]\s*")                  # "[普通]", "[C16动态解析]"
+_VT_CODE = re.compile(r"\s*[(\uff08][A-Z0-9]+[)\uff09]\s*$")      # trailing model code, with ASCII or fullwidth parentheses
+_CJK = re.compile(r"[\u3000-\u9fff\uff00-\uffef]")
+
+
+def violet_version(name: str) -> dict | None:
+    """Firmware of a VioletToolBox version name: {version, model, ota_version}; None unless it is a Chinese-market
+    (CNxx) firmware, the only region the service lists with its real name."""
+    m = _VT_VERSION.search(name)
+    if not m:
+        return None
+    ota = f"{m['model']}_11.{m['letter']}.{m['build']}" if m["letter"] else m["version"]
+    return {"version": m["version"], "model": m["model"], "ota_version": ota}
+
+
+def violet_device(raw: str) -> str:
+    """Device label from a VioletToolBox device name (a tag, Chinese words, the model code in parentheses): -> "Realme GT7 PRO"."""
+    name = _CJK.sub("", _VT_CODE.sub("", _VT_TAG.sub("", raw)))
+    return normalize.device_from_name(re.sub(r"\s+", " ", name).strip())
+
+
+def violet_releases(brand: Brand, skip: Callable[[dict], bool], pause: float = 0.3) -> list[dict]:
+    """Chinese-market firmware (Android 14+) the VioletToolBox community service lists for the brand, with a
+    download link for every one `skip` does not rule out. One request at a time, with a pause: the service asks
+    for moderate use. Unreadable parts are reported and skipped."""
+    def get(path: str, **query):
+        time.sleep(pause)
+        return _get(f"{VT_BASE}/{path}?{urllib.parse.urlencode(query)}", VT_HEADERS)
+
+    out: list[dict] = []
+    seen: set[str] = set()
+    failed: list[str] = []
+    try:
+        series = get("series", packageType="full", brand=brand.violet)["items"]
+    except Exception as e:  # noqa: BLE001 - a source that is down must not stop the run
+        _warn("VioletToolBox", f"VioletToolBox: {brand.label} not read ({type(e).__name__})")
+        return out
+    for ser in series:
+        try:
+            devices = get("devices", packageType="full", brand=brand.violet, series=ser)["items"]
+        except Exception as e:  # noqa: BLE001
+            failed.append(f"{ser}: {type(e).__name__}")
+            continue
+        for raw in devices:
+            device = violet_device(raw)
+            if not brand.matches({"device": device}):
+                continue
+            try:
+                names = [x["name"] for x in get("versions", packageType="full", brand=brand.violet, series=ser,
+                                               device=raw)["items"]]
+                for name in names:
+                    fw = violet_version(name)
+                    if not fw or fw["version"] in seen or not catalog.wanted_version(fw["version"]):
+                        continue
+                    seen.add(fw["version"])
+                    rel = {"id": "vt-" + hashlib.sha1(f"{fw['version']}|CN".encode(), usedforsecurity=False).hexdigest()[:20],
+                           "device": device, "region": "CN", "model": fw["model"], "version": fw["version"],
+                           "ota_version": fw["ota_version"], "build_timestamp": normalize.ota_timestamp(fw["ota_version"]),
+                           "source_url": "", "md5": "", "size": 0, "origin": "violettoolbox"}
+                    if not skip(rel):
+                        time.sleep(pause)
+                        rel["source_url"] = _violet_link(brand, ser, raw, name)
+                    out.append(rel)
+            except Exception as e:  # noqa: BLE001
+                failed.append(f"{device}: {type(e).__name__}")
+    if failed:
+        _warn("VioletToolBox", f"VioletToolBox: {len(failed)} parts of {brand.label} could not be read ({'; '.join(failed[:8])})")
+    return out
+
+
+def _violet_link(brand: Brand, series: str, device: str, version: str) -> str:
+    """Download link of one version, or "" when the service has none (it is used in memory only)."""
+    body = json.dumps({"packageType": "full", "brand": brand.violet, "series": series, "device": device,
+                       "version": version}).encode()
+    req = urllib.request.Request(VT_BASE + "/download-link", data=body,
+                                 headers={**VT_HEADERS, "Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=40) as r:
+            links = json.load(r).get("links") or []
+    except Exception:  # noqa: BLE001 - no link: the firmware is listed but cannot be read
+        return ""
+    return next((link for link in links if isinstance(link, str) and link.startswith("http")), "")
 
 
 def arb_index() -> dict:

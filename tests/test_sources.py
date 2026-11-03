@@ -88,3 +88,67 @@ def test_each_brand_lists_only_its_own_oxygen_updater_devices(oxygen):
              for key in brands.BRANDS}
     assert found == {"oneplus": [("OP 13", "EU")], "oppo": [("OPPO FIND X10 PRO", "EU")],
                      "realme": [("Realme 16 PRO+", "IN")]}        # the Android 11 realme is too old
+
+
+@pytest.fixture
+def violet(monkeypatch):
+    """VioletToolBox stub: violet(tree={(series, device): [names]}, links={name: url}) -> links asked for."""
+    asked = []
+
+    def install(tree, links=None, brand_series=None):
+        def fake_get(url, headers, timeout=40):
+            path, _, query = url[len(sources.VT_BASE) + 1:].partition("?")
+            q = dict(p.split("=", 1) for p in query.split("&"))
+            from urllib.parse import unquote
+            q = {k: unquote(v).replace("+", " ") for k, v in q.items()}
+            if path == "series":
+                return {"items": sorted({s for s, _ in tree})}
+            if path == "devices":
+                return {"items": [d for s, d in tree if s == q["series"]]}
+            return {"items": [{"name": n} for n in tree[(q["series"], q["device"])]]}
+
+        def fake_link(brand, series, device, version):
+            asked.append(version)
+            return (links or {}).get(version, "https://example.invalid/vt.zip")
+
+        monkeypatch.setattr(sources, "_get", fake_get)
+        monkeypatch.setattr(sources, "_violet_link", fake_link)
+        return asked
+
+    return install
+
+
+def test_violet_names_and_devices_are_read():
+    assert sources.violet_version("ColorOS PHN110_14.0.0.850(CN01) C.22") == {
+        "version": "PHN110_14.0.0.850(CN01)", "model": "PHN110", "ota_version": "PHN110_11.C.22"}
+    assert sources.violet_version("OPD2601_16.0.10.600(CN01)")["ota_version"] == "OPD2601_16.0.10.600(CN01)"
+    assert sources.violet_version("ColorOS PEMM00_11_A.15") is None                    # no real version number
+    assert sources.violet_version("RealmeUI RMX3706_13.1.0.118(SP01CN01) A.48") is None   # not a plain CN firmware
+    assert sources.violet_device("[\u666e\u901a]OPPO A55 \u5168\u7f51\u901a\u7248 (PEMM00)") == "OPPO A55"
+    assert sources.violet_device("[\u666e\u901a]\u771f\u6211 Realme GT7 Pro\uff08RMX5010\uff09") == "Realme GT7 PRO"
+
+
+def test_violet_lists_android_14_plus_chinese_firmware_once_with_a_link_where_needed(violet):
+    asked = violet({("Find", "[\u666e\u901a]OPPO Find N3 (PHN110)"): [
+                        "ColorOS PHN110_13.2.0.300(CN01) A.48", "ColorOS PHN110_14.0.0.850(CN01) C.22",
+                        "ColorOS PHN110_15.0.0.860(CN01) F.57"],
+                    ("Find", "[\u666e\u901a]OPPO Find N3 (PHN110) 2"): ["ColorOS PHN110_15.0.0.860(CN01) F.57"]})
+    rels = sources.violet_releases(brands.BRANDS["oppo"], skip=lambda r: r["version"].startswith("PHN110_15"), pause=0)
+    assert [(r["version"], r["region"], r["device"], bool(r["source_url"])) for r in rels] == [
+        ("PHN110_14.0.0.850(CN01)", "CN", "OPPO FIND N3", True), ("PHN110_15.0.0.860(CN01)", "CN", "OPPO FIND N3", False)]
+    assert asked == ["ColorOS PHN110_14.0.0.850(CN01) C.22"]                  # a link only for the one not skipped
+    assert rels[0]["id"].startswith("vt-") and rels[0]["origin"] == "violettoolbox"
+
+
+def test_violet_old_oneplus_models_are_not_listed(violet):
+    violet({("number", "[\u666e\u901a]OnePlus 9 (LE2110)"): ["ColorOS LE2110_14.0.0.100(CN01) A.01"]})
+    assert sources.violet_releases(brands.BRANDS["oneplus"], skip=lambda r: True, pause=0) == []
+
+
+def test_violet_down_is_reported_and_does_not_stop_the_run(monkeypatch, capsys):
+    def down(url, headers, timeout=40):
+        raise OSError("unreachable")
+
+    monkeypatch.setattr(sources, "_get", down)
+    assert sources.violet_releases(brands.BRANDS["oppo"], skip=lambda r: True, pause=0) == []
+    assert "VioletToolBox: OPPO not read" in capsys.readouterr().err

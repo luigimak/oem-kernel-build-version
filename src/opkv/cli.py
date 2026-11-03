@@ -96,7 +96,7 @@ def cmd_fetch(a):
 
 
 def cmd_discover(a):
-    """Query the OTA servers (OTA Pulse protocol) and Oxygen Updater for the current firmware of every model
+    """Query the OTA servers (OTA Pulse protocol), Oxygen Updater and VioletToolBox for the firmware of every model
     of the selected brands and add the ones not yet known to the local catalog."""
     import re
 
@@ -127,7 +127,9 @@ def _discover_brand(a, brand: Brand, cat: dict, by_id: dict, by_key: dict, lette
 
     with urllib.request.urlopen(brand.pulse, timeout=60) as r:
         devices = json.load(r)
-    done = {normalize.firmware_key(r) for r in _load_results(_path(a, brand)).values()}      # already processed: not "new"
+    results = _load_results(_path(a, brand)).values()
+    done = {normalize.firmware_key(r) for r in results}      # already processed: not "new"
+    read = {normalize.firmware_key(r) for r in results if r["ok"]}      # kernel already read: no link needed
     labels = normalize.labels_by_model(r for r in cat["releases"] if brand.matches(r))
 
     queries: dict[tuple, tuple] = {}
@@ -216,10 +218,27 @@ def _discover_brand(a, brand: Brand, cat: dict, by_id: dict, by_key: dict, lette
             if key not in done:                          # already processed ones stay in the catalog (retries) but are not "new"
                 ou_added += 1
                 print(f"  + {rel['device']} {rel['region']} {rel['version']}  [oxygen-updater]", file=sys.stderr)
+    vt_added = 0
+    if not a.no_violet:
+        from . import sources
+        for rel in sources.violet_releases(brand, skip=lambda r: normalize.firmware_key(r) in read):
+            rel["device"] = labels.get(rel["model"], rel["device"])
+            key = normalize.firmware_key(rel)
+            if key in by_key:                            # known firmware (e.g. a failed read): a fresh link is all it needs
+                if rel["source_url"]:
+                    by_id[by_key[key]]["source_url"] = rel["source_url"]
+                continue
+            if not rel["source_url"]:                    # listed without a link: nothing to read
+                continue
+            by_id[rel["id"]] = rel
+            by_key[key] = rel["id"]
+            if key not in done:
+                vt_added += 1
+                print(f"  + {rel['device']} {rel['region']} {rel['version']}  [violettoolbox]", file=sys.stderr)
     cat["releases"] = list(by_id.values())
     with open(a.catalog, "w", encoding="utf-8") as f:
         json.dump(cat, f, ensure_ascii=False)
-    print(f"{brand.label}: new releases from OTA query: {added}  from Oxygen Updater: {ou_added}  "
+    print(f"{brand.label}: new releases from OTA query: {added}  from Oxygen Updater: {ou_added}  from VioletToolBox: {vt_added}  "
           f"links refreshed: {len(refreshed)}  (queries without answer: {sum(errs.values())})")
 
 
@@ -418,6 +437,7 @@ def main(argv=None):
     dsc = sub.add_parser("discover", help="native OTA query: find firmware missing from the catalog")
     common(dsc)
     dsc.add_argument("--no-ou", action="store_true", help="skip the Oxygen Updater source")
+    dsc.add_argument("--no-violet", action="store_true", help="skip the VioletToolBox source")
     dsc.add_argument("--catalog", default="data/catalog.json")
     dsc.add_argument("--workers", type=int, default=4)
     dsc.set_defaults(fn=cmd_discover)
