@@ -57,10 +57,6 @@ def is_realme(rel: dict) -> bool:
     return rel.get("device", "").upper().startswith("REALME ")
 
 
-def oneplus_releases(src: str) -> list[dict]:
-    return brand_releases(src, is_oneplus)
-
-
 def brand_releases(src: str, matches) -> list[dict]:
     """Android 14+ releases with a download link whose device `matches`, one per firmware."""
     seen, out = set(), []

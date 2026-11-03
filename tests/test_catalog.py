@@ -21,17 +21,17 @@ def _catalog(tmp_path, *releases):
 
 def test_same_firmware_under_two_ids_is_listed_once(tmp_path):
     src = _catalog(tmp_path, _release("aaa"), _release("bbb"))
-    assert [r["id"] for r in catalog.oneplus_releases(src)] == ["aaa"]
+    assert [r["id"] for r in catalog.brand_releases(src, catalog.is_oneplus)] == ["aaa"]
 
 
 def test_same_version_in_another_region_is_a_different_firmware(tmp_path):
     src = _catalog(tmp_path, _release("aaa", region="EU"), _release("bbb", region="GLO"))
-    assert [r["id"] for r in catalog.oneplus_releases(src)] == ["aaa", "bbb"]
+    assert [r["id"] for r in catalog.brand_releases(src, catalog.is_oneplus)] == ["aaa", "bbb"]
 
 
 def test_catalog_model_typo_does_not_hide_a_duplicate(tmp_path):
     src = _catalog(tmp_path, _release("aaa"), _release("bbb", version="CCPH2645_15.0.0.840(EX01)"))
-    assert [r["id"] for r in catalog.oneplus_releases(src)] == ["aaa"]
+    assert [r["id"] for r in catalog.brand_releases(src, catalog.is_oneplus)] == ["aaa"]
 
 
 def test_os_major():
@@ -73,7 +73,7 @@ def test_releases_without_a_download_link_or_older_than_android_14_are_not_liste
     gone = {**_release("gone"), "source_url": ""}
     old = _release("old", version="CPH2449_13.1.0.500(EX01)")
     other = {**_release("other"), "device": "Xiaomi 15"}
-    assert catalog.oneplus_releases(_catalog(tmp_path, gone, old, other, _release("ok"))) == [_release("ok")]
+    assert catalog.brand_releases(_catalog(tmp_path, gone, old, other, _release("ok")), catalog.is_oneplus) == [_release("ok")]
 
 
 @pytest.mark.parametrize("device,oppo,realme", [
