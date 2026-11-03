@@ -6297,7 +6297,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HttpError: range [7783035839-7783035860] su gauss-compota-c-in.allawnofs.com: Remote end closed connection without response"
+  "error": "HTTPError: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-ed71ea2ac60191e4422f",
@@ -9650,14 +9650,14 @@
   "md5": "77e86740088cb7fc2538ac6cf21b15be",
   "size": 7225030457,
   "origin": "oxygen-updater",
-  "ok": false,
+  "ok": true,
   "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HttpError: range [1712411207-1715935398] su gauss-compota-c-in.allawnofs.com: Remote end closed connection without response"
+  "linux_version": "Linux version 5.15.197-android13-8-o-g00d4e8e246c3 (build-user@build-host) (Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7) #1 SMP PREEMPT Wed Jul 29 13:21:00 UTC 2026",
+  "kernel_release": "5.15.197-android13-8-o-g00d4e8e246c3",
+  "build": "#1 SMP PREEMPT Wed Jul 29 13:21:00 UTC 2026",
+  "compiler": "Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "ou-aae4449cfc8cb14122c8",
@@ -9717,7 +9717,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HttpError: range [6769973726-6769973747] su gauss-compota-c-fr.allawnofs.com: Remote end closed connection without response"
+  "error": "HTTPError: HTTP Error 403: Forbidden"
  },
  {
   "id": "ou-b28cfd8081eee0812a34",
@@ -9737,7 +9737,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "IncompleteRead: IncompleteRead(3115461 bytes read, 408743 more expected)"
+  "error": "HTTPError: HTTP Error 403: Forbidden"
  },
  {
   "id": "q-150ee0fad37783d6d446",
@@ -14948,7 +14948,7 @@
   "ota_version": "RMX3700_16.0.3.503(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 8635160693,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -14957,7 +14957,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [1676991471-1681037354] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-1f50154884a2452e0b6b",
@@ -14968,7 +14968,7 @@
   "ota_version": "RMX3700_16.0.3.502(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 8618064631,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -14977,7 +14977,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [3013-312842] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-ee4850d1c8b41a58e3d9",
@@ -14988,7 +14988,7 @@
   "ota_version": "RMX3700_16.0.2.401(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 8605756398,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -14997,7 +14997,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [1667356985-1671317512] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-122a6b68021bde475b0c",
@@ -15008,7 +15008,7 @@
   "ota_version": "RMX3700_16.0.1.301(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 8582373859,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -15017,7 +15017,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [1621013094-1625059245] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-e6fc7795efb7a27106b1",
@@ -15608,16 +15608,16 @@
   "ota_version": "RMX3852_16.0.5.1010(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 9233297749,
   "origin": "violettoolbox",
-  "ok": false,
+  "ok": true,
   "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "linux_version": "Linux version 6.1.141-android14-11-o-gffc54a6d2287 (build-user@build-host) (Android (10087095, +pgo, +bolt, +lto, -mlgo, based on r487747c) clang version 17.0.2 (https://android.googlesource.com/toolchain/llvm-project d9f89f4d16663d5012e5c09495f3b30ece3d2362), LLD 17.0.2) #1 SMP PREEMPT Mon May 18 10:30:36 UTC 2026",
+  "kernel_release": "6.1.141-android14-11-o-gffc54a6d2287",
+  "build": "#1 SMP PREEMPT Mon May 18 10:30:36 UTC 2026",
+  "compiler": "Android (10087095, +pgo, +bolt, +lto, -mlgo, based on r487747c) clang version 17.0.2 (https://android.googlesource.com/toolchain/llvm-project d9f89f4d16663d5012e5c09495f3b30ece3d2362), LLD 17.0.2",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "vt-5b59e5d525e83cd21749",
@@ -15628,7 +15628,7 @@
   "ota_version": "RMX3852_16.0.5.1300(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 9290095744,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -15637,7 +15637,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [1708722806-1712058089] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-fa42f4f8081d6dc9a9fb",
@@ -15948,7 +15948,7 @@
   "ota_version": "RMX5060_16.0.0.210(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 8925004728,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -15957,7 +15957,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [8925004706-8925004727] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-57a3585b44aafecbe162",
@@ -16008,7 +16008,7 @@
   "ota_version": "RMX5060_16.0.5.711(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 8970729188,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -16017,7 +16017,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [8970729166-8970729187] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-ee2eebbd5f64a02d31bc",
@@ -16028,7 +16028,7 @@
   "ota_version": "RMX5060_16.0.7.210(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 9077305879,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -16037,7 +16037,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [9077305857-9077305878] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-fbb2e8399117efa2ecc1",
@@ -16128,7 +16128,7 @@
   "ota_version": "RMX5080_16.0.9.400(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 9528604881,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -16137,7 +16137,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [9528604859-9528604880] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-15ac39e43fa514cb33ea",
@@ -16148,7 +16148,7 @@
   "ota_version": "RMX5080_16.0.8.301(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 9491093947,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -16157,7 +16157,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [9491028390-9491093946] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-498d1aa8e96d32e98410",
@@ -16188,7 +16188,7 @@
   "ota_version": "RMX5080_16.0.10.500(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 9562913137,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -16197,7 +16197,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [9562913115-9562913136] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-7e86e796c563680da23b",
@@ -16628,7 +16628,7 @@
   "ota_version": "RMX5071_16.0.5.1010(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 8302951739,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -16637,7 +16637,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [0-65535] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-8d1fefc56ca08dd0f701",
@@ -17281,14 +17281,14 @@
  },
  {
   "id": "vt-0bb4da185c39d55d99ce",
-  "device": "Realme GT5",
+  "device": "Realme GT5 150W",
   "region": "CN",
   "model": "RMX3820",
   "version": "RMX3820_16.0.5.1010(CN01)",
   "ota_version": "RMX3820_16.0.5.1010(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 8715936037,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -17297,38 +17297,38 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [1704376157-1707354192] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-daeea979c95b675d56dc",
-  "device": "Realme GT5",
+  "device": "Realme GT5 150W",
   "region": "CN",
   "model": "RMX3820",
   "version": "RMX3820_16.0.5.700(CN01)",
   "ota_version": "RMX3820_16.0.5.700(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 8519183772,
   "origin": "violettoolbox",
-  "ok": false,
+  "ok": true,
   "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "linux_version": "Linux version 5.15.180-android13-8-o-01178-g24b4f3bb3ee0 (build-user@build-host) (Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7) #1 SMP PREEMPT Mon Apr 27 13:23:06 UTC 2026",
+  "kernel_release": "5.15.180-android13-8-o-01178-g24b4f3bb3ee0",
+  "build": "#1 SMP PREEMPT Mon Apr 27 13:23:06 UTC 2026",
+  "compiler": "Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "vt-8192920a525f992192f1",
-  "device": "Realme GT5",
+  "device": "Realme GT5 150W",
   "region": "CN",
   "model": "RMX3820",
   "version": "RMX3820_16.0.3.500(CN01)",
   "ota_version": "RMX3820_16.0.3.500(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 8431837901,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -17337,18 +17337,18 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [1684308868-1688177451] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-d7c523f481808b86da24",
-  "device": "Realme GT5",
+  "device": "Realme GT5 150W",
   "region": "CN",
   "model": "RMX3820",
   "version": "RMX3820_16.0.2.402(CN01)",
   "ota_version": "RMX3820_16.0.2.402(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 8476236008,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -17357,11 +17357,11 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [1682799340-1685777227] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-3ba7330a878e12cda1d0",
-  "device": "Realme GT5",
+  "device": "Realme GT5 150W",
   "region": "CN",
   "model": "RMX3820",
   "version": "RMX3820_15.0.0.1300(CN01)",
@@ -17381,7 +17381,7 @@
  },
  {
   "id": "q-cc817b3e898ea7d98f7f",
-  "device": "Realme GT5",
+  "device": "Realme GT5 150W",
   "region": "CN",
   "model": "RMX3820",
   "version": "RMX3820_14.0.0.1120(CN01)",
@@ -17401,7 +17401,7 @@
  },
  {
   "id": "q-f37e1e47fc7276e81b98",
-  "device": "Realme GT5",
+  "device": "Realme GT5 150W",
   "region": "CN",
   "model": "RMX3820",
   "version": "RMX3820_15.0.0.1400(CN01)",
@@ -17421,7 +17421,7 @@
  },
  {
   "id": "q-14b2c4262328c92106a7",
-  "device": "Realme GT5",
+  "device": "Realme GT5 150W",
   "region": "CN",
   "model": "RMX3820",
   "version": "RMX3820_16.0.5.1300(CN01)",
@@ -17430,14 +17430,14 @@
   "md5": "ff1b788a94ab14cd805321fa629b3cb1",
   "size": 8779427201,
   "origin": "ota-query",
-  "ok": false,
+  "ok": true,
   "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "linux_version": "Linux version 5.15.197-android13-8-o-01214-gbee5b6ef6244 (build-user@build-host) (Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7) #1 SMP PREEMPT Fri Aug 7 06:32:56 UTC 2026",
+  "kernel_release": "5.15.197-android13-8-o-01214-gbee5b6ef6244",
+  "build": "#1 SMP PREEMPT Fri Aug 7 06:32:56 UTC 2026",
+  "compiler": "Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "vt-628d9b4656491e902a23",
@@ -17448,7 +17448,7 @@
   "ota_version": "RMX3823_16.0.5.1010(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 8715630577,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -17457,7 +17457,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [1704376209-1707354244] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-360be01b37b57929d629",
@@ -17468,7 +17468,7 @@
   "ota_version": "RMX3823_16.0.3.500(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 8440667738,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -17477,7 +17477,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [2982-3005] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-42e61498c115052c7967",
@@ -17488,7 +17488,7 @@
   "ota_version": "RMX3823_16.0.5.700(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 8531705900,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -17497,7 +17497,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [1697749416-1701616919] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-50940863785717447c34",
@@ -21688,7 +21688,7 @@
   "ota_version": "RMX5090_16.0.9.400(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 9752761248,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -21697,7 +21697,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [9752761226-9752761247] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-555db3e8d0d570abae6e",
@@ -21708,7 +21708,7 @@
   "ota_version": "RMX5090_16.0.5.712(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 9517452594,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -21717,7 +21717,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [9517452572-9517452593] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-32f13784e1b6967e1ad0",
@@ -21748,7 +21748,7 @@
   "ota_version": "RMX5090_16.0.2.400(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 9598580511,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -21757,7 +21757,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [9598580489-9598580510] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-017e9fcbca63d50b2b75",
@@ -21788,7 +21788,7 @@
   "ota_version": "RMX5090_16.0.3.500(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 9553262045,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -21797,7 +21797,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [9553262023-9553262044] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-0653d832739c7ee54559",
@@ -22408,7 +22408,7 @@
   "ota_version": "RMX6699_16.0.10.500(CN01)",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 9716411623,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "16",
@@ -22417,7 +22417,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "HttpError: range [9716346066-9716411622] su gauss-compota-c-cn.allawnfs.com: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-76d0c5b10e907c68a71b",

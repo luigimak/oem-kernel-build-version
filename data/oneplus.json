@@ -614,6 +614,26 @@
   "android_version": "15"
  },
  {
+  "id": "ou-554f9392e70f6c65b61f",
+  "device": "OP 10R 80W",
+  "region": "CN",
+  "model": "PGKM10",
+  "version": "PGKM10_15.0.0.1800(CN01)",
+  "ota_version": "PGKM10_11.H.20_3200_202604032300",
+  "build_timestamp": "2026-04-03T23:00:00",
+  "md5": "9ed76b5cd524c7fff4bf0b4d33cb75c5",
+  "size": 7234973868,
+  "origin": "oxygen-updater",
+  "ok": true,
+  "android_version": "15",
+  "linux_version": "Linux version 5.10.236-android12-9-o-g6973d81cd2ac (build-user@build-host) (Android (7284624, based on r416183b) clang version 12.0.5 (https://android.googlesource.com/toolchain/llvm-project c935d99d7cf2016289302412d708641d52d2f7ee), LLD 12.0.5 (/buildbot/src/android/llvm-toolchain/out/llvm-project/lld c935d99d7cf2016289302412d708641d52d2f7ee)) #1 SMP PREEMPT Tue Feb 10 13:50:12 UTC 2026",
+  "kernel_release": "5.10.236-android12-9-o-g6973d81cd2ac",
+  "build": "#1 SMP PREEMPT Tue Feb 10 13:50:12 UTC 2026",
+  "compiler": "Android (7284624, based on r416183b) clang version 12.0.5 (https://android.googlesource.com/toolchain/llvm-project c935d99d7cf2016289302412d708641d52d2f7ee), LLD 12.0.5 (/buildbot/src/android/llvm-toolchain/out/llvm-project/lld c935d99d7cf2016289302412d708641d52d2f7ee)",
+  "source": "payload.bin",
+  "error": null
+ },
+ {
   "id": "q-529e3c9d99a5477271dc",
   "device": "OP 10T/ACE PRO",
   "region": "IN",
@@ -1343,7 +1363,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error [Errno 104] Connection reset by peer>"
  },
  {
   "id": "vt-ceef96e6ac1fb4051b12",
@@ -1617,126 +1637,6 @@
   "android_version": "16",
   "size": 8234754783,
   "md5": "e55860b7e3b8384f282736e778ae2022"
- },
- {
-  "id": "vt-647daa9e27a588a52b25",
-  "device": "OP 11R/ACE 2",
-  "region": "CN",
-  "model": "PHK110",
-  "version": "PHK110_16.0.3.501(CN01)",
-  "ota_version": "PHK110_16.0.3.501(CN01)",
-  "build_timestamp": "",
-  "md5": "",
-  "size": 0,
-  "origin": "violettoolbox",
-  "ok": false,
-  "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
- },
- {
-  "id": "vt-d41083a0ddc05bae35bf",
-  "device": "OP 11R/ACE 2",
-  "region": "CN",
-  "model": "PHK110",
-  "version": "PHK110_16.0.5.700(CN01)",
-  "ota_version": "PHK110_16.0.5.700(CN01)",
-  "build_timestamp": "",
-  "md5": "",
-  "size": 0,
-  "origin": "violettoolbox",
-  "ok": false,
-  "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
- },
- {
-  "id": "vt-a02a68b364b126e8aea5",
-  "device": "OP 11R/ACE 2",
-  "region": "CN",
-  "model": "PHK110",
-  "version": "PHK110_16.0.2.400(CN01)",
-  "ota_version": "PHK110_16.0.2.400(CN01)",
-  "build_timestamp": "",
-  "md5": "",
-  "size": 0,
-  "origin": "violettoolbox",
-  "ok": false,
-  "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
- },
- {
-  "id": "q-323a455dddd98fb59f35",
-  "device": "OP 11R/ACE 2",
-  "region": "CN",
-  "model": "PHK110",
-  "version": "PHK110_14.0.0.808(CN01)",
-  "ota_version": "PHK110_11.C.57_1570_202410181206",
-  "build_timestamp": "2024-10-18T12:06:00",
-  "md5": "79e990664a8ec9fcfea927370bd6d8f4",
-  "size": 7321900506,
-  "origin": "ota-query",
-  "ok": true,
-  "linux_version": "Linux version 5.10.198-android12-9-o-gcb0e6dbdaee8 (build-user@build-host) (Android (7284624, based on r416183b) clang version 12.0.5 (https://android.googlesource.com/toolchain/llvm-project c935d99d7cf2016289302412d708641d52d2f7ee), LLD 12.0.5 (/buildbot/src/android/llvm-toolchain/out/llvm-project/lld c935d99d7cf2016289302412d708641d52d2f7ee)) #1 SMP PREEMPT Wed Aug 7 11:12:28 UTC 2024",
-  "kernel_release": "5.10.198-android12-9-o-gcb0e6dbdaee8",
-  "build": "#1 SMP PREEMPT Wed Aug 7 11:12:28 UTC 2024",
-  "compiler": "Android (7284624, based on r416183b) clang version 12.0.5 (https://android.googlesource.com/toolchain/llvm-project c935d99d7cf2016289302412d708641d52d2f7ee), LLD 12.0.5 (/buildbot/src/android/llvm-toolchain/out/llvm-project/lld c935d99d7cf2016289302412d708641d52d2f7ee)",
-  "source": "payload.bin",
-  "error": null,
-  "android_version": "14"
- },
- {
-  "id": "q-bffedb180fcbd99c88cc",
-  "device": "OP 11R/ACE 2",
-  "region": "CN",
-  "model": "PHK110",
-  "version": "PHK110_15.0.0.870(CN01)",
-  "ota_version": "PHK110_11.F.47_2470_202511061312",
-  "build_timestamp": "2025-11-06T13:12:00",
-  "md5": "034bfb58af4da2cf8856cede7a36782a",
-  "size": 7562824962,
-  "origin": "ota-query",
-  "ok": true,
-  "linux_version": "Linux version 5.10.226-android12-9-o-gbf90590695a1 (build-user@build-host) (Android (7284624, based on r416183b) clang version 12.0.5 (https://android.googlesource.com/toolchain/llvm-project c935d99d7cf2016289302412d708641d52d2f7ee), LLD 12.0.5 (/buildbot/src/android/llvm-toolchain/out/llvm-project/lld c935d99d7cf2016289302412d708641d52d2f7ee)) #1 SMP PREEMPT Sat Aug 16 07:34:19 UTC 2025",
-  "kernel_release": "5.10.226-android12-9-o-gbf90590695a1",
-  "build": "#1 SMP PREEMPT Sat Aug 16 07:34:19 UTC 2025",
-  "compiler": "Android (7284624, based on r416183b) clang version 12.0.5 (https://android.googlesource.com/toolchain/llvm-project c935d99d7cf2016289302412d708641d52d2f7ee), LLD 12.0.5 (/buildbot/src/android/llvm-toolchain/out/llvm-project/lld c935d99d7cf2016289302412d708641d52d2f7ee)",
-  "source": "payload.bin",
-  "error": null,
-  "android_version": "15"
- },
- {
-  "id": "q-2fd78885288d8dee0919",
-  "device": "OP 11R/ACE 2",
-  "region": "CN",
-  "model": "PHK110",
-  "version": "PHK110_16.0.5.1201(CN01)",
-  "ota_version": "PHK110_11.H.57_3570_202608191020",
-  "build_timestamp": "2026-08-19T10:20:00",
-  "md5": "1451ab23a9c853b90bc22dbd6904048d",
-  "size": 8278976058,
-  "origin": "ota-query",
-  "ok": true,
-  "linux_version": "Linux version 5.10.236-android12-9-o-g74d132f4467a (build-user@build-host) (Android (7284624, based on r416183b) clang version 12.0.5 (https://android.googlesource.com/toolchain/llvm-project c935d99d7cf2016289302412d708641d52d2f7ee), LLD 12.0.5 (/buildbot/src/android/llvm-toolchain/out/llvm-project/lld c935d99d7cf2016289302412d708641d52d2f7ee)) #1 SMP PREEMPT Fri Apr 10 03:27:19 UTC 2026",
-  "kernel_release": "5.10.236-android12-9-o-g74d132f4467a",
-  "build": "#1 SMP PREEMPT Fri Apr 10 03:27:19 UTC 2026",
-  "compiler": "Android (7284624, based on r416183b) clang version 12.0.5 (https://android.googlesource.com/toolchain/llvm-project c935d99d7cf2016289302412d708641d52d2f7ee), LLD 12.0.5 (/buildbot/src/android/llvm-toolchain/out/llvm-project/lld c935d99d7cf2016289302412d708641d52d2f7ee)",
-  "source": "payload.bin",
-  "error": null,
-  "android_version": "16"
  },
  {
   "id": "3e3091698e6e945dfa8b0b2e",
@@ -8639,7 +8539,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "vt-db8adaa711675d158de4",
@@ -8659,7 +8559,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "q-a8e18c4b33bbe07cbc0b",
@@ -8739,7 +8639,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "vt-00da9b35e0b6e3fb9a8b",
@@ -8779,7 +8679,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "vt-47bb80a3c8bdb2464d11",
@@ -8879,7 +8779,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "vt-49ed442104e5c485f7df",
@@ -8899,7 +8799,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "1dda4f6732a385be48f8010d",
@@ -9053,7 +8953,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "vt-486a022314a387b729ef",
@@ -9073,7 +8973,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "aef88e112689d50c9a3d6fe5",
@@ -9226,7 +9126,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "vt-0ef544ea5bf7821f71a8",
@@ -9246,7 +9146,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "eb70379ffc0f3a7a0f87fdb8",
@@ -9971,7 +9871,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "vt-4a59150c912a00c54693",
@@ -9991,7 +9891,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "9dcdc43134a0629b89a0127d",
@@ -10201,7 +10101,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "vt-780bffe2e0407823c22c",
@@ -10716,7 +10616,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "vt-329b4f93208638c5912b",
@@ -10736,7 +10636,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "vt-e8011fe7a6a39932b794",
@@ -11123,6 +11023,126 @@
   "source": "payload.bin",
   "error": null,
   "android_version": "15"
+ },
+ {
+  "id": "vt-647daa9e27a588a52b25",
+  "device": "OP ACE2",
+  "region": "CN",
+  "model": "PHK110",
+  "version": "PHK110_16.0.3.501(CN01)",
+  "ota_version": "PHK110_16.0.3.501(CN01)",
+  "build_timestamp": "",
+  "md5": "",
+  "size": 0,
+  "origin": "violettoolbox",
+  "ok": false,
+  "android_version": "16",
+  "linux_version": null,
+  "kernel_release": null,
+  "build": null,
+  "compiler": null,
+  "source": null,
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
+ },
+ {
+  "id": "vt-d41083a0ddc05bae35bf",
+  "device": "OP ACE2",
+  "region": "CN",
+  "model": "PHK110",
+  "version": "PHK110_16.0.5.700(CN01)",
+  "ota_version": "PHK110_16.0.5.700(CN01)",
+  "build_timestamp": "",
+  "md5": "",
+  "size": 0,
+  "origin": "violettoolbox",
+  "ok": false,
+  "android_version": "16",
+  "linux_version": null,
+  "kernel_release": null,
+  "build": null,
+  "compiler": null,
+  "source": null,
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
+ },
+ {
+  "id": "vt-a02a68b364b126e8aea5",
+  "device": "OP ACE2",
+  "region": "CN",
+  "model": "PHK110",
+  "version": "PHK110_16.0.2.400(CN01)",
+  "ota_version": "PHK110_16.0.2.400(CN01)",
+  "build_timestamp": "",
+  "md5": "",
+  "size": 0,
+  "origin": "violettoolbox",
+  "ok": false,
+  "android_version": "16",
+  "linux_version": null,
+  "kernel_release": null,
+  "build": null,
+  "compiler": null,
+  "source": null,
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
+ },
+ {
+  "id": "q-323a455dddd98fb59f35",
+  "device": "OP ACE2",
+  "region": "CN",
+  "model": "PHK110",
+  "version": "PHK110_14.0.0.808(CN01)",
+  "ota_version": "PHK110_11.C.57_1570_202410181206",
+  "build_timestamp": "2024-10-18T12:06:00",
+  "md5": "79e990664a8ec9fcfea927370bd6d8f4",
+  "size": 7321900506,
+  "origin": "ota-query",
+  "ok": true,
+  "linux_version": "Linux version 5.10.198-android12-9-o-gcb0e6dbdaee8 (build-user@build-host) (Android (7284624, based on r416183b) clang version 12.0.5 (https://android.googlesource.com/toolchain/llvm-project c935d99d7cf2016289302412d708641d52d2f7ee), LLD 12.0.5 (/buildbot/src/android/llvm-toolchain/out/llvm-project/lld c935d99d7cf2016289302412d708641d52d2f7ee)) #1 SMP PREEMPT Wed Aug 7 11:12:28 UTC 2024",
+  "kernel_release": "5.10.198-android12-9-o-gcb0e6dbdaee8",
+  "build": "#1 SMP PREEMPT Wed Aug 7 11:12:28 UTC 2024",
+  "compiler": "Android (7284624, based on r416183b) clang version 12.0.5 (https://android.googlesource.com/toolchain/llvm-project c935d99d7cf2016289302412d708641d52d2f7ee), LLD 12.0.5 (/buildbot/src/android/llvm-toolchain/out/llvm-project/lld c935d99d7cf2016289302412d708641d52d2f7ee)",
+  "source": "payload.bin",
+  "error": null,
+  "android_version": "14"
+ },
+ {
+  "id": "q-bffedb180fcbd99c88cc",
+  "device": "OP ACE2",
+  "region": "CN",
+  "model": "PHK110",
+  "version": "PHK110_15.0.0.870(CN01)",
+  "ota_version": "PHK110_11.F.47_2470_202511061312",
+  "build_timestamp": "2025-11-06T13:12:00",
+  "md5": "034bfb58af4da2cf8856cede7a36782a",
+  "size": 7562824962,
+  "origin": "ota-query",
+  "ok": true,
+  "linux_version": "Linux version 5.10.226-android12-9-o-gbf90590695a1 (build-user@build-host) (Android (7284624, based on r416183b) clang version 12.0.5 (https://android.googlesource.com/toolchain/llvm-project c935d99d7cf2016289302412d708641d52d2f7ee), LLD 12.0.5 (/buildbot/src/android/llvm-toolchain/out/llvm-project/lld c935d99d7cf2016289302412d708641d52d2f7ee)) #1 SMP PREEMPT Sat Aug 16 07:34:19 UTC 2025",
+  "kernel_release": "5.10.226-android12-9-o-gbf90590695a1",
+  "build": "#1 SMP PREEMPT Sat Aug 16 07:34:19 UTC 2025",
+  "compiler": "Android (7284624, based on r416183b) clang version 12.0.5 (https://android.googlesource.com/toolchain/llvm-project c935d99d7cf2016289302412d708641d52d2f7ee), LLD 12.0.5 (/buildbot/src/android/llvm-toolchain/out/llvm-project/lld c935d99d7cf2016289302412d708641d52d2f7ee)",
+  "source": "payload.bin",
+  "error": null,
+  "android_version": "15"
+ },
+ {
+  "id": "q-2fd78885288d8dee0919",
+  "device": "OP ACE2",
+  "region": "CN",
+  "model": "PHK110",
+  "version": "PHK110_16.0.5.1201(CN01)",
+  "ota_version": "PHK110_11.H.57_3570_202608191020",
+  "build_timestamp": "2026-08-19T10:20:00",
+  "md5": "1451ab23a9c853b90bc22dbd6904048d",
+  "size": 8278976058,
+  "origin": "ota-query",
+  "ok": true,
+  "linux_version": "Linux version 5.10.236-android12-9-o-g74d132f4467a (build-user@build-host) (Android (7284624, based on r416183b) clang version 12.0.5 (https://android.googlesource.com/toolchain/llvm-project c935d99d7cf2016289302412d708641d52d2f7ee), LLD 12.0.5 (/buildbot/src/android/llvm-toolchain/out/llvm-project/lld c935d99d7cf2016289302412d708641d52d2f7ee)) #1 SMP PREEMPT Fri Apr 10 03:27:19 UTC 2026",
+  "kernel_release": "5.10.236-android12-9-o-g74d132f4467a",
+  "build": "#1 SMP PREEMPT Fri Apr 10 03:27:19 UTC 2026",
+  "compiler": "Android (7284624, based on r416183b) clang version 12.0.5 (https://android.googlesource.com/toolchain/llvm-project c935d99d7cf2016289302412d708641d52d2f7ee), LLD 12.0.5 (/buildbot/src/android/llvm-toolchain/out/llvm-project/lld c935d99d7cf2016289302412d708641d52d2f7ee)",
+  "source": "payload.bin",
+  "error": null,
+  "android_version": "16"
  },
  {
   "id": "q-e9578b21ce39690d6380",
@@ -14666,7 +14686,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "vt-903d6ee3a99aa351aa8c",
@@ -16246,7 +16266,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "vt-79da9e6176ba1a66471c",
@@ -16266,7 +16286,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "vt-2e2ccf79b3eaff244040",
@@ -16286,7 +16306,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "q-67097c620f83326cc092",
@@ -16384,7 +16404,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "vt-28842214bc0625aa0064",
@@ -16424,7 +16444,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "80dcef01aaba0af3872598e6",
@@ -16558,7 +16578,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "vt-e598fdbe5313b5dc8679",
@@ -16696,26 +16716,6 @@
   "md5": "845125087b6a56b9784a8a6b6c891b54"
  },
  {
-  "id": "vt-3df2d829f193a6539aa4",
-  "device": "OP TURBO 6X",
-  "region": "CN",
-  "model": "PYS110",
-  "version": "PYS110_16.0.5.1301(CN01)",
-  "ota_version": "PYS110_16.0.5.1301(CN01)",
-  "build_timestamp": "",
-  "md5": "",
-  "size": 0,
-  "origin": "violettoolbox",
-  "ok": false,
-  "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
- },
- {
   "id": "vt-ea69942be15ba29ba91e",
   "device": "OP TURBO 6X",
   "region": "CN",
@@ -16773,19 +16773,19 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
-  "id": "vt-095f852683145d752d4d",
-  "device": "OP TURBO 6X PRO",
+  "id": "vt-3df2d829f193a6539aa4",
+  "device": "OP TURBO 6X",
   "region": "CN",
-  "model": "PYR110",
-  "version": "PYR110_16.0.5.1301(CN01)",
-  "ota_version": "PYR110_16.0.5.1301(CN01)",
-  "build_timestamp": "",
-  "md5": "",
-  "size": 0,
-  "origin": "violettoolbox",
+  "model": "PYS110",
+  "version": "PYS110_16.0.5.1301(CN01)",
+  "ota_version": "PYS110_11.A.44_0440_202609212138",
+  "build_timestamp": "2026-09-21T21:38:00",
+  "md5": "8e72da6c7f668263d16d583d4c2cd8ec",
+  "size": 8005212357,
+  "origin": "oxygen-updater",
   "ok": false,
   "android_version": "16",
   "linux_version": null,
@@ -16793,7 +16793,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "vt-cfaf8c33ad470c45e129",
@@ -16813,7 +16813,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  },
  {
   "id": "vt-78ed35f30d6e70420bf4",
@@ -16854,5 +16854,25 @@
   "compiler": null,
   "source": null,
   "error": "HTTPError: HTTP Error 403: Forbidden"
+ },
+ {
+  "id": "vt-095f852683145d752d4d",
+  "device": "OP TURBO 6X PRO",
+  "region": "CN",
+  "model": "PYR110",
+  "version": "PYR110_16.0.5.1301(CN01)",
+  "ota_version": "PYR110_11.A.22_0220_202609111055",
+  "build_timestamp": "2026-09-11T10:55:00",
+  "md5": "68da0e6162533361dcb5c0d9df3ddd3f",
+  "size": 8418802987,
+  "origin": "oxygen-updater",
+  "ok": false,
+  "android_version": "16",
+  "linux_version": null,
+  "kernel_release": null,
+  "build": null,
+  "compiler": null,
+  "source": null,
+  "error": "URLError: <urlopen error _ssl.c:993: The handshake operation timed out>"
  }
 ]
