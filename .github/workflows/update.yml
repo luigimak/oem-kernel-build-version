@@ -48,8 +48,13 @@ jobs:
         run: python -m opkv fetch
 
       - name: Extract Linux version for new OnePlus, OPPO and Realme releases
+        env:
+          # failed firmware are searched under every OTA letter: a manual run does all of them today, the scheduled
+          # runs take turns (each one every 7 days)
+          RESCAN: ${{ github.event_name == 'workflow_dispatch' && '--rescan-days 1' || '' }}
         run: |
-          python -m opkv discover
+          # shellcheck disable=SC2086  # RESCAN is empty or two words
+          python -m opkv discover $RESCAN
           python -m opkv run --retry-failed --workers 6
 
       - name: Regenerate table

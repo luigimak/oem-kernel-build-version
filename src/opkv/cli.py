@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import os
 import sys
@@ -127,7 +128,7 @@ def _discover_brand(a, brand: Brand, cat: dict, by_id: dict, by_key: dict, lette
 
     with urllib.request.urlopen(brand.pulse, timeout=60) as r:
         devices = json.load(r)
-    results = _load_results(_path(a, brand)).values()
+    results = list(_load_results(_path(a, brand)).values())
     done = {normalize.firmware_key(r) for r in results}      # already processed: not "new"
     read = {normalize.firmware_key(r) for r in results if r["ok"]}      # kernel already read: no link needed
     labels = normalize.labels_by_model(r for r in cat["releases"] if brand.matches(r))
@@ -171,6 +172,7 @@ def _discover_brand(a, brand: Brand, cat: dict, by_id: dict, by_key: dict, lette
 
     errs: dict[str, int] = {}
     added, new_keys, refreshed = 0, set(), set()
+    fresh: set[tuple] = set()                    # firmware that got a new link in this run
     with ThreadPoolExecutor(a.workers) as ex:
         for j, comps, err in ex.map(work, jobs):
             name, disp, model, q = j
@@ -189,6 +191,7 @@ def _discover_brand(a, brand: Brand, cat: dict, by_id: dict, by_key: dict, lette
                     rel = by_id[by_key[key]]
                     rel["source_url"], rel["md5"] = c["source_url"], c["md5"] or rel.get("md5", "")
                     refreshed.add(rel["id"])
+                    fresh.add(key)
                     continue
                 new_keys.add(key)
                 rid = "q-" + hashlib.sha1("|".join((model, c["ota_version"], disp)).encode(), usedforsecurity=False).hexdigest()[:20]
@@ -199,6 +202,7 @@ def _discover_brand(a, brand: Brand, cat: dict, by_id: dict, by_key: dict, lette
                               "source_url": c["source_url"], "md5": c["md5"], "size": c["size"],
                               "is_latest": True, "origin": "ota-query"}
                 by_key[key] = rid
+                fresh.add(key)
                 if key not in done:                      # already processed ones stay in the catalog (retries) but are not "new"
                     added += 1
                     print(f"  + {name} {disp} {c['version']}", file=sys.stderr)
@@ -215,6 +219,7 @@ def _discover_brand(a, brand: Brand, cat: dict, by_id: dict, by_key: dict, lette
                 continue
             by_id[rel["id"]] = rel
             by_key[key] = rel["id"]
+            fresh.add(key)
             if key not in done:                          # already processed ones stay in the catalog (retries) but are not "new"
                 ou_added += 1
                 print(f"  + {rel['device']} {rel['region']} {rel['version']}  [oxygen-updater]", file=sys.stderr)
@@ -227,19 +232,81 @@ def _discover_brand(a, brand: Brand, cat: dict, by_id: dict, by_key: dict, lette
             if key in by_key:                            # known firmware (e.g. a failed read): a fresh link is all it needs
                 if rel["source_url"]:
                     by_id[by_key[key]]["source_url"] = rel["source_url"]
+                    fresh.add(key)
                 continue
             if not rel["source_url"]:                    # listed without a link: nothing to read
                 continue
             by_id[rel["id"]] = rel
             by_key[key] = rel["id"]
+            fresh.add(key)
             if key not in done:
                 vt_added += 1
                 print(f"  + {rel['device']} {rel['region']} {rel['version']}  [violettoolbox]", file=sys.stderr)
+    checked = found = 0
+    if not a.no_scan:
+        todo = [r for r in results if not r["ok"] and r["region"] in oq.REGIONS
+                and normalize.firmware_key(r) not in fresh and _due(r, a.rescan_days, datetime.date.today())]
+        checked = len(todo)
+        with ThreadPoolExecutor(a.workers) as ex:
+            for row, c in ex.map(lambda r: _scan_failed(r, oq), todo):
+                if c is None:
+                    continue
+                key = normalize.firmware_key(row)
+                found += 1
+                if key in by_key:                        # the catalog knows it: only the link is new
+                    rel = by_id[by_key[key]]
+                    rel["source_url"], rel["md5"] = c["source_url"], c["md5"] or rel.get("md5", "")
+                else:                                    # an older firmware that no source lists any more
+                    rid = "q-" + hashlib.sha1("|".join((row["model"], c["ota_version"], row["region"])).encode(),
+                                              usedforsecurity=False).hexdigest()[:20]
+                    by_id[rid] = {"id": rid, "device": row["device"], "region": row["region"], "model": row["model"],
+                                  "version": row["version"], "ota_version": c["ota_version"],
+                                  "build_timestamp": normalize.ota_timestamp(c["ota_version"]),
+                                  "security_patch": c["security_patch"], "source_url": c["source_url"], "md5": c["md5"],
+                                  "size": c["size"], "is_latest": False, "origin": "ota-scan"}
+                    by_key[key] = rid
+                print(f"  = {row['device']} {row['region']} {row['version']}  [letter scan]", file=sys.stderr)
     cat["releases"] = list(by_id.values())
     with open(a.catalog, "w", encoding="utf-8") as f:
         json.dump(cat, f, ensure_ascii=False)
     print(f"{brand.label}: new releases from OTA query: {added}  from Oxygen Updater: {ou_added}  from VioletToolBox: {vt_added}  "
           f"links refreshed: {len(refreshed)}  (queries without answer: {sum(errs.values())})")
+    if not a.no_scan:
+        print(f"{brand.label}: failed firmware searched with every OTA letter: {checked}  found again: {found}")
+
+
+def _due(row: dict, days: int, today: datetime.date) -> bool:
+    """Is the failed `row` searched today? Rows take turns, each one every `days` days (no state is kept)."""
+    import hashlib
+    if days <= 1:
+        return True
+    turn = int(hashlib.sha1(f"{row['version']}|{row['region']}".encode(), usedforsecurity=False).hexdigest(), 16)
+    return turn % days == today.toordinal() % days
+
+
+def _answer(oq, q) -> list[dict]:
+    try:
+        return oq.components(oq.query(q))
+    except Exception:  # noqa: BLE001 - most letters have no update: that is the answer, not an error
+        return []
+
+
+def _scan_failed(row: dict, oq) -> tuple[dict, dict | None]:
+    """Ask the OTA servers for a failed firmware under every letter: the link of the catalog or of the service that
+    listed it has expired, but the same firmware may still be the current one of a track nobody asked for. Returns
+    the OTA component of that firmware, or None."""
+    import string
+    key = normalize.firmware_key(row)
+    major = catalog.os_major(row["version"])
+    if major is None:
+        return row, None
+    for q in oq.scan_queries(normalize.model_of(row), row["region"], major):
+        for letter in string.ascii_uppercase:
+            q.letter = letter
+            for c in _answer(oq, q):
+                if normalize.firmware_key({"version": c["version"], "region": row["region"]}) == key:
+                    return row, c
+    return row, None
 
 
 def cmd_report(a):
@@ -438,6 +505,9 @@ def main(argv=None):
     common(dsc)
     dsc.add_argument("--no-ou", action="store_true", help="skip the Oxygen Updater source")
     dsc.add_argument("--no-violet", action="store_true", help="skip the VioletToolBox source")
+    dsc.add_argument("--no-scan", action="store_true", help="do not search the failed firmware under every OTA letter")
+    dsc.add_argument("--rescan-days", type=int, default=7, metavar="N",
+                     help="each failed firmware is searched every N days (default 7; 1 = all of them today)")
     dsc.add_argument("--catalog", default="data/catalog.json")
     dsc.add_argument("--workers", type=int, default=4)
     dsc.set_defaults(fn=cmd_discover)

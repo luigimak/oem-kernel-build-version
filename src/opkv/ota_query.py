@@ -122,6 +122,19 @@ def _android_cos(rui: int) -> tuple[str, str]:
     return (f"Android {a}" if a >= 17 else f"Android{a}.0"), (f"ColorOS {c}.0" if c >= 17 else f"ColorOS{c}")
 
 
+# OTA Pulse names the product of some regions model + suffix (CPH2659EEA, RMX5078IN, CPH2865RU)
+REGION_SUFFIX = {"IN": "IN", "EU": "EEA", "RU": "RU", "TR": "TR"}
+
+
+def scan_queries(model: str, region: str, android: int) -> list[Query]:
+    """Queries that could return a firmware known only by model, region and Android release (a row of the results,
+    not an entry of OTA Pulse): the product with and without its regional suffix, from the Android release and the one
+    before it (an OTA offers the update of the version it is asked from). Each one is to be tried with every letter."""
+    products = [model, model + REGION_SUFFIX[region]] if region in REGION_SUFFIX else [model]
+    ruis = sorted({rui_from_group(f"Android {android}"), rui_from_group(f"Android {android - 1}")})
+    return [Query(p, model, region, rui) for p in products for rui in ruis]
+
+
 def query(q: Query, timeout: float = 30) -> dict:
     """Return the decrypted response JSON (dict) or raise OtaQueryError."""
     nv, scode = REGIONS[q.region_name]

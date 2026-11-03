@@ -62,14 +62,15 @@ def discover(tmp_path, monkeypatch):
 
     monkeypatch.setattr(sources, "violet_releases", fake_violet)
 
-    def go(catalog_releases, results_rows, devices=(), answers=None, ou=(), no_ou=True, violet=()):
+    def go(catalog_releases, results_rows, devices=(), answers=None, ou=(), no_ou=True, violet=(), scan=False):
         state.update(devices=list(devices), answers=answers or {}, ou=list(ou), violet=list(violet))
         cat = tmp_path / "catalog.json"
         write_json(cat, {"api_version": "1", "releases": catalog_releases})
         out = tmp_path / "oneplus.json"
         write_json(out, results_rows)
         argv = ["discover", "--brand", "oneplus", "--data-dir", str(tmp_path), "--catalog", str(cat)]
-        assert cli.main(argv + (["--no-ou"] if no_ou else []) + ([] if violet else ["--no-violet"])) == 0
+        assert cli.main(argv + (["--no-ou"] if no_ou else []) + ([] if violet else ["--no-violet"])
+                                  + (["--rescan-days", "1"] if scan else ["--no-scan"])) == 0
         return read_json(cat)["releases"]
 
     go.queries = queries
@@ -179,3 +180,49 @@ def test_violettoolbox_gives_a_fresh_link_to_a_failed_firmware(discover):
 
 def test_violettoolbox_firmware_without_a_link_is_not_added(discover):
     assert discover([], [], violet=[violet_release("PHN110_14.0.0.850(CN01)", url="")]) == []
+
+
+def test_failed_firmware_missing_from_every_source_is_searched_letter_by_letter(discover):
+    version = "CPH2701_16.0.5.1301(EX01)"
+    failed = row("ou-9", version=version, region="ID", device="OPPO RENO 15", ok=False, android_version="16")
+    releases = discover([], [failed], answers={("CPH2701", "ID"): answer(version, "C")}, scan=True)
+    assert [(r["version"], r["region"], r["origin"], r["source_url"]) for r in releases] == [
+        (version, "ID", "ota-scan", "https://example.invalid/CPH2701.zip")]
+    assert [q[2] for q in discover.queries] == ["A", "B", "C"]             # it stops at the letter that answers
+
+
+def test_failed_firmware_nobody_answers_for_is_tried_with_all_letters(discover):
+    failed = row("ou-9", version="CPH2701_16.0.5.1301(EX01)", region="ID", device="OPPO RENO 15", ok=False,
+                 android_version="16")
+    assert discover([], [failed], scan=True) == []
+    assert {q[2] for q in discover.queries} == set("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+
+def test_failed_firmware_known_to_the_catalog_only_gets_a_new_link(discover):
+    version = "CPH2701_16.0.5.1301(EX01)"
+    old = release("cat1", version=version, region="ID", device="OPPO RENO 15", source_url="https://example.invalid/old.zip")
+    failed = row("cat1", version=version, region="ID", device="OPPO RENO 15", ok=False, android_version="16")
+    releases = discover([old], [failed], answers={("CPH2701", "ID"): answer(version, "F")}, scan=True)
+    assert [(r["id"], r["source_url"]) for r in releases] == [("cat1", "https://example.invalid/CPH2701.zip")]
+
+
+def test_failed_firmware_that_got_a_link_from_another_source_is_not_searched(discover):
+    v = violet_release("PHN110_14.0.0.850(CN01)")
+    failed = row("cat1", version=v["version"], region="CN", device="OPPO FIND N3", ok=False, android_version="14")
+    discover([], [failed], violet=[v], scan=True)
+    assert discover.queries == []
+
+
+def test_failed_firmware_with_a_region_the_servers_do_not_know_is_not_searched(discover):
+    failed = row("a", version="CPH2701_16.0.5.1301(EX01)", region="APC", ok=False, android_version="16")
+    discover([], [failed], scan=True)
+    assert discover.queries == []
+
+
+def test_rows_take_turns_when_they_are_searched_every_few_days():
+    import datetime
+    rows = [{"version": f"CPH27{i:02d}_16.0.5.1301(EX01)", "region": "ID"} for i in range(40)]
+    week = [datetime.date(2026, 11, 1) + datetime.timedelta(days=d) for d in range(7)]
+    searched = [r["version"] for day in week for r in rows if cli._due(r, 7, day)]
+    assert sorted(searched) == sorted(r["version"] for r in rows)        # each one exactly once a week
+    assert all(cli._due(r, 1, week[0]) for r in rows)                     # every day when asked to

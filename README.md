@@ -13,7 +13,7 @@ A searchable, filterable table of all of them is published with GitHub Pages: <h
 ```bash
 python3 -m venv .venv && .venv/bin/pip install .       # '.[archive]' adds what `opkv archive` needs
 opkv fetch      # update the local release catalog (roms.danielspringer.at API)
-opkv discover   # find firmware missing from the catalog: OTA servers + Oxygen Updater + VioletToolBox (--no-ou, --no-violet to skip)
+opkv discover   # find firmware missing from the catalog: OTA servers + Oxygen Updater + VioletToolBox (--no-ou, --no-violet to skip), then searches the failed ones under every OTA letter (--no-scan, --rescan-days)
 opkv run        # extract kernel/build of new firmware -> data/<brand>.json
 opkv archive    # add older Android 14+ OnePlus firmware missing from the results (spike0en archive, boot.7z)
 opkv report     # data/<brand>.md
@@ -49,6 +49,7 @@ the updated results to the default branch (`archive` is a manual command; `archi
 - Full OTAs only; incremental ones return an error. OTAs without `payload.bin` fall back to `boot.img` in the zip.
 - The Android version comes from `META-INF/com/android/metadata` in each OTA (a few KB); if it is missing, it is inferred from the OS version (OxygenOS/ColorOS 13+ major = Android release). `run` backfills it for rows that lack it.
 - Missing `md5`/`size` are filled from Oxygen Updater, the antirollchecker database or the OTA `Content-Length`; rows whose links expired may stay empty.
+- Failed firmware are searched again with every other source, whatever source listed them: `discover` asks the OTA servers for each of them under all letters A–Z (the product with and without its regional suffix, from its Android release and the one before). The scheduled runs take turns, each failed firmware every 7 days; a manual run does all of them. Oxygen Updater offers only the latest firmware of a device, and the spike0en archive only OnePlus, so they cannot help here.
 - VioletToolBox lists older Chinese-market (CN) firmware only; it is the one source of that history for OPPO and Realme.
 - The spike0en archive and `archive` cover OnePlus only; OPPO and Realme come from the catalog, OTA Pulse and Oxygen Updater.
 - Beta tracks (`taste`) cannot be found by `discover`; they depend on the catalog.
@@ -84,7 +85,7 @@ its owners. If you are a source owner and want something changed or removed, ope
 - the Oxygen Updater API is called with the User-Agent of the Oxygen Updater app, which is the only one it accepts;
 - the VioletToolBox ROM API (`violettool.top/rom-api`, public, no login) is called as `opkv`: version lists once a day, and a download link only for firmware not yet read (the link points to the manufacturer's own CDN and is used in memory only). Its README asks developers to use it moderately, hence the pause between requests.
 
-Volume is moderate (a daily run makes roughly 1500 OTA queries, a few thousand Oxygen Updater requests, mostly for the many OPPO and Realme models, a few hundred VioletToolBox requests, one at a time with a pause, plus the packages that are new that day) and read-only. This may not match the terms of use of those services; if you run it, you do so on your own responsibility, and if you maintain one of them and object, open an issue.
+Volume is moderate (a daily run makes roughly 1500 OTA queries, a few thousand Oxygen Updater requests, mostly for the many OPPO and Realme models, a few hundred VioletToolBox requests, one at a time with a pause, up to a couple of thousand OTA queries a day to search the failed firmware (each one is searched every 7 days), plus the packages that are new that day) and read-only. This may not match the terms of use of those services; if you run it, you do so on your own responsibility, and if you maintain one of them and object, open an issue.
 
 ## Sources
 - [roms.danielspringer.at](https://roms.danielspringer.at) — release catalog (`opkv fetch`).
