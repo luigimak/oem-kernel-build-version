@@ -6,36 +6,34 @@ of OnePlus, OPPO and Realme OTA packages, without downloading the firmware: it r
 [`data/oneplus.md`](data/oneplus.md) / [`data/oneplus.json`](data/oneplus.json),
 [`data/oppo.md`](data/oppo.md) / [`data/oppo.json`](data/oppo.json),
 [`data/realme.md`](data/realme.md) / [`data/realme.json`](data/realme.json).
-A searchable, filterable table of all of them is published with GitHub Pages: <https://luigimak.github.io/oem-kernel-build-version/>
-(source in [`docs/`](docs/), deployed by `.github/workflows/pages.yml`; set Settings → Pages → Source to "GitHub Actions" once).
+A searchable, filterable table of all of them is published with GitHub Pages: <https://luigimak.github.io/oem-kernel-build-version/> (source in [`docs/`](docs/)).
 
 ## Usage
 ```bash
 python3 -m venv .venv && .venv/bin/pip install .       # '.[archive]' adds what `opkv archive` needs
 opkv fetch      # update the local release catalog (roms.danielspringer.at API)
-opkv discover   # find firmware missing from the catalog: OTA servers + Oxygen Updater + VioletToolBox (--no-ou, --no-violet to skip), then searches the failed ones under every OTA letter (--no-scan, --rescan-days)
+opkv discover   # find firmware missing from the catalog: OTA servers, Oxygen Updater, VioletToolBox; then search the failed ones again
 opkv run        # extract kernel/build of new firmware -> data/<brand>.json
 opkv archive    # add older Android 14+ OnePlus firmware missing from the results (spike0en archive, boot.7z)
 opkv report     # data/<brand>.md
 opkv url <URL>  # a single OTA zip
 ```
 `fetch`, `discover`, `run`, `archive` and `report` take `--brand oneplus|oppo|realme|all` (default `all`) and `--data-dir` (default `data`).
+`discover` also takes `--no-ou`, `--no-violet` and `--no-scan` to skip a source or the new search of the failed firmware.
 OnePlus (`OP …`) from the 10 series onward, every OPPO and Realme model, and only firmware from Android 14 onward (older rows are dropped). `run` is resumable.
 
-The workflow `.github/workflows/update.yml` runs `fetch`, `discover`, `run --retry-failed` and `report` every day at 05:17 UTC and commits
-the updated results to the default branch (`archive` is a manual command; `archive --retry-failed` downloads again the assets that failed before). Scheduled runs are off until the repository variable
-`AUTO_UPDATE` is set to `true` (so a fork does not run them); manual runs always work. The workflow installs the hash-pinned
-[`requirements.txt`](requirements.txt), runs `python -m opkv` from the checkout, and gives the commit step alone the token it needs to push.
+A GitHub Actions workflow (`.github/workflows/update.yml`) runs `fetch`, `discover`, `run --retry-failed` and `report` every day and commits
+the updated results to the default branch. `archive` is a manual command.
 
 ## Results
 `data/<brand>.json` is a list of rows, one per firmware, sorted by device, model and build time:
 
 | Field | Meaning |
 |---|---|
-| `id`, `origin` | row id and where the firmware was found (`catalog`, `ota-query`, `oxygen-updater`, `spike0en-archive`) |
+| `id`, `origin` | row id and where the firmware was found (`catalog`, `ota-query`, `ota-scan`, `oxygen-updater`, `violettoolbox`, `spike0en-archive`) |
 | `device`, `model`, `region` | device label (`OP 13R`), model code (`CPH2645`), region (`EU`, `GLO`, `IN`, `CN`, `NA`, …) |
 | `version`, `ota_version`, `build_timestamp` | firmware version (`CPH2645_15.0.0.840(EX01)`), OTA version string, OTA build time |
-| `android_version` | Android release, from the OTA metadata |
+| `android_version` | Android release, from the OTA metadata; for a firmware that could not be read, from its version |
 | `ok`, `error` | whether the kernel string was extracted, and why not |
 | `linux_version`, `kernel_release`, `build`, `compiler` | the `Linux version …` banner and its parts |
 | `source` | where the banner was read: `payload.bin` or `boot.img` |
@@ -47,9 +45,9 @@ the updated results to the default branch (`archive` is a manual command; `archi
 - Firmware URLs are never stored or logged (error messages are redacted).
 - A firmware is identified by `(version, region)`, whichever source or id it came with; each model code gets one device label (the most common one).
 - Full OTAs only; incremental ones return an error. OTAs without `payload.bin` fall back to `boot.img` in the zip.
-- The Android version comes from `META-INF/com/android/metadata` in each OTA (a few KB); if it is missing, it is inferred from the OS version (OxygenOS/ColorOS 13+ major = Android release). `run` backfills it for rows that lack it.
+- If the OTA has no metadata, the Android release is inferred from the OS version (OxygenOS/ColorOS 13+ major = Android release).
 - Missing `md5`/`size` are filled from Oxygen Updater, the antirollchecker database or the OTA `Content-Length`; rows whose links expired may stay empty.
-- Failed firmware are searched again with every other source, whatever source listed them: `discover` asks the OTA servers for each of them under all letters A–Z (the product with and without its regional suffix, from its Android release and the one before). The scheduled runs take turns, each failed firmware every 7 days; a manual run does all of them. Oxygen Updater offers only the latest firmware of a device, and the spike0en archive only OnePlus, so they cannot help here.
+- Failed firmware (expired links, servers that refuse) are searched again through every source that allows it, a few each day; some stay failed for good.
 - VioletToolBox lists older Chinese-market (CN) firmware only; it is the one source of that history for OPPO and Realme.
 - The spike0en archive and `archive` cover OnePlus only; OPPO and Realme come from the catalog, OTA Pulse and Oxygen Updater.
 - Beta tracks (`taste`) cannot be found by `discover`; they depend on the catalog.
@@ -61,16 +59,14 @@ the updated results to the default branch (`archive` is a manual command; `archi
 .venv/bin/ruff check .
 .venv/bin/mypy
 ```
-CI (`.github/workflows/ci.yml`) runs the tests on Python 3.10, 3.12 and 3.14, ruff and mypy on 3.12, and lints the workflows with actionlint and zizmor.
-`requirements.txt` is generated from `pyproject.toml`: `pip-compile --generate-hashes --strip-extras --annotation-style=line -o requirements.txt pyproject.toml`
-(Dependabot proposes the updates, monthly).
+CI runs the tests, ruff and mypy on every push.
 
 ## License and attribution
 Copyright 2026 luigimak, licensed under the Apache License 2.0 (see [LICENSE](LICENSE) and [NOTICE](NOTICE)).
 
 `src/opkv/ota_query.py` and `src/opkv/resolver.py` are derived from
 [OTA Pulse](https://github.com/RemuruSama/OTA-Pulse) (Apache-2.0, Copyright 2026 OTA Pulse), translated to Python
-and modified; each file header says so. The model list (OTA Pulse `devices/oneplus.json`) is downloaded at runtime
+and modified; each file header says so. The model list (OTA Pulse `devices/{oneplus,oppo,realme}.json`) is downloaded at runtime
 and not redistributed here.
 
 No code from the other sources below is copied. They are queried at runtime, and `data/*.json` and `data/*.md` only contain factual
@@ -83,9 +79,9 @@ its owners. If you are a source owner and want something changed or removed, ope
 `opkv` only reads public metadata and never logs in. To get answers it has to present itself as the clients those services expect:
 - the OnePlus/OPPO/Realme OTA servers (`discover`) are queried the way the OnePlus updater does, with a placeholder device identity (no real IMEI or account) and the protocol implemented by OTA Pulse; the OTA CDN (`run`) is read with the headers of that client, about 10 MB per new package, never the whole firmware;
 - the Oxygen Updater API is called with the User-Agent of the Oxygen Updater app, which is the only one it accepts;
-- the VioletToolBox ROM API (`violettool.top/rom-api`, public, no login) is called as `opkv`: version lists once a day, and a download link only for firmware not yet read (the link points to the manufacturer's own CDN and is used in memory only). Its README asks developers to use it moderately, hence the pause between requests.
+- the VioletToolBox ROM API (`violettool.top/rom-api`, public, no login) is called as `opkv`: version lists once a day, and a download link asked for right before a package is read (it expires within minutes, points to the manufacturer's own CDN and is used in memory only). Its README asks developers to use it moderately, hence the pause between requests.
 
-Volume is moderate (a daily run makes roughly 1500 OTA queries, a few thousand Oxygen Updater requests, mostly for the many OPPO and Realme models, a few hundred VioletToolBox requests, one at a time with a pause, up to a couple of thousand OTA queries a day to search the failed firmware (each one is searched every 7 days), plus the packages that are new that day) and read-only. This may not match the terms of use of those services; if you run it, you do so on your own responsibility, and if you maintain one of them and object, open an issue.
+Volume is moderate and read-only: a daily run makes about a thousand OTA queries, a few thousand Oxygen Updater requests and a few hundred VioletToolBox ones (one at a time, with a pause), plus the packages that are new that day. This may not match the terms of use of those services; if you run it, you do so on your own responsibility, and if you maintain one of them and object, open an issue.
 
 ## Sources
 - [roms.danielspringer.at](https://roms.danielspringer.at) — release catalog (`opkv fetch`).

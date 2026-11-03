@@ -20,15 +20,17 @@ The payload.bin (CrAU) format and protobuf field numbers follow AOSP's update_me
 == Third-party services and data (no code included) ==
 
 No source code of the following projects is copied or redistributed. They are queried at
-runtime and only the factual metadata listed below is stored in data/results.*.
+runtime and only the factual metadata listed below is stored in data/<brand>.json and data/<brand>.md.
 Some of them publish no license; this project is not affiliated with any of them.
-  - OTA Pulse devices/oneplus.json (model list): downloaded at runtime, not redistributed.
+  - OTA Pulse devices/{oneplus,oppo,realme}.json (model lists): downloaded at runtime, not redistributed.
   - roms.danielspringer.at (release catalog API): release names/versions/regions.
   - Oxygen Updater API (https://oxygenupdater.com): release version, md5, size.
   - spike0en/oneplus_archive (https://github.com/spike0en/oneplus_archive): the boot.7z
     release assets are downloaded temporarily to read the kernel version string and are
     not redistributed.
+  - VioletToolBox (https://github.com/Smart-Paocai/VioletToolBox, GPL-3.0): only its public ROM API is
+    called (older firmware names and temporary download links); none of its code is used.
   - Bartixxx32/OnePlus-antirollchecker database.json: md5 checksums.
 
-Firmware is the property of OnePlus / OPPO; no firmware image is stored or redistributed
+Firmware is the property of OnePlus / OPPO / Realme; no firmware image is stored or redistributed
 here, only the "Linux version ..." string extracted from boot.img.
