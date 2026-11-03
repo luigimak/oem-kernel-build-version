@@ -160,6 +160,27 @@ function fillSelect(sel, all, values) {
   for (const v of [...new Set(values)].filter(Boolean).sort(collator.compare)) sel.append(new Option(v, v));
 }
 
+// each list offers only the values that exist with the other filters applied (brand -> its devices, ...);
+// `want` holds the values to select, and one that is no longer offered goes back to "all"
+function refreshOptions(want) {
+  const showFailed = $("failed").checked;
+  const f = { ...want };
+  for (let changed = true, n = 0; changed && n < FILTERS.length; n++) {
+    changed = false;
+    for (const { id, all } of FILTERS) {
+      const pool = state.rows.filter((r) => (showFailed || r.ok) &&
+        FILTERS.every((o) => o.id === id || !f[o.id] || r[o.id] === f[o.id]));
+      fillSelect($(id), all, pool.map((r) => r[id]));
+      $(id).value = f[id] || "";
+      if ($(id).value !== (f[id] || "")) { $(id).value = ""; f[id] = ""; changed = true; }
+    }
+  }
+}
+
+function selected() {
+  return Object.fromEntries(FILTERS.map(({ id }) => [id, $(id).value]));
+}
+
 function el(tag, text, cls) {
   const e = document.createElement(tag);
   if (text !== undefined) e.textContent = text;
@@ -197,7 +218,8 @@ function detailRow(row) {
 function render() {
   const q = $("q").value.trim().toLowerCase();
   const terms = q ? q.split(/\s+/) : [];
-  const f = { brand: $("brand").value, device: $("device").value, region: $("region").value, android: $("android").value, branch: $("branch").value };
+  refreshOptions(selected());
+  const f = selected();
   const showFailed = $("failed").checked;
 
   const rows = state.rows.filter((r) =>
@@ -253,12 +275,8 @@ function saveHash() {
 function loadHash() {
   const p = new URLSearchParams(location.hash.slice(1));
   $("q").value = p.get("q") || "";
-  for (const { id } of FILTERS) {
-    const v = p.get(id) || "";
-    $(id).value = v;
-    if ($(id).value !== v) $(id).value = "";   // a value that is not an option
-  }
   $("failed").checked = p.get("failed") === "1";
+  refreshOptions(Object.fromEntries(FILTERS.map(({ id }) => [id, p.get(id) || ""])));
   const s = /^([+-])(\w+)$/.exec(p.get("sort") || "");
   if (s && COLUMNS.some((c) => c.key === s[2])) { state.sort = s[2]; state.dir = s[1] === "+" ? 1 : -1; }
 }
@@ -303,11 +321,6 @@ async function main() {
     if (!state.rows.length) { $("msg").textContent = "No data could be loaded."; return; }
   }
 
-  fillSelect($("brand"), FILTERS[0].all, state.rows.map((r) => r.brand));
-  fillSelect($("device"), FILTERS[1].all, state.rows.map((r) => r.device));
-  fillSelect($("region"), FILTERS[2].all, state.rows.map((r) => r.region));
-  fillSelect($("android"), FILTERS[3].all, state.rows.map((r) => r.android));
-  fillSelect($("branch"), FILTERS[4].all, state.rows.map((r) => r.branch));
   loadHash();
 
   for (const id of ["q", "brand", "device", "region", "android", "branch", "failed"]) {
