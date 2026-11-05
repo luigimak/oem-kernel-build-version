@@ -6310,14 +6310,14 @@
   "md5": "622868288bcaabab8e2c346568ee3fa9",
   "size": 7783035861,
   "origin": "oxygen-updater",
-  "ok": false,
+  "ok": true,
   "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "linux_version": "Linux version 6.6.118-android15-8-o-ga8027a191504-4k (kleaf@build-host) (Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0) #1 SMP PREEMPT Wed Sep 23 02:58:19 UTC 2026",
+  "kernel_release": "6.6.118-android15-8-o-ga8027a191504-4k",
+  "build": "#1 SMP PREEMPT Wed Sep 23 02:58:19 UTC 2026",
+  "compiler": "Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "vt-ed71ea2ac60191e4422f",
@@ -9730,14 +9730,14 @@
   "md5": "10b1becfdd55626e54d25d44f0caa7bf",
   "size": 6769973748,
   "origin": "oxygen-updater",
-  "ok": false,
+  "ok": true,
   "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "linux_version": "Linux version 5.15.197-android13-8-o-g8297879b45c5 (build-user@build-host) (Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7) #1 SMP PREEMPT Thu Oct 8 15:54:04 UTC 2026",
+  "kernel_release": "5.15.197-android13-8-o-g8297879b45c5",
+  "build": "#1 SMP PREEMPT Thu Oct 8 15:54:04 UTC 2026",
+  "compiler": "Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "ou-b28cfd8081eee0812a34",
@@ -15517,7 +15517,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "no download link"
+  "error": "HTTPError: HTTP Error 404: Not Found"
  },
  {
   "id": "vt-b9a5a50f15d2420f336b",
@@ -15707,7 +15707,7 @@
   "version": "RMX3852_16.0.5.1300(CN01)",
   "ota_version": "RMX3852_16.0.5.1300(CN01)",
   "build_timestamp": "",
-  "md5": "",
+  "md5": "7c02bd98906e1055bf8e542577801e58",
   "size": 9290095744,
   "origin": "violettoolbox",
   "ok": true,
@@ -15967,7 +15967,7 @@
   "version": "RMX3850_16.0.5.1310(CN01)",
   "ota_version": "RMX3850_16.0.5.1310(CN01)",
   "build_timestamp": "",
-  "md5": "",
+  "md5": "b6d8cadbb86632626f789cbf5370baa6",
   "size": 9154262840,
   "origin": "violettoolbox",
   "ok": true,
@@ -17857,7 +17857,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 404: Not Found"
+  "error": "no download link"
  },
  {
   "id": "vt-5f35bdf880b91a5b46fb",
@@ -19860,6 +19860,26 @@
   "error": null
  },
  {
+  "id": "q-5631caeb4834259aa3e0",
+  "device": "Realme GT6T/6SE",
+  "region": "TR",
+  "model": "RMX3853",
+  "version": "RMX3853_16.0.5.1200(EX01)",
+  "ota_version": "RMX3853_11.F.69_2690_202608102217",
+  "build_timestamp": "2026-08-10T22:17:00",
+  "md5": "99a71dbf5127939fce1dda82197c7158",
+  "size": 8359770263,
+  "origin": "ota-query",
+  "ok": true,
+  "android_version": "16",
+  "linux_version": "Linux version 6.1.141-android14-11-o-gf61012bbfa24 (build-user@build-host) (Android (10087095, +pgo, +bolt, +lto, -mlgo, based on r487747c) clang version 17.0.2 (https://android.googlesource.com/toolchain/llvm-project d9f89f4d16663d5012e5c09495f3b30ece3d2362), LLD 17.0.2) #1 SMP PREEMPT Mon Aug 10 12:44:35 UTC 2026",
+  "kernel_release": "6.1.141-android14-11-o-gf61012bbfa24",
+  "build": "#1 SMP PREEMPT Mon Aug 10 12:44:35 UTC 2026",
+  "compiler": "Android (10087095, +pgo, +bolt, +lto, -mlgo, based on r487747c) clang version 17.0.2 (https://android.googlesource.com/toolchain/llvm-project d9f89f4d16663d5012e5c09495f3b30ece3d2362), LLD 17.0.2",
+  "source": "payload.bin",
+  "error": null
+ },
+ {
   "id": "q-c815cb9c37e0589f6d83",
   "device": "Realme GT6T/6SE",
   "region": "RU",
@@ -20595,6 +20615,26 @@
   "linux_version": "Linux version 6.1.157-android14-11-o-g78d995d4a8ab (build-user@build-host) (Android (10087095, +pgo, +bolt, +lto, -mlgo, based on r487747c) clang version 17.0.2 (https://android.googlesource.com/toolchain/llvm-project d9f89f4d16663d5012e5c09495f3b30ece3d2362), LLD 17.0.2) #1 SMP PREEMPT Thu Sep 10 12:00:30 UTC 2026",
   "kernel_release": "6.1.157-android14-11-o-g78d995d4a8ab",
   "build": "#1 SMP PREEMPT Thu Sep 10 12:00:30 UTC 2026",
+  "compiler": "Android (10087095, +pgo, +bolt, +lto, -mlgo, based on r487747c) clang version 17.0.2 (https://android.googlesource.com/toolchain/llvm-project d9f89f4d16663d5012e5c09495f3b30ece3d2362), LLD 17.0.2",
+  "source": "payload.bin",
+  "error": null
+ },
+ {
+  "id": "efd861ce767ebc6da53bb19c",
+  "device": "Realme GT7",
+  "region": "IN",
+  "model": "RMX5061",
+  "version": "RMX5061_17.0.0.105(EX01)",
+  "ota_version": "RMX5061_11.H.12_3120_202610220155",
+  "build_timestamp": "2026-10-22T01:55:00",
+  "md5": "c1f5fb97c3ef5d94254b317aadb5df91",
+  "size": 9477545874,
+  "origin": "catalog",
+  "ok": true,
+  "android_version": "17",
+  "linux_version": "Linux version 6.1.157-android14-11-o-gd9fcbfbcb18a (build-user@build-host) (Android (10087095, +pgo, +bolt, +lto, -mlgo, based on r487747c) clang version 17.0.2 (https://android.googlesource.com/toolchain/llvm-project d9f89f4d16663d5012e5c09495f3b30ece3d2362), LLD 17.0.2) #1 SMP PREEMPT Wed Oct 21 16:42:06 UTC 2026",
+  "kernel_release": "6.1.157-android14-11-o-gd9fcbfbcb18a",
+  "build": "#1 SMP PREEMPT Wed Oct 21 16:42:06 UTC 2026",
   "compiler": "Android (10087095, +pgo, +bolt, +lto, -mlgo, based on r487747c) clang version 17.0.2 (https://android.googlesource.com/toolchain/llvm-project d9f89f4d16663d5012e5c09495f3b30ece3d2362), LLD 17.0.2",
   "source": "payload.bin",
   "error": null
