@@ -6440,6 +6440,26 @@
   "error": null
  },
  {
+  "id": "ou-455ddd08dde374fcc46b",
+  "device": "OPPO A7 PRO",
+  "region": "IN",
+  "model": "CPH2931",
+  "version": "CPH2931_16.0.10.515(EX01)",
+  "ota_version": "CPH2931_11.A.39_0390_202611040035",
+  "build_timestamp": "2026-11-04T00:35:00",
+  "md5": "f57e6aa602e09975c33058ffe1642dba",
+  "size": 6786889797,
+  "origin": "oxygen-updater",
+  "ok": false,
+  "android_version": "16",
+  "linux_version": null,
+  "kernel_release": null,
+  "build": null,
+  "compiler": null,
+  "source": null,
+  "error": "HTTPError: HTTP Error 403: Forbidden"
+ },
+ {
   "id": "ou-d2386973a3a9f9b02fdc",
   "device": "OPPO A7 PRO MAX",
   "region": "ID",

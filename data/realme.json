@@ -15548,7 +15548,7 @@
   "ota_version": "RMX3708_11.F.15",
   "build_timestamp": "",
   "md5": "",
-  "size": 0,
+  "size": 911946976,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "15",
@@ -15557,7 +15557,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "URLError: <urlopen error _ssl.c:994: The handshake operation timed out>"
+  "error": "NotImplementedError: incremental OTA (op type 10) in boot"
  },
  {
   "id": "vt-d66fa64974645a4613bf",
@@ -21700,6 +21700,26 @@
   "error": null
  },
  {
+  "id": "q-1047f22aec96b357c203",
+  "device": "Realme GT7 PRO",
+  "region": "RU",
+  "model": "RMX5011",
+  "version": "RMX5011_16.0.10.500(EX01)",
+  "ota_version": "RMX5011_11.F.68_2680_202608101940",
+  "build_timestamp": "2026-08-10T19:40:00",
+  "md5": "c87376b6f4d99a0b0269d995c83cefa8",
+  "size": 9547952496,
+  "origin": "ota-query",
+  "ok": true,
+  "android_version": "16",
+  "linux_version": "Linux version 6.6.118-android15-8-g2e6b9c3812c5-ab15114928-4k (kleaf@build-host) (Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0) #1 SMP PREEMPT Mon Mar 30 10:41:25 UTC 2026",
+  "kernel_release": "6.6.118-android15-8-g2e6b9c3812c5-ab15114928-4k",
+  "build": "#1 SMP PREEMPT Mon Mar 30 10:41:25 UTC 2026",
+  "compiler": "Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0",
+  "source": "payload.bin",
+  "error": null
+ },
+ {
   "id": "f988b6bad125cab99c221d06",
   "device": "Realme GT7 PRO",
   "region": "EU",
@@ -21970,14 +21990,14 @@
   "md5": "d6b3a5376132ec3531ff436308daef61",
   "size": 9009289348,
   "origin": "oxygen-updater",
-  "ok": false,
+  "ok": true,
   "android_version": "17",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "linux_version": "Linux version 6.6.118-android15-8-gc4127a25dcf3-ab15863337-4k (kleaf@build-host) (Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0) #1 SMP PREEMPT Wed Jul 15 13:58:53 UTC 2026",
+  "kernel_release": "6.6.118-android15-8-gc4127a25dcf3-ab15863337-4k",
+  "build": "#1 SMP PREEMPT Wed Jul 15 13:58:53 UTC 2026",
+  "compiler": "Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "ou-00c7ae01824f21c3c0cf",
@@ -26657,6 +26677,6 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 404: Not Found"
+  "error": "no download link"
  }
 ]
