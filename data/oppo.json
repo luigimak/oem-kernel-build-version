@@ -6450,14 +6450,14 @@
   "md5": "f57e6aa602e09975c33058ffe1642dba",
   "size": 6786889797,
   "origin": "oxygen-updater",
-  "ok": false,
+  "ok": true,
   "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "linux_version": "Linux version 5.15.197-android13-8-00017-g6a42d5ffa908-ab15936251 (build-user@build-host) (Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7) #1 SMP PREEMPT Fri Jul 24 09:15:28 UTC 2026",
+  "kernel_release": "5.15.197-android13-8-00017-g6a42d5ffa908-ab15936251",
+  "build": "#1 SMP PREEMPT Fri Jul 24 09:15:28 UTC 2026",
+  "compiler": "Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "ou-d2386973a3a9f9b02fdc",
@@ -7329,6 +7329,26 @@
   "build_timestamp": "2026-07-08T15:42:00",
   "md5": "f8f808d1c625ca7cc797850847b1e7ab",
   "size": 5531135109,
+  "origin": "oxygen-updater",
+  "ok": true,
+  "android_version": "15",
+  "linux_version": "Linux version 5.15.180-android13-8-o-01005-g1527b4f84249 (build-user@build-host) (Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7) #1 SMP PREEMPT Fri Mar 27 17:17:07 UTC 2026",
+  "kernel_release": "5.15.180-android13-8-o-01005-g1527b4f84249",
+  "build": "#1 SMP PREEMPT Fri Mar 27 17:17:07 UTC 2026",
+  "compiler": "Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7",
+  "source": "payload.bin",
+  "error": null
+ },
+ {
+  "id": "ou-411edcd80e2f79e83653",
+  "device": "OPPO A78 4G",
+  "region": "VN",
+  "model": "CPH256522342",
+  "version": "CPH256522342_15.0.0.1900(EX01)",
+  "ota_version": "CPH256522342_11.F.83_2830_202607081543",
+  "build_timestamp": "2026-07-08T15:43:00",
+  "md5": "ed5b73c583756fcce3d00f0d5c34dd1a",
+  "size": 5830479861,
   "origin": "oxygen-updater",
   "ok": true,
   "android_version": "15",
@@ -8536,6 +8556,26 @@
   "kernel_release": "5.15.197-android13-8-o-g00d4e8e246c3",
   "build": "#1 SMP PREEMPT Wed Jul 29 13:21:00 UTC 2026",
   "compiler": "Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7",
+  "source": "payload.bin",
+  "error": null
+ },
+ {
+  "id": "ou-43300a88986274ac7174",
+  "device": "OPPO F35 PRO",
+  "region": "IN",
+  "model": "CPH2829",
+  "version": "CPH2829_17.0.0.115(EX01)",
+  "ota_version": "CPH2829_11.A.21_0210_202610300631",
+  "build_timestamp": "2026-10-30T06:31:00",
+  "md5": "a481c6896b51ca29fd46f4cf68d28726",
+  "size": 7726383517,
+  "origin": "oxygen-updater",
+  "ok": true,
+  "android_version": "17",
+  "linux_version": "Linux version 6.1.157-android14-11-g14047afecd8b-ab16012876 (build-user@build-host) (Android (10087095, +pgo, +bolt, +lto, -mlgo, based on r487747c) clang version 17.0.2 (https://android.googlesource.com/toolchain/llvm-project d9f89f4d16663d5012e5c09495f3b30ece3d2362), LLD 17.0.2) #1 SMP PREEMPT Tue Aug  4 11:44:32 UTC 2026",
+  "kernel_release": "6.1.157-android14-11-g14047afecd8b-ab16012876",
+  "build": "#1 SMP PREEMPT Tue Aug  4 11:44:32 UTC 2026",
+  "compiler": "Android (10087095, +pgo, +bolt, +lto, -mlgo, based on r487747c) clang version 17.0.2 (https://android.googlesource.com/toolchain/llvm-project d9f89f4d16663d5012e5c09495f3b30ece3d2362), LLD 17.0.2",
   "source": "payload.bin",
   "error": null
  },
@@ -11637,7 +11677,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:994: The handshake operation timed out>"
  },
  {
   "id": "vt-8db256b9f92d8ff135bf",
@@ -16477,7 +16517,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 404: Not Found"
+  "error": "URLError: <urlopen error _ssl.c:994: The handshake operation timed out>"
  },
  {
   "id": "bf535f1ed85b8741ef6d3633",
@@ -16738,6 +16778,26 @@
   "compiler": "Android (15323222, +pgo, +bolt, +lto, +mlgo, based on r584948c) clang version 22.0.1 (https://android.googlesource.com/toolchain/llvm-project 2d65e4108033380e6fe8e08b1f1826cd2bfb0c99), LLD 22.0.1 (/mnt/disks/build-disk/src/googleplex-android/llvm-r584948-release/out/llvm-project/llvm 2d65e4108033380e6fe8e08b1f1826cd2bfb0c99)",
   "source": "payload.bin",
   "error": null
+ },
+ {
+  "id": "ou-2f504379aa662986af64",
+  "device": "OPPO K14+",
+  "region": "IN",
+  "model": "CPH3009",
+  "version": "CPH3009_17.0.0.115(EX01)",
+  "ota_version": "CPH3009_11.A.21_0210_202610300623",
+  "build_timestamp": "2026-10-30T06:23:00",
+  "md5": "221a38aeb0a1e767a98d307d6e1e5d18",
+  "size": 7661653475,
+  "origin": "oxygen-updater",
+  "ok": false,
+  "android_version": "17",
+  "linux_version": null,
+  "kernel_release": null,
+  "build": null,
+  "compiler": null,
+  "source": null,
+  "error": "HTTPError: HTTP Error 403: Forbidden"
  },
  {
   "id": "ou-d86a3f051e66a6d77a76",
@@ -18958,6 +19018,26 @@
   "compiler": "Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0",
   "source": "payload.bin",
   "error": null
+ },
+ {
+  "id": "ou-aae08c88d24465b56ed6",
+  "device": "OPPO RENO 16",
+  "region": "JP",
+  "model": "CPH2865",
+  "version": "CPH2865_16.0.10.601(EX01)",
+  "ota_version": "CPH2865_11.A.42_0420_202609082022",
+  "build_timestamp": "2026-09-08T20:22:00",
+  "md5": "69be342ce26198664dec382699c7a739",
+  "size": 9491974043,
+  "origin": "oxygen-updater",
+  "ok": false,
+  "android_version": "16",
+  "linux_version": null,
+  "kernel_release": null,
+  "build": null,
+  "compiler": null,
+  "source": null,
+  "error": "HTTPError: HTTP Error 403: Forbidden"
  },
  {
   "id": "9dbf4086fb3f09354caf3ee0",
