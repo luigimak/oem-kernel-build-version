@@ -2712,7 +2712,7 @@
   "version": "CPH2583_15.0.0.861(EX01)",
   "ota_version": "CPH2583_15.0.0.861(EX01)",
   "build_timestamp": "",
-  "md5": "",
+  "md5": "b199f0be89d68e76a211e5c72ce4c406",
   "size": 0,
   "origin": "spike0en-archive",
   "ok": true,
@@ -4573,7 +4573,7 @@
   "version": "CPH2655_16.0.2.403(EX01)",
   "ota_version": "CPH2655_16.0.2.403(EX01)",
   "build_timestamp": "",
-  "md5": "",
+  "md5": "84c72e90073d6fd26b3d0a9e58fdaa3a",
   "size": 0,
   "origin": "spike0en-archive",
   "ok": true,
@@ -4681,7 +4681,7 @@
   "error": null,
   "android_version": "15",
   "size": 7205651988,
-  "md5": ""
+  "md5": "5b693110ced8964a707defcd198acfc4"
  },
  {
   "id": "sp-d432637051",
@@ -5463,7 +5463,7 @@
   "error": null,
   "android_version": "15",
   "size": 6901458988,
-  "md5": ""
+  "md5": "c0a7c5363c15bb31d5bcca7553f7f4c9"
  },
  {
   "id": "f9a284c8baedb0737d2eb658",
@@ -6509,7 +6509,7 @@
   "error": null,
   "android_version": "16",
   "size": 8392748547,
-  "md5": ""
+  "md5": "7586a65e4c837f84e913e9de040c3ad0"
  },
  {
   "id": "41ac64efaeabd800076cc75f",
@@ -6528,7 +6528,7 @@
   "error": null,
   "android_version": "16",
   "size": 8390740387,
-  "md5": ""
+  "md5": "e6d61fc87ad841d90922b0703ea79d14"
  },
  {
   "id": "615522787db6b32ca9588247",
@@ -7557,7 +7557,7 @@
   "error": null,
   "android_version": "16",
   "size": 8988828392,
-  "md5": ""
+  "md5": "972de7e37c1a7703874c61fb2ba8e0b6"
  },
  {
   "id": "14e31407892edfee986284ad",
@@ -7576,7 +7576,7 @@
   "error": null,
   "android_version": "16",
   "size": 8997212420,
-  "md5": ""
+  "md5": "93ea2f91961c0aef9b06d66f43da5fbb"
  },
  {
   "id": "77f80dfbb3ee82a08cf2ffda",
@@ -7595,7 +7595,7 @@
   "error": null,
   "android_version": "16",
   "size": 8997308772,
-  "md5": ""
+  "md5": "f2a24e0321a88315e6a229a49a651544"
  },
  {
   "id": "e27edc8c8b390ba74b8324a3",
@@ -8450,7 +8450,7 @@
   "error": null,
   "android_version": "16",
   "size": 9047003529,
-  "md5": ""
+  "md5": "b347f3dd914bb44b809bb5297aea73ac"
  },
  {
   "id": "d3e172f60c7c859c80671f23",
@@ -8469,7 +8469,7 @@
   "error": null,
   "android_version": "16",
   "size": 9026452090,
-  "md5": ""
+  "md5": "48f9cceb8612a45706d33d9f7ae405ac"
  },
  {
   "id": "9a8df5c60fae2dd3111fea15",
@@ -9764,7 +9764,7 @@
   "error": null,
   "android_version": "15",
   "size": 7797949643,
-  "md5": ""
+  "md5": "1dbfdeb21b8373f6451097aafe6f6cae"
  },
  {
   "id": "e3d456d877f751329c2dd99b",
@@ -10510,7 +10510,7 @@
   "error": null,
   "android_version": "16",
   "size": 8294127036,
-  "md5": ""
+  "md5": "071eb65c14254e8acc8fc3c6b292e315"
  },
  {
   "id": "80c30c4b5d8cb25bc29c9e82",
@@ -10915,7 +10915,7 @@
   "error": null,
   "android_version": "16",
   "size": 8169551678,
-  "md5": ""
+  "md5": "f84d18dcf66d28b52ad061d84e6f5f06"
  },
  {
   "id": "67b8c8eb4bbc1e1b6fea4dd7",
