@@ -10780,6 +10780,26 @@
   "error": null
  },
  {
+  "id": "q-daafd8256d882301f0de",
+  "device": "Realme 15 PRO",
+  "region": "MEA",
+  "model": "RMX5101",
+  "version": "RMX5101_15.0.2.604(EX01)",
+  "ota_version": "RMX5101_11.A.65_0650_202512282052",
+  "build_timestamp": "2025-12-28T20:52:00",
+  "md5": "5365c6ebbb4d8c24266847f2bbb7b385",
+  "size": 7961986293,
+  "origin": "ota-query",
+  "ok": true,
+  "android_version": "15",
+  "linux_version": "Linux version 6.6.57-android15-8-g7b1f455c7143-ab13591283-4k (kleaf@build-host) (Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0) #1 SMP PREEMPT Tue Jun  3 03:22:33 UTC 2025",
+  "kernel_release": "6.6.57-android15-8-g7b1f455c7143-ab13591283-4k",
+  "build": "#1 SMP PREEMPT Tue Jun  3 03:22:33 UTC 2025",
+  "compiler": "Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0",
+  "source": "payload.bin",
+  "error": null
+ },
+ {
   "id": "q-cbc635046bf54edc311a",
   "device": "Realme 15 PRO",
   "region": "MY",
