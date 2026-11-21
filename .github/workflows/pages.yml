@@ -28,7 +28,7 @@ jobs:
       id-token: write   # deploy-pages proves the deployment comes from this workflow
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.retry.outputs.page_url || steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -46,5 +46,17 @@ jobs:
         with:
           path: _site
 
+      # right after the upload GitHub may not list the artifact yet ("No artifacts named github-pages were found"):
+      # the deployment is not created in that case, so waiting a little and asking again is safe
       - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346  # v5.0.1
+        continue-on-error: true
+
+      - name: Wait before the second attempt
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 20
+
+      # a failure that is not transient fails here too, and so does the job
+      - id: retry
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346  # v5.0.1
