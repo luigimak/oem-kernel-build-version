@@ -13330,14 +13330,14 @@
   "md5": "1780a2ddc2d6b3b0cf4b5e956d855b5b",
   "size": 9380368508,
   "origin": "oxygen-updater",
-  "ok": false,
+  "ok": true,
   "android_version": "17",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "RemoteDisconnected: Remote end closed connection without response"
+  "linux_version": "Linux version 6.6.118-android15-8-gc4127a25dcf3-ab15863337-4k (kleaf@build-host) (Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0) #1 SMP PREEMPT Wed Jul 15 13:58:53 UTC 2026",
+  "kernel_release": "6.6.118-android15-8-gc4127a25dcf3-ab15863337-4k",
+  "build": "#1 SMP PREEMPT Wed Jul 15 13:58:53 UTC 2026",
+  "compiler": "Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "ou-33134cb227c300eb4660",
@@ -24457,7 +24457,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "error": "URLError: <urlopen error _ssl.c:994: The handshake operation timed out>"
  },
  {
   "id": "vt-44e482f42c278a94f0a8",
@@ -25347,7 +25347,7 @@
   "version": "RMX5200_17.0.1.201(CN01)",
   "ota_version": "RMX5200_17.0.1.201(CN01)",
   "build_timestamp": "",
-  "md5": "",
+  "md5": "f1de2164412e0b0bb43c9433887a54b9",
   "size": 10433206530,
   "origin": "violettoolbox",
   "ok": true,
@@ -26130,14 +26130,14 @@
   "md5": "b57ad133fe9c0f580ec3ee63a4e51a97",
   "size": 10115501605,
   "origin": "oxygen-updater",
-  "ok": false,
+  "ok": true,
   "android_version": "17",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "RemoteDisconnected: Remote end closed connection without response"
+  "linux_version": "Linux version 6.12.69-android16-6-g5fd39602326e-ab16372235-4k (kleaf@build-host) (Android (14043575, +pgo, +bolt, +lto, +mlgo, based on r536225) clang version 19.0.1 (https://android.googlesource.com/toolchain/llvm-project b3a530ec6537146650e42be89f1089e9a3588460), LLD 19.0.1) #1 SMP PREEMPT Thu Sep 17 08:57:15 UTC 2026",
+  "kernel_release": "6.12.69-android16-6-g5fd39602326e-ab16372235-4k",
+  "build": "#1 SMP PREEMPT Thu Sep 17 08:57:15 UTC 2026",
+  "compiler": "Android (14043575, +pgo, +bolt, +lto, +mlgo, based on r536225) clang version 19.0.1 (https://android.googlesource.com/toolchain/llvm-project b3a530ec6537146650e42be89f1089e9a3588460), LLD 19.0.1",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "ou-0f5ad8f706c489af1e09",
@@ -27827,7 +27827,7 @@
   "version": "RMX8899_17.0.1.200(CN01)",
   "ota_version": "RMX8899_17.0.1.200(CN01)",
   "build_timestamp": "",
-  "md5": "",
+  "md5": "7fd8b9ac589d6c41411e2521d6d3c85f",
   "size": 9867142365,
   "origin": "violettoolbox",
   "ok": true,
