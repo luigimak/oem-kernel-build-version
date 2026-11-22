@@ -17368,7 +17368,7 @@
   "ota_version": "RMX3708_11.F.15",
   "build_timestamp": "",
   "md5": "",
-  "size": 911946976,
+  "size": 0,
   "origin": "violettoolbox",
   "ok": false,
   "android_version": "15",
@@ -17377,7 +17377,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "NotImplementedError: incremental OTA (op type 10) in boot"
+  "error": "URLError: <urlopen error _ssl.c:994: The handshake operation timed out>"
  },
  {
   "id": "vt-d66fa64974645a4613bf",
@@ -24457,7 +24457,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "URLError: <urlopen error _ssl.c:994: The handshake operation timed out>"
+  "error": "HTTPError: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-44e482f42c278a94f0a8",
