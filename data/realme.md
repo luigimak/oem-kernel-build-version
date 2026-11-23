@@ -93,6 +93,7 @@
 | Realme 13+ 5G | RMX5000 | BR<br>IN<br>TW | A15 | RMX5000_15.0.0.1360(EX01) | `6.1.128-android14-11-o-g501aa92d3343` | `#1 SMP PREEMPT Tue Nov 25 10:49:54 UTC 2025` |
 | Realme 13+ 5G | RMX5000 | BR<br>ID<br>LATAM<br>MEA<br>MY<br>TH | A15 | RMX5000_15.0.0.1370(EX01) | `6.1.128-android14-11-o-g16bee0eef042` | `#1 SMP PREEMPT Fri Jan  9 03:40:22 UTC 2026` |
 | Realme 13+ 5G | RMX5000 | BR<br>ID<br>IN<br>KZ<br>LATAM<br>LK<br>MEA<br>MY<br>PH<br>RU<br>TH<br>TW<br>VN | A16 | RMX5000_16.0.5.1300(EX01) | `6.1.157-android14-11-o-gb8d874e47ac6` | `#1 SMP PREEMPT Tue Sep 29 15:39:12 UTC 2026` |
+| Realme 13+ 5G | RMX5000 | BR<br>ID<br>KZ<br>LATAM<br>LK<br>MEA<br>MY<br>PH<br>RU<br>TH<br>TW<br>VN | A16 | RMX5000_16.0.5.1310(EX01) | `6.1.157-android14-11-o-g0454ffe79e7c` | `#1 SMP PREEMPT Fri Nov  6 08:39:48 UTC 2026` |
 | Realme 14 PRO | RMX5056 | MEA | A15 | RMX5056_15.0.0.1034(EX01) | `6.1.128-android14-11-o-g163599eeb21c` | `#1 SMP PREEMPT Mon Aug 18 11:51:45 UTC 2025` |
 | Realme 14 PRO | RMX5056 | IN<br>LK<br>TR | A15 | RMX5056_15.0.0.1202(EX01) | `6.1.128-android14-11-o-ga333edf4a33c` | `#1 SMP PREEMPT Wed Nov 19 04:43:18 UTC 2025` |
 | Realme 14 PRO | RMX5056 | IN | A16 | RMX5056_16.0.5.1220(EX01) | `6.1.157-android14-11-o-g2f4584ecbf1b` | `#1 SMP PREEMPT Fri Aug 14 11:21:05 UTC 2026` |
@@ -110,7 +111,7 @@
 | Realme 14T | RMX5074 | EU | A15 | RMX5074_15.0.0.824(EX01) | `5.15.149-android13-8-o-gdc24b2c6e506` | `#1 SMP PREEMPT Thu May 15 15:00:04 UTC 2025` |
 | Realme 14T | RMX5078 | MX<br>SA | A15 | RMX5078_15.0.0.1208(EX01) | `5.15.167-android13-8-o-g825587a8e0b2` | `#1 SMP PREEMPT Mon Sep 22 10:09:09 UTC 2025` |
 | Realme 14T | RMX5078 | BR<br>ID<br>IN<br>KZ<br>LATAM<br>LK<br>MEA<br>MY<br>PH<br>RU<br>TH<br>VN | A16 | RMX5078_16.0.5.1300(EX01) | `5.15.197-android13-8-o-g00d4e8e246c3` | `#1 SMP PREEMPT Wed Jul 29 13:21:00 UTC 2026` |
-| Realme 14T | RMX5078 | BR<br>ID<br>IN<br>KZ<br>LATAM<br>LK<br>MEA<br>MY<br>PH<br>TH<br>VN | A16 | RMX5078_16.0.5.1310(EX01) | `5.15.197-android13-8-o-g46b2ca86743a` | `#1 SMP PREEMPT Fri Nov 6 02:56:41 UTC 2026` |
+| Realme 14T | RMX5078 | BR<br>ID<br>IN<br>KZ<br>LATAM<br>LK<br>MEA<br>MY<br>PH<br>RU<br>TH<br>VN | A16 | RMX5078_16.0.5.1310(EX01) | `5.15.197-android13-8-o-g46b2ca86743a` | `#1 SMP PREEMPT Fri Nov 6 02:56:41 UTC 2026` |
 | Realme 14X | RMX3943 | EU<br>MY<br>TW | A16<br>A16 | RMX3943_16.0.5.1300(EX01)<br>RMX3943_16.0.5.1310(EX01) | `5.15.197-android13-8-o-g8297879b45c5` | `#1 SMP PREEMPT Thu Oct 8 15:54:04 UTC 2026` |
 | Realme 14X | RMX3943 | IN | A16<br>A16 | RMX3943_16.0.5.1300(EX01)<br>RMX3943_16.0.5.1310(EX01) | `5.15.197-android13-8-o-g71ade72e3805` | `#1 SMP PREEMPT Thu Oct 8 15:55:35 UTC 2026` |
 | Realme 14X 5G | RMX3940 | IN | A14 | RMX3940_14.1.0.520(EX01) | `5.15.149-android13-8-o-ga384f1254827` | `#1 SMP PREEMPT Thu Feb 13 10:27:16 UTC 2025` |
@@ -139,7 +140,7 @@
 | Realme 16 PRO+ | RMX5131 | MX | A16 | RMX5131_16.0.2.412(EX01) | `6.6.89-android15-8-g096cdb6ecefc-ab14358676-4k` | `#1 SMP PREEMPT Tue Oct 28 09:04:21 UTC 2025` |
 | Realme 16 PRO+ | RMX5131 | TR | A16 | RMX5131_16.0.5.713(EX01) | `6.6.89-android15-8-g97a9aaefab9a-ab14519050-4k` | `#1 SMP PREEMPT Mon Dec  1 09:40:16 UTC 2025` |
 | Realme 16 PRO+ | RMX5131 | BR<br>EU<br>ID<br>IN<br>KZ<br>LATAM<br>MEA<br>MY<br>PH<br>RU<br>TH | A16<br>A16 | RMX5131_16.0.5.1201(EX01)<br>RMX5131_16.0.5.1209(EX01) | `6.6.118-android15-8-g2e6b9c3812c5-ab15114928-4k` | `#1 SMP PREEMPT Mon Mar 30 10:41:25 UTC 2026` |
-| Realme 16 PRO+ | RMX5131 | BR<br>ID<br>IN<br>KZ<br>LATAM<br>MY<br>PH | A17 | RMX5131_17.0.0.110(EX01) | `6.6.118-android15-8-gc4127a25dcf3-ab15863337-4k` | `#1 SMP PREEMPT Wed Jul 15 13:58:53 UTC 2026` |
+| Realme 16 PRO+ | RMX5131 | BR<br>ID<br>IN<br>KZ<br>LATAM<br>MEA<br>MY<br>PH<br>RU<br>TH | A17 | RMX5131_17.0.0.110(EX01) | `6.6.118-android15-8-gc4127a25dcf3-ab15863337-4k` | `#1 SMP PREEMPT Wed Jul 15 13:58:53 UTC 2026` |
 | Realme 16T | RMX5268 | IN<br>MEA<br>MY<br>TH<br>VN | A16 | RMX5268_16.0.5.1381(EX01) | `5.15.197-android13-8-o-g00d4e8e246c3` | `#1 SMP PREEMPT Wed Jul 29 13:21:00 UTC 2026` |
 | Realme 16T | RMX5268 | MY<br>VN | A16 | RMX5268_16.0.5.1391(EX01) | `5.15.197-android13-8-o-g471eac164a1c` | `#1 SMP PREEMPT Tue Nov 3 03:24:30 UTC 2026` |
 | Realme 9 4G | RMX3521 | MEA | A14 | RMX3521_14.0.0.91(EX01) | `4.19.157-perf+` | `#1 SMP PREEMPT Wed Apr 24 12:48:57 CST 2024` |
@@ -445,6 +446,7 @@
 | Realme P1 SPEED 5G | RMX5004 | IN | A15 | RMX5004_15.0.0.300(EX01) | `6.1.75-android14-11-o-gca3b9a202b3c` | `#1 SMP PREEMPT Sat Dec  7 17:10:59 UTC 2024` |
 | Realme P1 SPEED 5G | RMX5004 | IN | A15 | RMX5004_15.0.0.1360(EX01) | `6.1.128-android14-11-o-g501aa92d3343` | `#1 SMP PREEMPT Tue Nov 25 10:49:54 UTC 2025` |
 | Realme P1 SPEED 5G | RMX5004 | IN | A16 | RMX5004_16.0.5.1300(EX01) | `6.1.157-android14-11-o-gb8d874e47ac6` | `#1 SMP PREEMPT Tue Sep 29 15:39:12 UTC 2026` |
+| Realme P1 SPEED 5G | RMX5004 | IN | A16 | RMX5004_16.0.5.1310(EX01) | `6.1.157-android14-11-o-g0454ffe79e7c` | `#1 SMP PREEMPT Fri Nov  6 08:39:48 UTC 2026` |
 | Realme P2 PRO 5G | RMX3987 | IN | A14 | RMX3987_14.1.0.630(EX01) | `5.10.198-android12-9-o-ge5195c7f11d3` | `#1 SMP PREEMPT Wed Aug 7 17:17:38 UTC 2024` |
 | Realme P2 PRO 5G | RMX3987 | IN | A15 | RMX3987_15.0.0.1400(EX01) | `5.10.226-android12-9-o-g6fd8d0dc685b` | `#1 SMP PREEMPT Thu Jun 19 08:26:30 UTC 2025` |
 | Realme P2 PRO 5G | RMX3987 | IN | A16 | RMX3987_16.0.5.1301(EX01) | `5.10.246-android12-9-o-g95a6d93f479e` | `#1 SMP PREEMPT Wed Sep 9 05:28:07 UTC 2026` |
@@ -457,7 +459,7 @@
 | Realme P3 5G | RMX5070 | APC<br>IN<br>MEA<br>SA | A15 | RMX5070_15.0.0.830(EX01) | `6.1.118-android14-11-o-g2b5b11ae17b7` | `#1 SMP PREEMPT Mon Sep 15 07:10:34 UTC 2025` |
 | Realme P3 5G | RMX5070 | MX | A16 | RMX5070_16.0.2.410(EX01) | `6.1.118-android14-11-o-ga4334e45d622` | `#1 SMP PREEMPT Sat Dec  6 03:48:37 UTC 2025` |
 | Realme P3 5G | RMX5070 | BR<br>EU<br>ID<br>IN<br>KZ<br>LATAM<br>LK<br>MEA<br>MY<br>PH<br>RU<br>SA<br>TH<br>TW<br>VN | A16 | RMX5070_16.0.5.1300(EX01) | `6.1.157-android14-11-o-g00d81d97d759` | `#1 SMP PREEMPT Fri Aug  7 09:40:54 UTC 2026` |
-| Realme P3 5G | RMX5070 | BR<br>EU<br>ID<br>KZ<br>LATAM<br>LK<br>MEA<br>MY<br>PH<br>RU<br>SA<br>TH<br>TW<br>VN | A16 | RMX5070_16.0.5.1310(EX01) | `6.1.157-android14-11-o-g8efbdb60faf9` | `#1 SMP PREEMPT Tue Oct 20 16:38:49 UTC 2026` |
+| Realme P3 5G | RMX5070 | BR<br>EU<br>ID<br>IN<br>KZ<br>LATAM<br>LK<br>MEA<br>MY<br>PH<br>RU<br>SA<br>TH<br>TW<br>VN | A16 | RMX5070_16.0.5.1310(EX01) | `6.1.157-android14-11-o-g8efbdb60faf9` | `#1 SMP PREEMPT Tue Oct 20 16:38:49 UTC 2026` |
 | Realme P3 PRO 5G | RMX5032 | IN | A15 | RMX5032_15.0.0.1034(EX01) | `6.1.118-android14-11-o-g7847aab43955` | `#1 SMP PREEMPT Sun Oct 12 14:19:22 UTC 2025` |
 | Realme P3 PRO 5G | RMX5032 | IN | A16 | RMX5032_16.0.5.1300(EX01) | `6.1.157-android14-11-o-g00d81d97d759` | `#1 SMP PREEMPT Fri Aug  7 09:40:54 UTC 2026` |
 | Realme P3 PRO 5G | RMX5032 | IN | A16 | RMX5032_16.0.5.1310(EX01) | `6.1.157-android14-11-o-ga6a5f9ef684f` | `#1 SMP PREEMPT Fri Nov  6 04:28:00 UTC 2026` |
