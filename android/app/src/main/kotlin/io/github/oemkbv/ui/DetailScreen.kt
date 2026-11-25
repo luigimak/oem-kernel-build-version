@@ -50,7 +50,7 @@ fun DetailScreen(row: Firmware?, followed: Boolean, onBack: () -> Unit, onToggle
   val clipboard = LocalClipboard.current
   val context = LocalContext.current
   val copied = stringResource(R.string.copied)
-  val name = row?.let { it.device.ifEmpty { it.model } }.orEmpty()
+  val name = row?.name.orEmpty()
 
   fun copy(label: String, text: String) {
     scope.launch {
@@ -144,7 +144,7 @@ private fun Field(label: Int, value: String, mono: Boolean = false, error: Boole
 
 private fun share(context: android.content.Context, row: Firmware) {
   val text = buildString {
-    append(row.device.ifEmpty { row.model }).append(" (").append(row.model).append(") ").append(row.version)
+    append(row.name).append(" (").append(row.model).append(") ").append(row.version)
     if (row.linuxVersion.isNotEmpty()) append('\n').append(row.linuxVersion) else if (row.kernel.isNotEmpty()) append('\n').append(row.kernel)
   }
   val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)

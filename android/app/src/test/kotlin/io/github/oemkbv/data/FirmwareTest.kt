@@ -29,11 +29,11 @@ class FirmwareTest {
 
   @Test
   fun `row keeps the kernel branch, the search text and a follow key`() {
-    val row = dto("a1", device = "OP 13", model = "CPH2655", kernel = "6.6.30-android15-8-g1234").toFirmware(Brand.ONEPLUS)
+    val row = dto("a1", device = "13", model = "CPH2655", kernel = "6.6.30-android15-8-g1234").toFirmware(Brand.ONEPLUS)
     assertEquals("oneplus:a1", row.uid)
     assertEquals("6.6", row.branch)
     assertEquals("oneplus:CPH2655", row.followKey)
-    assertTrue("op 13" in row.haystack && "cph2655" in row.haystack && "6.6.30" in row.haystack && "oneplus" in row.haystack)
+    assertTrue("oneplus 13" in row.haystack && "cph2655" in row.haystack && "6.6.30" in row.haystack && "oneplus" in row.haystack)
     assertNotNull(row.builtMs)
     assertTrue(row.ok)
   }
@@ -50,13 +50,20 @@ class FirmwareTest {
 
   @Test
   fun `follow key falls back to the device when the model is empty`() {
-    assertEquals("realme:Realme 10", dto("x", device = "Realme 10", model = "").toFirmware(Brand.REALME).followKey)
+    assertEquals("realme:10", dto("x", device = "10", model = "").toFirmware(Brand.REALME).followKey)
+  }
+
+  @Test
+  fun `name puts the brand before the device, or before the model when there is no device`() {
+    assertEquals("OnePlus 13R", dto("a", device = "13R").toFirmware(Brand.ONEPLUS).name)
+    assertEquals("Realme 10", dto("b", device = "10").toFirmware(Brand.REALME).name)
+    assertEquals("Realme RMX3630", dto("c", device = "", model = "RMX3630").toFirmware(Brand.REALME).name)
   }
 
   @Test
   fun `rows of the real files parse with nulls, unknown and missing fields`() {
     val json = Json { ignoreUnknownKeys = true; isLenient = true; coerceInputValues = true }
-    val text = """[{"id":"vt-1","device":"OP 10 PRO","size":7482806174,"ok":true,"error":null,"new_field":[1,2]},{"id":"x"},{"id":7,"ok":false}]"""
+    val text = """[{"id":"vt-1","brand":"OnePlus","device":"10 PRO","size":7482806174,"ok":true,"error":null,"new_field":[1,2]},{"id":"x"},{"id":7,"ok":false}]"""
     val rows = json.decodeFromString(ListSerializer(FirmwareDto.serializer()), text)
     assertEquals(3, rows.size)
     assertEquals(7482806174, rows[0].size)

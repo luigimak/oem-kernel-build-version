@@ -264,11 +264,11 @@ fun FirmwareCard(row: Firmware, followed: Boolean, onClick: () -> Unit, modifier
   Card(onClick = onClick, modifier = modifier.fillMaxWidth().testTag("row-${row.uid}")) {
     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
       Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(row.device.ifEmpty { row.model }, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+        Text(row.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
         if (followed) Icon(Icons.Default.Star, null, tint = MaterialTheme.colorScheme.primary)
       }
       Text(
-        listOf(row.brand.label, row.model, row.region).filter { it.isNotEmpty() }.joinToString(" · ") +
+        listOf(row.model, row.region).filter { it.isNotEmpty() }.joinToString(" · ") +
           if (row.android.isNotEmpty()) " · " + stringResource(R.string.android_version, row.android) else "",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,

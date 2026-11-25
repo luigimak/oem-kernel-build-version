@@ -64,6 +64,9 @@ data class Firmware(
   /** What "follow" refers to: a model code of a brand (the device label is shared by several regional models). */
   val followKey: String get() = followKey(brand, model.ifEmpty { device })
 
+  /** Brand and device as one label ("OnePlus 13R"): the device alone is ambiguous, OnePlus 11 and Realme 11 are both "11". */
+  val name: String get() = "${brand.label} ${device.ifEmpty { model }}".trim()
+
   companion object {
     fun followKey(brand: Brand, model: String): String = "${brand.key}:$model"
   }

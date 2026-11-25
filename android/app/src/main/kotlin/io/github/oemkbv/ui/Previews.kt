@@ -12,7 +12,7 @@ import io.github.oemkbv.ui.theme.OEMKernelBuildVersionTheme
 
 private val sample = listOf(
   FirmwareDto(
-    id = "1", device = "OP 13", region = "EU", model = "CPH2655", version = "CPH2655_15.0.0.840(EX01)", androidVersion = "15", ok = true,
+    id = "1", device = "13", region = "EU", model = "CPH2655", version = "CPH2655_15.0.0.840(EX01)", androidVersion = "15", ok = true,
     kernelRelease = "6.6.30-android15-8-g1d2c3b4a5f6e", build = "#1 SMP PREEMPT Wed Dec 10 04:46:02 UTC 2025", source = "payload.bin", size = 7482806174, md5 = "bec15bb89e84487b104728993feab7df",
     linuxVersion = "Linux version 6.6.30-android15-8-g1d2c3b4a5f6e (build-user@build-host) (Android clang version 18.0.1) #1 SMP PREEMPT Wed Dec 10 04:46:02 UTC 2025",
     compiler = "Android (11368308, +pgo, +bolt, +lto, -mlgo, based on r510928) clang version 18.0.1",
@@ -22,10 +22,10 @@ private val sample = listOf(
     kernelRelease = "6.6.46-android15-8-g9a8b7c6d5e4f", build = "#1 SMP PREEMPT Thu Jan 14 08:12:44 CST 2026",
   ).toFirmware(Brand.OPPO),
   FirmwareDto(
-    id = "3", device = "Realme 10", region = "TH", model = "RMX3630", version = "RMX3630_14.0.0.200(EX01)", androidVersion = "14", ok = true,
+    id = "3", device = "10", region = "TH", model = "RMX3630", version = "RMX3630_14.0.0.200(EX01)", androidVersion = "14", ok = true,
     kernelRelease = "5.10.198-android12-9-gf7a7af5fc933", build = "#1 SMP PREEMPT Wed Sep 20 05:00:00 UTC 2023",
   ).toFirmware(Brand.REALME),
-  FirmwareDto(id = "4", device = "OP 13", region = "IN", model = "CPH2655", version = "CPH2655_15.0.0.101(EX01)", androidVersion = "15", ok = false, error = "link expired")
+  FirmwareDto(id = "4", device = "13", region = "IN", model = "CPH2655", version = "CPH2655_15.0.0.101(EX01)", androidVersion = "15", ok = false, error = "link expired")
     .toFirmware(Brand.ONEPLUS),
 )
 

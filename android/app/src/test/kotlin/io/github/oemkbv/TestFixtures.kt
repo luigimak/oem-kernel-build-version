@@ -12,7 +12,7 @@ import java.io.IOException
 /** A firmware row as the data files have it, for tests. */
 fun dto(
   id: String,
-  device: String = "OP 13",
+  device: String = "13",
   model: String = "CPH2655",
   region: String = "EU",
   version: String = "CPH2655_15.0.0.100(EX01)",

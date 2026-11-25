@@ -46,12 +46,12 @@ class AppUiTest {
     TestWorld.api = FakeApi().apply {
       publish(
         Brand.ONEPLUS,
-        dto("o1", "OP 13", "CPH2655", "EU", "CPH2655_15.0.0.100(EX01)", "15", "6.6.30-android15-8-g1", "#1 SMP PREEMPT Wed Dec 10 04:46:02 UTC 2025"),
-        dto("o2", "OP 13", "PJZ110", "CN", "PJZ110_15.0.0.200(CN01)", "15", "6.6.50-android15-8-g2", "#1 SMP PREEMPT Wed Jan 14 04:46:02 UTC 2026"),
-        dto("o3", "OP 13", "CPH2655", "IN", "CPH2655_15.0.0.101(EX01)", ok = false),
+        dto("o1", "13", "CPH2655", "EU", "CPH2655_15.0.0.100(EX01)", "15", "6.6.30-android15-8-g1", "#1 SMP PREEMPT Wed Dec 10 04:46:02 UTC 2025"),
+        dto("o2", "13", "PJZ110", "CN", "PJZ110_15.0.0.200(CN01)", "15", "6.6.50-android15-8-g2", "#1 SMP PREEMPT Wed Jan 14 04:46:02 UTC 2026"),
+        dto("o3", "13", "CPH2655", "IN", "CPH2655_15.0.0.101(EX01)", ok = false),
       )
       publish(Brand.OPPO, dto("p1", "Find X8", "CPH2651", "EU", "CPH2651_15.0.0.50(EX01)", "15", "6.6.30-android15-8-g4"))
-      publish(Brand.REALME, dto("r1", "Realme 10", "RMX3630", "TH", "RMX3630_14.0.0.200(EX01)", "14", "5.10.198-android12-9-g5"))
+      publish(Brand.REALME, dto("r1", "10", "RMX3630", "TH", "RMX3630_14.0.0.200(EX01)", "14", "5.10.198-android12-9-g5"))
     }
   }
 
@@ -103,7 +103,7 @@ class AppUiTest {
     rule.onNodeWithTag("row-oppo:p1").assertIsDisplayed()
 
     rule.onNodeWithTag("chip-device").performClick()
-    rule.onAllNodesWithText("Find X8").assertCountEquals(2) // the card and the OPPO device offered by the menu…
+    rule.onAllNodesWithText("OPPO Find X8").assertCountEquals(2) // the card and the OPPO device offered by the menu…
     rule.onAllNodesWithText("Realme 10").assertCountEquals(0) // …and not the Realme one, in the menu or in the list
   }
 
@@ -136,7 +136,7 @@ class AppUiTest {
     rule.onNodeWithText("1 of 1 firmware").assertIsDisplayed()
 
     rule.onNodeWithContentDescription("Settings").performClick()
-    rule.onNodeWithText("OP 13 (CPH2655)").assertIsDisplayed()
+    rule.onNodeWithText("OnePlus 13 (CPH2655)").assertIsDisplayed()
   }
 
   @Test
@@ -193,7 +193,7 @@ class AppUiTest {
   fun `rotation keeps the open detail and the search`() {
     launch()
     waitForList()
-    rule.onNodeWithTag("search").performTextInput("op 13")
+    rule.onNodeWithTag("search").performTextInput("oneplus 13")
     rule.waitUntil(5_000) { rule.onAllNodesWithTag("row-oppo:p1").fetchSemanticsNodes().isEmpty() }
     rule.onNodeWithTag("row-oneplus:o1").performClick()
     rule.onNodeWithTag("follow").assertIsDisplayed()
