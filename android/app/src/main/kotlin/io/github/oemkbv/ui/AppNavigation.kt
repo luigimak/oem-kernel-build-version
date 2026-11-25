@@ -1,0 +1,81 @@
+package io.github.oemkbv.ui
+
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.ui.NavDisplay
+import io.github.oemkbv.data.Firmware
+
+@Composable
+fun AppNavigation(viewModel: MainViewModel) {
+  val state by viewModel.state.collectAsStateWithLifecycle()
+  val stack = rememberSaveable(saver = Screen.StackSaver) { mutableStateListOf<Screen>(Screen.Main) }
+  val context = LocalContext.current
+  val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
+  // Android 13+ asks before an app may notify: ask when notifying becomes useful, not at first launch
+  fun askToNotify() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+      ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+    ) {
+      permission.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
+  }
+
+  val callbacks = remember(viewModel) {
+    ListCallbacks(
+      onQuery = viewModel::setQuery,
+      onSelect = viewModel::select,
+      onShowFailed = viewModel::setShowFailed,
+      onFollowedOnly = viewModel::setFollowedOnly,
+      onSort = viewModel::sortBy,
+      onReset = viewModel::reset,
+      onRefresh = viewModel::refresh,
+      onOpen = { stack.add(Screen.Detail(it.uid)) },
+      onSettings = { stack.add(Screen.Settings) },
+    )
+  }
+
+  NavDisplay(
+    backStack = stack,
+    onBack = { if (stack.size > 1) stack.removeAt(stack.lastIndex) },
+    entryProvider = entryProvider<Screen> {
+      entry<Screen.Main> { ListScreen(state, callbacks) }
+      entry<Screen.Detail> { key ->
+        val row: Firmware? = remember(key.uid, state.allRows) { state.allRows.firstOrNull { it.uid == key.uid } }
+        DetailScreen(
+          row = row,
+          followed = row != null && row.followKey in state.followed,
+          onBack = { if (stack.size > 1) stack.removeAt(stack.lastIndex) },
+          onToggleFollow = {
+            val following = it.followKey in state.followed
+            viewModel.toggleFollow(it)
+            if (!following && state.notifications) askToNotify()
+          },
+        )
+      }
+      entry<Screen.Settings> {
+        SettingsScreen(
+          state = state,
+          onBack = { if (stack.size > 1) stack.removeAt(stack.lastIndex) },
+          onNotifications = {
+            viewModel.setNotifications(it)
+            if (it) askToNotify()
+          },
+          onUnfollow = { viewModel.setFollowed(it, false) },
+        )
+      }
+    },
+  )
+}

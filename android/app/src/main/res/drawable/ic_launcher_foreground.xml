@@ -1,0 +1,14 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- a chip: body with a hole, three pins per side -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M40,36h28a4,4 0 0 1 4,4v28a4,4 0 0 1 -4,4h-28a4,4 0 0 1 -4,-4v-28a4,4 0 0 1 4,-4zM46,46h16v16h-16z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M44,29h4v7h-4zM52,29h4v7h-4zM60,29h4v7h-4zM44,72h4v7h-4zM52,72h4v7h-4zM60,72h4v7h-4zM29,44h7v4h-7zM29,52h7v4h-7zM29,60h7v4h-7zM72,44h7v4h-7zM72,52h7v4h-7zM72,60h7v4h-7z" />
+</vector>
