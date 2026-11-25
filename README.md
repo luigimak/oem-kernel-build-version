@@ -53,6 +53,18 @@ the updated results to the default branch. `archive` is a manual command.
 - The spike0en archive and `archive` cover OnePlus only; OPPO and Realme come from the catalog, OTA Pulse and Oxygen Updater.
 - Beta tracks (`taste`) cannot be found by `discover`; they depend on the catalog.
 
+## Android app
+[`android/`](android/) is a small native app (Kotlin, Jetpack Compose, Android 8.0+) with the same table as the web page: search, filters
+(brand, device, region, Android, kernel), sorting, and a detail page with the full `Linux version …` string to copy or share.
+English and Italian; another language is a `res/values-xx/strings.xml` away.
+
+- It reads `oneplus.json`, `oppo.json` and `realme.json` from the Pages site when it starts (conditional requests, a copy is kept on the phone and works offline), so the app does not need a new release when the data changes.
+- Follow a model to be notified when new firmware of it appears (checked twice a day on the phone; no account, no server of ours).
+- Build and test: `cd android && ./gradlew assembleDebug testDebugUnitTest lintDebug` (JDK 17, Android SDK 36).
+- Releases: a tag `app-vX.Y.Z` runs `android-release.yml`, which builds the signed APK and leaves it in a draft GitHub release.
+  It needs the secrets `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`.
+- A new brand must also be added to `Brand` in `android/app/src/main/kotlin/io/github/oemkbv/data/Firmware.kt`.
+
 ## Development
 ```bash
 .venv/bin/pip install -e '.[dev]'
@@ -60,7 +72,7 @@ the updated results to the default branch. `archive` is a manual command.
 .venv/bin/ruff check .
 .venv/bin/mypy
 ```
-CI runs the tests, ruff and mypy on every push.
+CI runs the tests, ruff and mypy on every push; the app has its own workflow (`android.yml`: unit tests, lint, debug build).
 
 ## License and attribution
 Copyright 2026 luigimak, licensed under the Apache License 2.0 (see [LICENSE](LICENSE) and [NOTICE](NOTICE)).
