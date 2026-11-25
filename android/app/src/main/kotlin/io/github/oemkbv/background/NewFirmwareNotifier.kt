@@ -54,8 +54,7 @@ class NewFirmwareNotifier(private val context: Context) {
   }
 
   private fun line(row: Firmware): String {
-    val head = row.device.ifEmpty { row.model }
-    return "$head · ${row.version} · ${row.kernel}"
+    return "${row.name} · ${row.version} · ${row.kernel}"
   }
 
   private fun ensureChannel() {

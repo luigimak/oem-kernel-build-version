@@ -10,12 +10,12 @@ import kotlin.test.assertTrue
 
 class FirmwareQueryTest {
   private val rows: List<Firmware> = listOf(
-    dto("1", "OP 13", "CPH2655", "EU", "CPH2655_15.0.0.100(EX01)", "15", "6.6.30-android15-8-g1", "#1 SMP PREEMPT Wed Dec 10 04:46:02 UTC 2025").toFirmware(Brand.ONEPLUS),
-    dto("2", "OP 13", "PJZ110", "CN", "PJZ110_15.0.0.200(CN01)", "15", "6.6.50-android15-8-g2", "#1 SMP PREEMPT Wed Jan 14 04:46:02 UTC 2026").toFirmware(Brand.ONEPLUS),
-    dto("3", "OP 10 Pro", "NE2210", "GLO", "NE2210_14.0.0.9(EX01)", "14", "5.10.209-android12-9-g3", "#1 SMP PREEMPT Mon Dec 25 12:31:09 UTC 2023").toFirmware(Brand.ONEPLUS),
+    dto("1", "13", "CPH2655", "EU", "CPH2655_15.0.0.100(EX01)", "15", "6.6.30-android15-8-g1", "#1 SMP PREEMPT Wed Dec 10 04:46:02 UTC 2025").toFirmware(Brand.ONEPLUS),
+    dto("2", "13", "PJZ110", "CN", "PJZ110_15.0.0.200(CN01)", "15", "6.6.50-android15-8-g2", "#1 SMP PREEMPT Wed Jan 14 04:46:02 UTC 2026").toFirmware(Brand.ONEPLUS),
+    dto("3", "10 Pro", "NE2210", "GLO", "NE2210_14.0.0.9(EX01)", "14", "5.10.209-android12-9-g3", "#1 SMP PREEMPT Mon Dec 25 12:31:09 UTC 2023").toFirmware(Brand.ONEPLUS),
     dto("4", "Find X8", "CPH2651", "EU", "CPH2651_15.0.0.50(EX01)", "15", "6.6.30-android15-8-g4", "#1 SMP PREEMPT Wed Dec 10 05:00:00 UTC 2025").toFirmware(Brand.OPPO),
-    dto("5", "Realme 10", "RMX3630", "TH", "RMX3630_14.0.0.200(EX01)", "14", "5.10.198-android12-9-g5", "#1 SMP PREEMPT Wed Sep 20 05:00:00 UTC 2023").toFirmware(Brand.REALME),
-    dto("6", "OP 13", "CPH2655", "IN", "CPH2655_15.0.0.101(EX01)", ok = false).toFirmware(Brand.ONEPLUS),
+    dto("5", "10", "RMX3630", "TH", "RMX3630_14.0.0.200(EX01)", "14", "5.10.198-android12-9-g5", "#1 SMP PREEMPT Wed Sep 20 05:00:00 UTC 2023").toFirmware(Brand.REALME),
+    dto("6", "13", "CPH2655", "IN", "CPH2655_15.0.0.101(EX01)", ok = false).toFirmware(Brand.ONEPLUS),
   )
 
   private fun run(filters: Filters = Filters(), sort: Sort = Sort(), followed: Set<String> = emptySet()) =
@@ -49,13 +49,13 @@ class FirmwareQueryTest {
 
   @Test
   fun `device sort is natural, not alphabetical`() {
-    val devices = run(sort = Sort(SortKey.DEVICE, descending = false)).rows.map { it.device }.distinct()
-    assertEquals(listOf("Find X8", "OP 10 Pro", "OP 13", "Realme 10"), devices)
+    val devices = run(sort = Sort(SortKey.DEVICE, descending = false)).rows.map { it.name }.distinct()
+    assertEquals(listOf("OnePlus 10 Pro", "OnePlus 13", "OPPO Find X8", "Realme 10"), devices)
   }
 
   @Test
   fun `search needs every word, in any column`() {
-    assertEquals(listOf("2", "1"), ids(run(Filters(query = "op 13"))))
+    assertEquals(listOf("2", "1"), ids(run(Filters(query = "oneplus 13"))))
     assertEquals(listOf("2"), ids(run(Filters(query = "pjz110 6.6.50"))))
     assertEquals(listOf("1", "4"), ids(run(Filters(query = "6.6.30"))).sorted())
     assertTrue(run(Filters(query = "nothing like this")).rows.isEmpty())
@@ -71,7 +71,7 @@ class FirmwareQueryTest {
   @Test
   fun `each list offers only what exists with the other selections`() {
     val r = run(Filters().with(FilterField.BRAND, "OnePlus"))
-    assertEquals(listOf("OP 10 Pro", "OP 13"), r.options.getValue(FilterField.DEVICE))
+    assertEquals(listOf("OnePlus 10 Pro", "OnePlus 13"), r.options.getValue(FilterField.DEVICE))
     assertEquals(listOf("CN", "EU", "GLO"), r.options.getValue(FilterField.REGION))
     // the brand list itself ignores the brand selection, so it can be changed
     assertEquals(listOf("OnePlus", "OPPO", "Realme"), r.options.getValue(FilterField.BRAND))
@@ -79,10 +79,21 @@ class FirmwareQueryTest {
   }
 
   @Test
+  fun `the same device name under two brands stays two devices`() {
+    val both = listOf(
+      dto("1", "11", "CPH2447").toFirmware(Brand.ONEPLUS),
+      dto("2", "11", "RMX3780", version = "RMX3780_14.0.0.100(EX01)").toFirmware(Brand.REALME),
+    )
+    val all = FirmwareQuery.run(both, Filters(), Sort(), emptySet())
+    assertEquals(listOf("OnePlus 11", "Realme 11"), all.options.getValue(FilterField.DEVICE))
+    assertEquals(listOf("2"), ids(FirmwareQuery.run(both, Filters().with(FilterField.DEVICE, "Realme 11"), Sort(), emptySet())))
+  }
+
+  @Test
   fun `a selection that no longer exists is dropped`() {
-    // "Find X8" is an OPPO device: with Realme selected the brand is dropped, the device stays
-    val r = run(Filters().with(FilterField.DEVICE, "Find X8").with(FilterField.BRAND, "Realme"))
-    assertEquals(mapOf(FilterField.DEVICE to "Find X8"), r.filters.selected)
+    // "OPPO Find X8" is an OPPO device: with Realme selected the brand is dropped, the device stays
+    val r = run(Filters().with(FilterField.DEVICE, "OPPO Find X8").with(FilterField.BRAND, "Realme"))
+    assertEquals(mapOf(FilterField.DEVICE to "OPPO Find X8"), r.filters.selected)
     assertEquals(listOf("4"), ids(r))
   }
 

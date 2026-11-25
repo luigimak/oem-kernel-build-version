@@ -107,7 +107,7 @@ fun SettingsScreen(
         )
       }
       for (key in state.followed.sorted()) {
-        val label = state.allRows.firstOrNull { it.followKey == key }?.let { "${it.device.ifEmpty { it.model }} (${it.model})" } ?: key
+        val label = state.allRows.firstOrNull { it.followKey == key }?.let { "${it.name} (${it.model})" } ?: key
         Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
           Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
           IconButton(onClick = { onUnfollow(key) }) { Icon(Icons.Default.Clear, stringResource(R.string.unfollow, label)) }

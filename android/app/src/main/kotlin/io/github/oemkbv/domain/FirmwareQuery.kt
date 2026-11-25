@@ -4,7 +4,7 @@ import io.github.oemkbv.data.Firmware
 
 enum class FilterField(val value: (Firmware) -> String) {
   BRAND({ it.brand.label }),
-  DEVICE({ it.device }),
+  DEVICE({ it.name }),
   REGION({ it.region }),
   ANDROID({ it.android }),
   BRANCH({ it.branch }),
@@ -95,7 +95,7 @@ object FirmwareQuery {
   private fun sortKey(row: Firmware, key: SortKey): Any? =
     when (key) {
       SortKey.BRAND -> row.brand.label
-      SortKey.DEVICE -> row.device
+      SortKey.DEVICE -> row.name
       SortKey.MODEL -> row.model
       SortKey.REGION -> row.region
       SortKey.ANDROID -> row.android

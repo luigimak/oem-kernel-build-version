@@ -33,7 +33,7 @@ class CheckNewFirmwareWorkerTest {
   fun setUp() {
     shadowOf(app).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
     TestWorld.api = FakeApi().apply {
-      publish(Brand.ONEPLUS, dto("o1", "OP 13", "CPH2655", version = "CPH2655_15.0.0.100(EX01)"))
+      publish(Brand.ONEPLUS, dto("o1", "13", "CPH2655", version = "CPH2655_15.0.0.100(EX01)"))
       publish(Brand.OPPO, dto("p1", "Find X8", "CPH2651"))
       publish(Brand.REALME)
     }
@@ -41,7 +41,7 @@ class CheckNewFirmwareWorkerTest {
 
   private fun run(): Result = runBlocking { TestListenableWorkerBuilder<CheckNewFirmwareWorker>(app).build().doWork() }
 
-  /** The user follows OP 13 while its first firmware is already known. */
+  /** The user follows OnePlus 13 while its first firmware is already known. */
   private fun followOp13() = runBlocking {
     val c = app.container
     val rows = c.repository.refresh().rows
@@ -61,8 +61,8 @@ class CheckNewFirmwareWorkerTest {
     followOp13()
     TestWorld.api.publish(
       Brand.ONEPLUS,
-      dto("o1", "OP 13", "CPH2655"),
-      dto("o9", "OP 13", "CPH2655", version = "CPH2655_15.0.0.200(EX01)", kernel = "6.6.50-android15-8-g9"),
+      dto("o1", "13", "CPH2655"),
+      dto("o9", "13", "CPH2655", version = "CPH2655_15.0.0.200(EX01)", kernel = "6.6.50-android15-8-g9"),
     )
     assertEquals(Result.success(), run())
     val n = notifications.single()
@@ -78,7 +78,7 @@ class CheckNewFirmwareWorkerTest {
   fun `other models and failed rows do not notify`() {
     followOp13()
     TestWorld.api.publish(Brand.OPPO, dto("p1", "Find X8", "CPH2651"), dto("p2", "Find X8", "CPH2651", version = "CPH2651_15.0.0.99(EX01)"))
-    TestWorld.api.publish(Brand.ONEPLUS, dto("o1", "OP 13", "CPH2655"), dto("o8", "OP 13", "CPH2655", ok = false))
+    TestWorld.api.publish(Brand.ONEPLUS, dto("o1", "13", "CPH2655"), dto("o8", "13", "CPH2655", ok = false))
     assertEquals(Result.success(), run())
     assertTrue(notifications.isEmpty())
   }
@@ -86,7 +86,7 @@ class CheckNewFirmwareWorkerTest {
   @Test
   fun `without the notification permission nothing is lost, it is reported later`() {
     followOp13()
-    TestWorld.api.publish(Brand.ONEPLUS, dto("o1", "OP 13", "CPH2655"), dto("o9", "OP 13", "CPH2655", version = "CPH2655_15.0.0.200(EX01)"))
+    TestWorld.api.publish(Brand.ONEPLUS, dto("o1", "13", "CPH2655"), dto("o9", "13", "CPH2655", version = "CPH2655_15.0.0.200(EX01)"))
     shadowOf(app).denyPermissions(Manifest.permission.POST_NOTIFICATIONS)
     assertEquals(Result.success(), run())
     assertTrue(notifications.isEmpty())
