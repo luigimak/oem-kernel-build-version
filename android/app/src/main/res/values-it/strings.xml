@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OEM-KernelBuildVersion</string>
+    <string name="title">Versioni kernel build</string>
+
+    <!-- list -->
+    <string name="search_hint">Cerca firmware, modello, kernel, build…</string>
+    <string name="clear_search">Cancella ricerca</string>
+    <string name="filter_brand">Brand</string>
+    <string name="filter_device">Dispositivo</string>
+    <string name="filter_region">Regione</string>
+    <string name="filter_android">Android</string>
+    <string name="filter_kernel">Kernel</string>
+    <string name="all_brands">Tutti i brand</string>
+    <string name="all_devices">Tutti i dispositivi</string>
+    <string name="all_regions">Tutte le regioni</string>
+    <string name="all_android">Tutti gli Android</string>
+    <string name="all_kernels">Tutti i kernel</string>
+    <string name="filter_followed">Seguiti</string>
+    <string name="filter_failed">Mostra falliti</string>
+    <string name="sort">Ordina</string>
+    <string name="reset">Azzera</string>
+    <string name="sort_brand">Brand</string>
+    <string name="sort_device">Dispositivo</string>
+    <string name="sort_model">Modello</string>
+    <string name="sort_region">Regione</string>
+    <string name="sort_android">Android</string>
+    <string name="sort_firmware">Firmware</string>
+    <string name="sort_kernel">Kernel</string>
+    <string name="sort_built">Build del kernel</string>
+    <string name="sort_ascending">crescente</string>
+    <string name="sort_descending">decrescente</string>
+    <string name="count">%1$d di %2$d firmware</string>
+    <string name="no_match">Nessun firmware corrisponde.</string>
+    <string name="no_followed">Nessun modello seguito. Apri un firmware e tocca la stella.</string>
+    <string name="loading">Caricamento…</string>
+    <string name="load_failed">Impossibile caricare i dati. Controlla la connessione e riprova.</string>
+    <string name="retry">Riprova</string>
+    <string name="partial_failure">Impossibile aggiornare %1$s: quei firmware potrebbero non essere aggiornati.</string>
+    <string name="refresh">Aggiorna</string>
+    <string name="settings">Impostazioni</string>
+    <string name="back">Indietro</string>
+    <string name="failed">fallito</string>
+    <string name="android_version">Android %1$s</string>
+
+    <!-- detail -->
+    <string name="field_brand">Brand</string>
+    <string name="field_device">Dispositivo</string>
+    <string name="field_model">Modello</string>
+    <string name="field_region">Regione</string>
+    <string name="field_android">Android</string>
+    <string name="field_firmware">Firmware</string>
+    <string name="field_kernel">Kernel</string>
+    <string name="field_build">Build del kernel</string>
+    <string name="field_ota_version">Versione OTA</string>
+    <string name="field_ota_built">Build OTA</string>
+    <string name="field_linux_version">Linux version</string>
+    <string name="field_compiler">Compilatore</string>
+    <string name="field_source">Letto da</string>
+    <string name="field_size">Dimensione</string>
+    <string name="field_md5">MD5</string>
+    <string name="field_error">Errore</string>
+    <string name="copy_linux_version">Copia Linux version</string>
+    <string name="copy_kernel">Copia kernel</string>
+    <string name="copied">Copiato</string>
+    <string name="share">Condividi</string>
+    <string name="follow">Segui %1$s</string>
+    <string name="unfollow">Smetti di seguire %1$s</string>
+    <string name="firmware_not_found">Questo firmware non è più nei dati.</string>
+    <string name="size_gib">%1$s GiB</string>
+
+    <!-- settings -->
+    <string name="settings_notifications">Notifiche sui nuovi firmware</string>
+    <string name="settings_notifications_summary">Controlla due volte al giorno e ti avvisa quando un modello seguito riceve un nuovo firmware.</string>
+    <string name="settings_notifications_denied">Le notifiche sono bloccate per questa app. Consentile dalle impostazioni di sistema.</string>
+    <string name="settings_followed">Modelli seguiti</string>
+    <string name="settings_followed_empty">Nessuno. Segui un modello dalla pagina del suo firmware.</string>
+    <string name="settings_language">Lingua</string>
+    <string name="settings_language_summary">Scegli la lingua di questa app.</string>
+    <string name="settings_data">Dati</string>
+    <string name="settings_last_checked">Ultimo controllo: %1$s</string>
+    <string name="settings_never_checked">Nessun controllo ancora</string>
+    <string name="settings_data_source">Letti dalla tabella pubblica, aggiornata ogni giorno sul server. Nessun account, nessun tracciamento.</string>
+    <string name="settings_about">Informazioni</string>
+    <string name="settings_version">Versione %1$s</string>
+    <string name="settings_source_code">Codice sorgente e metodo su GitHub</string>
+    <string name="settings_license">Licenza Apache 2.0</string>
+
+    <!-- notifications -->
+    <string name="channel_name">Nuovi firmware</string>
+    <string name="channel_description">Nuovi firmware dei modelli che segui</string>
+    <plurals name="notification_title">
+        <item quantity="one">%1$d nuovo firmware</item>
+        <item quantity="many">%1$d nuovi firmware</item>
+        <item quantity="other">%1$d nuovi firmware</item>
+    </plurals>
+    <string name="notification_more">e altri %1$d</string>
+</resources>
