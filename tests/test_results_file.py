@@ -1,5 +1,5 @@
 """What lands in data/<brand>.json, whatever the command that saved it (checked through `opkv run`)."""
-from helpers import row
+from helpers import release, row
 
 
 def saved(run, rows):
@@ -9,6 +9,19 @@ def saved(run, rows):
 def test_results_file_ends_with_a_newline(run):
     saved(run, [row("a")])
     assert run.path.read_text(encoding="utf-8").endswith("]\n")
+
+
+def test_new_row_has_the_brand_and_the_device_without_its_prefix(run):
+    r = run([release("n", device="OP 13R")], [])[1][0]
+    assert (r["brand"], r["device"]) == ("OnePlus", "13R")
+    assert list(r)[:3] == ["id", "brand", "device"]
+
+
+def test_rows_written_before_the_brand_field_are_rewritten_in_the_current_layout(run):
+    old = row("a", device="OP 13R")
+    del old["brand"]
+    r = saved(run, [old])[0]
+    assert (r["brand"], r["device"], list(r)[:3]) == ("OnePlus", "13R", ["id", "brand", "device"])
 
 
 def test_firmware_older_than_android_14_is_dropped(run):
@@ -21,9 +34,9 @@ def test_source_url_is_never_persisted(run):
 
 
 def test_catalog_typos_are_fixed(run):
-    typo = row("a", version="CCPH2645_15.0.0.840(EX01)", device="OP PAD2 PRO")
+    typo = row("a", version="CCPH2645_15.0.0.840(EX01)", device="PAD2 PRO")
     r = saved(run, [typo])[0]
-    assert (r["model"], r["version"], r["device"]) == ("CPH2645", "CPH2645_15.0.0.840(EX01)", "OP PAD 2 PRO")
+    assert (r["model"], r["version"], r["device"]) == ("CPH2645", "CPH2645_15.0.0.840(EX01)", "PAD 2 PRO")
 
 
 def test_model_follows_the_firmware_version(run):
@@ -52,15 +65,15 @@ def test_same_version_in_two_regions_is_not_a_duplicate(run):
 
 
 def test_device_label_follows_the_majority_of_its_model(run):
-    rows = [row(f"a{i}", version=f"CPH2653_15.0.0.{i}00(EX01)", device="OP 13") for i in range(3)]
-    rows.append(row("odd", version="CPH2653_16.0.0.210(EX01)", device="OP 13S"))
-    assert {r["device"] for r in saved(run, rows)} == {"OP 13"}
+    rows = [row(f"a{i}", version=f"CPH2653_15.0.0.{i}00(EX01)", device="13") for i in range(3)]
+    rows.append(row("odd", version="CPH2653_16.0.0.210(EX01)", device="13S"))
+    assert {r["device"] for r in saved(run, rows)} == {"13"}
 
 
 def test_models_with_a_single_label_are_left_alone(run):
-    rows = [row("a", version="CPH2653_15.0.0.100(EX01)", device="OP 13"),
-            row("b", version="CPH2723_15.0.0.100(EX01)", device="OP 13S", region="IN")]
-    assert {r["device"] for r in saved(run, rows)} == {"OP 13", "OP 13S"}
+    rows = [row("a", version="CPH2653_15.0.0.100(EX01)", device="13"),
+            row("b", version="CPH2723_15.0.0.100(EX01)", device="13S", region="IN")]
+    assert {r["device"] for r in saved(run, rows)} == {"13", "13S"}
 
 
 def test_failed_row_without_android_gets_it_from_the_firmware_version(run):

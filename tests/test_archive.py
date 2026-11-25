@@ -40,12 +40,12 @@ def archive_run(tmp_path, monkeypatch):
 
 
 def test_missing_firmware_is_added_with_the_device_label_of_its_model(archive_run):
-    rows = [row(f"a{i}", version=f"CPH2653_15.0.0.{i}00(EX01)", region="GLO", device="OP 13") for i in range(3)]
-    rows.append(row("odd", version="CPH2653_15.0.0.900(EX01)", region="EU", device="OP 13S"))
+    rows = [row(f"a{i}", version=f"CPH2653_15.0.0.{i}00(EX01)", region="GLO", device="13") for i in range(3)]
+    rows.append(row("odd", version="CPH2653_15.0.0.900(EX01)", region="EU", device="13S"))
     downloaded, out = archive_run(rows, [rel()])
     new = [r for r in out if r["version"] == V]
     assert len(downloaded) == 1 and len(new) == 1
-    assert (new[0]["device"], new[0]["origin"], new[0]["android_version"]) == ("OP 13", "spike0en-archive", "16")
+    assert (new[0]["device"], new[0]["origin"], new[0]["android_version"]) == ("13", "spike0en-archive", "16")
     assert new[0]["id"].startswith("sp-")
 
 

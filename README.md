@@ -20,7 +20,7 @@ opkv url <URL>  # a single OTA zip
 ```
 `fetch`, `discover`, `run`, `archive` and `report` take `--brand oneplus|oppo|realme|all` (default `all`) and `--data-dir` (default `data`).
 `discover` also takes `--no-ou`, `--no-violet` and `--no-scan` to skip a source or the new search of the failed firmware.
-OnePlus (`OP …`) from the 10 series onward, every OPPO and Realme model, and only firmware from Android 14 onward (older rows are dropped). `run` is resumable.
+OnePlus from the 10 series onward, every OPPO and Realme model, and only firmware from Android 14 onward (older rows are dropped). `run` is resumable.
 
 A GitHub Actions workflow (`.github/workflows/update.yml`) runs `fetch`, `discover`, `run --retry-failed` and `report` every day and commits
 the updated results to the default branch. `archive` is a manual command.
@@ -31,7 +31,8 @@ the updated results to the default branch. `archive` is a manual command.
 | Field | Meaning |
 |---|---|
 | `id`, `origin` | row id and where the firmware was found (`catalog`, `ota-query`, `ota-scan`, `oxygen-updater`, `violettoolbox`, `spike0en-archive`) |
-| `device`, `model`, `region` | device label (`OP 13R`), model code (`CPH2645`), region (`EU`, `GLO`, `IN`, `CN`, `NA`, …) |
+| `brand`, `device` | brand (`OnePlus`, `OPPO`, `Realme`) and device label without the brand (`13R`, `FIND X9`, `GT7 PRO`) |
+| `model`, `region` | model code (`CPH2645`), region (`EU`, `GLO`, `IN`, `CN`, `NA`, …) |
 | `version`, `ota_version`, `build_timestamp` | firmware version (`CPH2645_15.0.0.840(EX01)`), OTA version string, OTA build time |
 | `android_version` | Android release, from the OTA metadata; for a firmware that could not be read, from its version |
 | `ok`, `error` | whether the kernel string was extracted, and why not |

@@ -19,18 +19,24 @@ def fw(rid, version, ts, kernel, build, **kw):
 
 def test_table_has_the_expected_columns(tmp_path):
     lines = report(tmp_path, [row("a")])
-    assert lines[0] == "| Device | Models | Regions | Android version | FW versions | Kernel | Build |"
-    assert lines[1] == "|---|---|---|---|---|---|---|"
-    assert lines[2] == f"| OP 13R | CPH2645 | EU | A15 | CPH2645_15.0.0.840(EX01) | `{KERNEL}` | `{BUILD}` |"
+    assert lines[0] == "| Brand | Device | Models | Regions | Android version | FW versions | Kernel | Build |"
+    assert lines[1] == "|---|---|---|---|---|---|---|---|"
+    assert lines[2] == f"| OnePlus | 13R | CPH2645 | EU | A15 | CPH2645_15.0.0.840(EX01) | `{KERNEL}` | `{BUILD}` |"
+
+
+def test_rows_written_before_the_brand_field_are_reported_by_their_short_device(tmp_path):
+    old = row("a", device="OP 13R")
+    del old["brand"]
+    assert report(tmp_path, [old])[2].startswith("| OnePlus | 13R | CPH2645 |")
 
 
 def test_rows_sharing_device_kernel_and_build_are_merged(tmp_path):
-    rows = [row("a", version="CPH2653_15.0.0.100(EX01)", region="EU", device="OP 13", build_timestamp="2025-01-01T00:00:00"),
-            row("b", version="CPH2653_15.0.0.100(EX01)", region="GLO", device="OP 13", build_timestamp="2025-01-01T00:00:00"),
-            row("c", version="CPH2649_15.0.0.110(EX01)", region="IN", device="OP 13", build_timestamp="2025-02-01T00:00:00",
+    rows = [row("a", version="CPH2653_15.0.0.100(EX01)", region="EU", device="13", build_timestamp="2025-01-01T00:00:00"),
+            row("b", version="CPH2653_15.0.0.100(EX01)", region="GLO", device="13", build_timestamp="2025-01-01T00:00:00"),
+            row("c", version="CPH2649_15.0.0.110(EX01)", region="IN", device="13", build_timestamp="2025-02-01T00:00:00",
                 android_version="16")]
     assert report(tmp_path, rows)[2:] == [
-        f"| OP 13 | CPH2649<br>CPH2653 | EU<br>GLO<br>IN | A15<br>A16 | CPH2653_15.0.0.100(EX01)<br>CPH2649_15.0.0.110(EX01)"
+        f"| OnePlus | 13 | CPH2649<br>CPH2653 | EU<br>GLO<br>IN | A15<br>A16 | CPH2653_15.0.0.100(EX01)<br>CPH2649_15.0.0.110(EX01)"
         f" | `{KERNEL}` | `{BUILD}` |"]
 
 
@@ -47,32 +53,32 @@ def test_unknown_android_version_is_marked(tmp_path):
 
 
 def test_devices_are_listed_alphabetically(tmp_path):
-    rows = [row("a", version="CPH2653_15.0.0.100(EX01)", device="OP 13"),
-            row("b", version="CPH2581_15.0.0.100(EX01)", device="OP 12")]
-    assert [line.split(" | ")[0] for line in report(tmp_path, rows)[2:]] == ["| OP 12", "| OP 13"]
+    rows = [row("a", version="CPH2653_15.0.0.100(EX01)", device="13"),
+            row("b", version="CPH2581_15.0.0.100(EX01)", device="12")]
+    assert [line.split(" | ")[1] for line in report(tmp_path, rows)[2:]] == ["12", "13"]
 
 
 def test_older_builds_come_first(tmp_path):
-    rows = [fw("new", "CPH2653_16.0.0.100(EX01)", "2025-09-01T00:00:00", "6.6.2", "#1 SMP Mon Sep 1 00:00:00 UTC 2025", device="OP 13"),
-            fw("old", "CPH2653_15.0.0.100(EX01)", "2025-03-01T00:00:00", "6.6.1", "#1 SMP Mon Mar 3 00:00:00 UTC 2025", device="OP 13")]
-    assert [line.split(" | ")[5] for line in report(tmp_path, rows)[2:]] == ["`6.6.1`", "`6.6.2`"]
+    rows = [fw("new", "CPH2653_16.0.0.100(EX01)", "2025-09-01T00:00:00", "6.6.2", "#1 SMP Mon Sep 1 00:00:00 UTC 2025", device="13"),
+            fw("old", "CPH2653_15.0.0.100(EX01)", "2025-03-01T00:00:00", "6.6.1", "#1 SMP Mon Mar 3 00:00:00 UTC 2025", device="13")]
+    assert [line.split(" | ")[6] for line in report(tmp_path, rows)[2:]] == ["`6.6.1`", "`6.6.2`"]
 
 
 def test_rows_without_an_ota_stamp_are_placed_by_their_kernel_build_date(tmp_path):
-    rows = [fw("late", "CPH2653_16.0.0.100(EX01)", "2025-09-01T00:00:00", "6.6.3", "#1 SMP Mon Sep 1 00:00:00 UTC 2025", device="OP 13"),
-            fw("archive", "CPH2653_15.0.0.500(EX01)", "", "6.6.2", "#1 SMP Tue Jun 10 08:00:00 UTC 2025", device="OP 13"),
-            fw("early", "CPH2653_15.0.0.100(EX01)", "2025-03-01T00:00:00", "6.6.1", "#1 SMP Mon Mar 3 00:00:00 UTC 2025", device="OP 13")]
-    assert [line.split(" | ")[5] for line in report(tmp_path, rows)[2:]] == ["`6.6.1`", "`6.6.2`", "`6.6.3`"]
+    rows = [fw("late", "CPH2653_16.0.0.100(EX01)", "2025-09-01T00:00:00", "6.6.3", "#1 SMP Mon Sep 1 00:00:00 UTC 2025", device="13"),
+            fw("archive", "CPH2653_15.0.0.500(EX01)", "", "6.6.2", "#1 SMP Tue Jun 10 08:00:00 UTC 2025", device="13"),
+            fw("early", "CPH2653_15.0.0.100(EX01)", "2025-03-01T00:00:00", "6.6.1", "#1 SMP Mon Mar 3 00:00:00 UTC 2025", device="13")]
+    assert [line.split(" | ")[6] for line in report(tmp_path, rows)[2:]] == ["`6.6.1`", "`6.6.2`", "`6.6.3`"]
 
 
 def test_report_uses_one_device_label_per_model(tmp_path):
-    rows = [row(f"a{i}", version=f"CPH2653_15.0.0.{i}00(EX01)", device="OP 13", kernel_release=f"6.6.{i}") for i in range(3)]
-    rows.append(row("odd", version="CPH2653_16.0.0.210(EX01)", device="OP 13S", kernel_release="6.6.9"))
-    assert {line.split(" | ")[0] for line in report(tmp_path, rows)[2:]} == {"| OP 13"}
+    rows = [row(f"a{i}", version=f"CPH2653_15.0.0.{i}00(EX01)", device="13", kernel_release=f"6.6.{i}") for i in range(3)]
+    rows.append(row("odd", version="CPH2653_16.0.0.210(EX01)", device="13S", kernel_release="6.6.9"))
+    assert {line.split(" | ")[1] for line in report(tmp_path, rows)[2:]} == {"13"}
 
 
 def test_rows_follow_the_kernel_build_date_even_when_the_ota_stamps_disagree(tmp_path):
     # built first, packaged later (staged rollout): the table lists kernel builds
-    rows = [fw("b", "CPH2653_15.0.0.200(EX01)", "2025-04-01T00:00:00", "6.6.2", "#1 SMP Mon Mar 10 00:00:00 UTC 2025", device="OP 13"),
-            fw("a", "CPH2653_15.0.0.100(EX01)", "2025-05-01T00:00:00", "6.6.1", "#1 SMP Mon Feb 3 00:00:00 UTC 2025", device="OP 13")]
-    assert [line.split(" | ")[5] for line in report(tmp_path, rows)[2:]] == ["`6.6.1`", "`6.6.2`"]
+    rows = [fw("b", "CPH2653_15.0.0.200(EX01)", "2025-04-01T00:00:00", "6.6.2", "#1 SMP Mon Mar 10 00:00:00 UTC 2025", device="13"),
+            fw("a", "CPH2653_15.0.0.100(EX01)", "2025-05-01T00:00:00", "6.6.1", "#1 SMP Mon Feb 3 00:00:00 UTC 2025", device="13")]
+    assert [line.split(" | ")[6] for line in report(tmp_path, rows)[2:]] == ["`6.6.1`", "`6.6.2`"]

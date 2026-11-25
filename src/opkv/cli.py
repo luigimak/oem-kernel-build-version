@@ -16,10 +16,10 @@ def _path(a, brand: Brand, ext: str = "json") -> str:
     return os.path.join(a.data_dir, f"{brand.key}.{ext}")
 
 
-def _load_results(path: str) -> dict:
+def _load_results(path: str, brand: Brand) -> dict:
     if os.path.exists(path):
         with open(path, encoding="utf-8") as f:
-            rows = {r["id"]: r for r in json.load(f)}
+            rows = {r["id"]: brand.adopt(r) for r in json.load(f)}
         normalize.dedupe(rows)             # a file written by an older version can hold one firmware twice
         return rows
     return {}
@@ -128,7 +128,7 @@ def _discover_brand(a, brand: Brand, cat: dict, by_id: dict, by_key: dict, lette
 
     with urllib.request.urlopen(brand.pulse, timeout=60) as r:
         devices = json.load(r)
-    results = list(_load_results(_path(a, brand)).values())
+    results = list(_load_results(_path(a, brand), brand).values())
     done = {normalize.firmware_key(r) for r in results}      # already processed: not "new"
     read = {normalize.firmware_key(r) for r in results if r["ok"]}      # kernel already read: no link needed
     labels = normalize.labels_by_model(r for r in cat["releases"] if brand.matches(r))
@@ -257,13 +257,13 @@ def _discover_brand(a, brand: Brand, cat: dict, by_id: dict, by_key: dict, lette
                 else:                                    # an older firmware that no source lists any more
                     rid = "q-" + hashlib.sha1("|".join((row["model"], c["ota_version"], row["region"])).encode(),
                                               usedforsecurity=False).hexdigest()[:20]
-                    by_id[rid] = {"id": rid, "device": row["device"], "region": row["region"], "model": row["model"],
+                    by_id[rid] = {"id": rid, "device": brand.full(row["device"]), "region": row["region"], "model": row["model"],
                                   "version": row["version"], "ota_version": c["ota_version"],
                                   "build_timestamp": normalize.ota_timestamp(c["ota_version"]),
                                   "security_patch": c["security_patch"], "source_url": c["source_url"], "md5": c["md5"],
                                   "size": c["size"], "is_latest": False, "origin": "ota-scan"}
                     by_key[key] = rid
-                print(f"  = {row['device']} {row['region']} {row['version']}  [letter scan]", file=sys.stderr)
+                print(f"  = {brand.full(row['device'])} {row['region']} {row['version']}  [letter scan]", file=sys.stderr)
     cat["releases"] = list(by_id.values())
     with open(a.catalog, "w", encoding="utf-8") as f:
         json.dump(cat, f, ensure_ascii=False)
@@ -320,7 +320,7 @@ def cmd_report(a):
 def _report_brand(brand: Brand, results: str, out_path: str) -> None:
     with open(results, encoding="utf-8") as f:
         data = json.load(f)
-    rows = [normalize.row(r) for r in data
+    rows = [normalize.row(brand.adopt(r)) for r in data
             if r["ok"] and catalog.wanted_version(r["version"], r.get("android_version"))]
     normalize.relabel(rows)
     # oldest build first: the table lists kernel builds, so by the kernel build date (archive rows carry no OTA
@@ -330,15 +330,15 @@ def _report_brand(brand: Brand, results: str, out_path: str) -> None:
     groups: dict[tuple, list] = {}
     for r in rows:                                   # dict keeps first-seen order = oldest build first
         groups.setdefault((r["device"], r["kernel_release"], r["build"]), []).append(r)
-    out = ["| Device | Models | Regions | Android version | FW versions | Kernel | Build |",
-           "|---|---|---|---|---|---|---|"]
+    out = ["| Brand | Device | Models | Regions | Android version | FW versions | Kernel | Build |",
+           "|---|---|---|---|---|---|---|---|"]
     for (device, kernel, build), g in groups.items():
         models = "<br>".join(sorted({r["model"] for r in g}))
         regions = "<br>".join(sorted({r["region"] for r in g}))
         pairs = list(dict.fromkeys((r["version"], normalize.android(r)) for r in g))   # one line per FW version
         versions = "<br>".join(v for v, _ in pairs)
         androids = "<br>".join(f"A{an}" if an else "?" for _, an in pairs)                   # same order as FW versions
-        out.append(f"| {device} | {models} | {regions} | {androids} | {versions} | `{kernel}` | `{build}` |")
+        out.append(f"| {brand.label} | {device} | {models} | {regions} | {androids} | {versions} | `{kernel}` | `{build}` |")
     with open(out_path, "w", encoding="utf-8") as f:
         f.write("\n".join(out) + "\n")
     print(f"{brand.label}: {len(rows)} firmware -> {len(groups)} rows -> {out_path}")
@@ -364,7 +364,7 @@ def _archive_brand(a, brand: Brand) -> None:
 
     from . import archive
     out = _path(a, brand)
-    rows = _load_results(out)
+    rows = _load_results(out, brand)
     # a failed row is tried from the archive, unless it already failed there (--retry-failed downloads it again)
     have = {normalize.firmware_key(r) for r in rows.values()
             if r["ok"] or (r.get("origin") == "spike0en-archive" and not a.retry_failed)}
@@ -391,8 +391,9 @@ def _archive_brand(a, brand: Brand) -> None:
             code = t["version"].split("_")[0]
             rid = "sp-" + hashlib.sha1(f"{t['version']}|{t['region']}".encode(), usedforsecurity=False).hexdigest()[:10]
             rows[rid] = {
-                "id": rid, "device": device_of[code], "region": t["region"], "model": code, "version": t["version"],
-                "ota_version": t["version"], "build_timestamp": "", "md5": "", "size": 0, "origin": "spike0en-archive",
+                "id": rid, "brand": brand.label, "device": device_of[code], "region": t["region"], "model": code,
+                "version": t["version"], "ota_version": t["version"], "build_timestamp": "", "md5": "", "size": 0,
+                "origin": "spike0en-archive",
                 "ok": res.ok, "android_version": str(catalog.os_major(t["version"])),
                 "linux_version": res.linux_version, "kernel_release": res.kernel_release, "build": res.build,
                 "compiler": res.compiler, "source": res.source, "error": res.error,
@@ -420,7 +421,7 @@ def _link(rel: dict) -> str:
 def _run_brand(a, brand: Brand) -> None:
     out = _path(a, brand)
     rels = catalog.brand_releases(a.catalog, brand.matches)
-    rows = _load_results(out)
+    rows = _load_results(out, brand)
     row_of = {normalize.firmware_key(r): i for i, r in rows.items()}      # firmware -> id of its stored row
     todo = [r for r in rels
             if (i := row_of.get(normalize.firmware_key(r))) is None or (a.retry_failed and not rows[i]["ok"])]
@@ -438,8 +439,8 @@ def _run_brand(a, brand: Brand) -> None:
             rel, res = fu.result()
             rid = row_of.get(normalize.firmware_key(rel), rel["id"])      # a retry updates the stored row
             rows[rid] = {
-                "id": rid, "device": rel["device"], "region": rel["region"], "model": rel["model"],
-                "version": rel["version"], "ota_version": rel["ota_version"],
+                "id": rid, "brand": brand.label, "device": brand.short(rel["device"]), "region": rel["region"],
+                "model": rel["model"], "version": rel["version"], "ota_version": rel["ota_version"],
                 "build_timestamp": rel.get("build_timestamp", ""), "md5": rel.get("md5", ""),
                 "size": rel.get("size") or res.size or 0, "origin": rel.get("origin", "catalog"),
                 "ok": res.ok, "android_version": res.android_version or rows.get(rid, {}).get("android_version"),

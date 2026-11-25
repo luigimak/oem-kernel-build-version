@@ -102,7 +102,7 @@ def test_new_model_without_catalog_entry_is_labelled_from_the_ota_pulse_name(dis
 
 
 def test_firmware_already_in_results_is_not_new_but_stays_retryable(discover, capsys):
-    failed = row("q-old", version="CPH2745_17.0.0.102(EX01)", region="IN", device="OP 15", ok=False)
+    failed = row("q-old", version="CPH2745_17.0.0.102(EX01)", region="IN", device="15", ok=False)
     releases = discover([], [failed], devices=[device("OnePlus 15", variant("IN", "CPH2745"))],
                         answers={("CPH2745", "IN"): answer("CPH2745_17.0.0.102(EX01)")})
     assert [r["version"] for r in releases] == ["CPH2745_17.0.0.102(EX01)"]
@@ -126,7 +126,7 @@ def test_firmware_older_than_android_14_is_ignored(discover):
 
 def test_failed_oxygen_updater_row_is_offered_again_for_a_retry(discover):
     version = "CPH2399_14.0.0.3101(EX01)"
-    failed = row("ou-1", version=version, region="EU", device="OP NORD 2T", ok=False)
+    failed = row("ou-1", version=version, region="EU", device="NORD 2T", ok=False)
     releases = discover([], [failed], ou=[ou_release("ou-1", version, "EU", "OP NORD 2T")], no_ou=False)
     assert [r["id"] for r in releases] == ["ou-1"]
 
@@ -162,14 +162,14 @@ def test_violettoolbox_firmware_is_added_to_the_catalog_with_its_reference(disco
 
 def test_violettoolbox_firmware_already_read_is_left_out(discover):
     v = violet_release("PHN110_14.0.0.850(CN01)")
-    done = row("a", version=v["version"], region="CN", device="OPPO FIND N3")
+    done = row("a", version=v["version"], region="CN", brand="OPPO", device="FIND N3")
     assert discover([], [done], violet=[v]) == []
 
 
 def test_violettoolbox_reference_is_added_to_a_failed_firmware_the_catalog_knows(discover):
     v = violet_release("PHN110_14.0.0.850(CN01)")
     old = release("cat1", version=v["version"], region="CN", device="OPPO FIND N3", source_url="https://example.invalid/old.zip")
-    failed = row("cat1", version=v["version"], region="CN", device="OPPO FIND N3", ok=False)
+    failed = row("cat1", version=v["version"], region="CN", brand="OPPO", device="FIND N3", ok=False)
     releases = discover([old], [failed], violet=[v])
     assert [(r["id"], r["source_url"], r["violet"]) for r in releases] == [
         ("cat1", "https://example.invalid/old.zip", v["violet"])]
@@ -177,15 +177,22 @@ def test_violettoolbox_reference_is_added_to_a_failed_firmware_the_catalog_knows
 
 def test_failed_firmware_missing_from_every_source_is_searched_letter_by_letter(discover):
     version = "CPH2701_16.0.5.1301(EX01)"
-    failed = row("ou-9", version=version, region="ID", device="OPPO RENO 15", ok=False, android_version="16")
+    failed = row("ou-9", version=version, region="ID", brand="OPPO", device="RENO 15", ok=False, android_version="16")
     releases = discover([], [failed], answers={("CPH2701", "ID"): answer(version, "C")}, scan=True)
     assert [(r["version"], r["region"], r["origin"], r["source_url"]) for r in releases] == [
         (version, "ID", "ota-scan", "https://example.invalid/CPH2701.zip")]
     assert [q[2] for q in discover.queries] == ["A", "B", "C"]             # it stops at the letter that answers
 
 
+def test_letter_scan_gives_the_catalog_the_prefixed_device_name(discover):
+    version = "CPH2701_16.0.5.1301(EX01)"
+    failed = row("a", version=version, region="ID", device="13R", ok=False, android_version="16")
+    releases = discover([], [failed], answers={("CPH2701", "ID"): answer(version, "C")}, scan=True)
+    assert [r["device"] for r in releases] == ["OP 13R"]
+
+
 def test_failed_firmware_nobody_answers_for_is_tried_with_all_letters(discover):
-    failed = row("ou-9", version="CPH2701_16.0.5.1301(EX01)", region="ID", device="OPPO RENO 15", ok=False,
+    failed = row("ou-9", version="CPH2701_16.0.5.1301(EX01)", region="ID", brand="OPPO", device="RENO 15", ok=False,
                  android_version="16")
     assert discover([], [failed], scan=True) == []
     assert {q[2] for q in discover.queries} == set("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -194,14 +201,14 @@ def test_failed_firmware_nobody_answers_for_is_tried_with_all_letters(discover):
 def test_failed_firmware_known_to_the_catalog_only_gets_a_new_link(discover):
     version = "CPH2701_16.0.5.1301(EX01)"
     old = release("cat1", version=version, region="ID", device="OPPO RENO 15", source_url="https://example.invalid/old.zip")
-    failed = row("cat1", version=version, region="ID", device="OPPO RENO 15", ok=False, android_version="16")
+    failed = row("cat1", version=version, region="ID", brand="OPPO", device="RENO 15", ok=False, android_version="16")
     releases = discover([old], [failed], answers={("CPH2701", "ID"): answer(version, "F")}, scan=True)
     assert [(r["id"], r["source_url"]) for r in releases] == [("cat1", "https://example.invalid/CPH2701.zip")]
 
 
 def test_failed_firmware_that_got_a_link_from_another_source_is_not_searched(discover):
     v = violet_release("PHN110_14.0.0.850(CN01)")
-    failed = row("cat1", version=v["version"], region="CN", device="OPPO FIND N3", ok=False, android_version="14")
+    failed = row("cat1", version=v["version"], region="CN", brand="OPPO", device="FIND N3", ok=False, android_version="14")
     discover([], [failed], violet=[v], scan=True)
     assert discover.queries == []
 

@@ -15,10 +15,10 @@ def release(rid, version="CPH2645_15.0.0.840(EX01)", region="EU", device="OP 13R
             "source_url": "https://example.invalid/ota.zip", "md5": "0" * 32, "size": 1000, **kw}
 
 
-def row(rid, version="CPH2645_15.0.0.840(EX01)", region="EU", device="OP 13R", ok=True, **kw):
-    """A complete data/results.json row."""
+def row(rid, version="CPH2645_15.0.0.840(EX01)", region="EU", device="13R", ok=True, **kw):
+    """A complete data/<brand>.json row (a OnePlus one unless `brand` says otherwise)."""
     model = version.split("_")[0]
-    base = {"id": rid, "device": device, "region": region, "model": model, "version": version,
+    base = {"id": rid, "brand": "OnePlus", "device": device, "region": region, "model": model, "version": version,
             "ota_version": f"{model}_11.C.60_1600_202507081931", "build_timestamp": "2025-07-08T19:31:00",
             "ok": ok, "android_version": "15", "md5": "0" * 32, "size": 1000, "source": "payload.bin",
             "linux_version": BANNER if ok else None, "error": None if ok else "HTTPError: HTTP Error 404: Not Found",

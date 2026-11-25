@@ -120,7 +120,8 @@ function buildTime(build) {
   return Date.parse(`${m[1]} ${m[2]} ${m[5]} ${m[3]} ${ZONES[m[4]]}`);
 }
 
-function prepare(r, brand) {
+function prepare(r, fileBrand) {
+  const brand = r.brand || fileBrand;
   const kernel = r.kernel_release || "";
   const branch = /^\d+\.\d+/.exec(kernel);
   return {
