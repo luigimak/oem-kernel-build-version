@@ -21,3 +21,14 @@ updates:
     groups:
       python:
         patterns: ["*"]
+
+  # the Android app: Gradle plugins and libraries (android/gradle/libs.versions.toml)
+  - package-ecosystem: gradle
+    directory: /android
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      android:
+        patterns: ["*"]
