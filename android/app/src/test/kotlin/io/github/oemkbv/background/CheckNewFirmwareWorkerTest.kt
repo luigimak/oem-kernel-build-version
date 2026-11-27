@@ -72,7 +72,7 @@ class CheckNewFirmwareWorkerTest {
     assertEquals(Result.success(), run())
     val n = notifications.single()
     assertEquals("1 new firmware", n.extras.getString("android.title"))
-    assertTrue(n.extras.getString("android.text")!!.contains("CPH2655_15.0.0.200(EX01)"))
+    assertTrue(n.extras.getString("android.text")!!.contains("OnePlus 13 EU · CPH2655_15.0.0.200(EX01) · 6.6.50-android15-8-g9"))
     // a tap opens that device
     assertEquals(op13.key, shadowOf(n.contentIntent).savedIntent.getStringExtra("device"))
 

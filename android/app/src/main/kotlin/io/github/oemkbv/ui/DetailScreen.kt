@@ -51,7 +51,7 @@ fun DetailScreen(row: Firmware?, favorite: Boolean, onBack: () -> Unit, onToggle
   val clipboard = LocalClipboard.current
   val context = LocalContext.current
   val copied = stringResource(R.string.copied)
-  val name = row?.name.orEmpty()
+  val name = row?.deviceId?.label.orEmpty()
 
   fun copy(label: String, text: String) {
     scope.launch {
@@ -143,11 +143,13 @@ private fun Field(label: Int, value: String, mono: Boolean = false, error: Boole
   }
 }
 
+/** `OnePlus 13 EU (CPH2653) CPH2653_16.0.9.401(EX01)` and, below, the Linux version string (or at least the kernel). */
+internal fun shareText(row: Firmware): String = buildString {
+  append(row.deviceId.label).append(" (").append(row.model).append(") ").append(row.version)
+  if (row.linuxVersion.isNotEmpty()) append('\n').append(row.linuxVersion) else if (row.kernel.isNotEmpty()) append('\n').append(row.kernel)
+}
+
 private fun share(context: android.content.Context, row: Firmware) {
-  val text = buildString {
-    append(row.name).append(" (").append(row.model).append(") ").append(row.version)
-    if (row.linuxVersion.isNotEmpty()) append('\n').append(row.linuxVersion) else if (row.kernel.isNotEmpty()) append('\n').append(row.kernel)
-  }
-  val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
+  val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, shareText(row))
   context.startActivity(Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 }

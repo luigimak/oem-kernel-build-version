@@ -111,7 +111,7 @@ object FirmwareQuery {
   private fun sortKey(row: Firmware, key: SortKey): Any? =
     when (key) {
       SortKey.BRAND -> row.brand.label
-      SortKey.DEVICE -> row.name
+      SortKey.DEVICE -> row.deviceId.label
       SortKey.MODEL -> row.model
       SortKey.REGION -> row.region
       SortKey.ANDROID -> row.android

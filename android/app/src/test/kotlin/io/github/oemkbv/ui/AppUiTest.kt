@@ -95,6 +95,11 @@ class AppUiTest {
     rule.onAllNodesWithTag("row-oneplus:o3").assertCountEquals(0)
     rule.onNodeWithTag("row-oneplus:o2").assertIsDisplayed()
     rule.onNodeWithText("6.6.50-android15-8-g2").assertIsDisplayed()
+    // every result is titled with its device: brand, device and region
+    rule.onNodeWithTag("row-oneplus:o2").assertTextContains("OnePlus 13 CN")
+    rule.onNodeWithTag("row-oneplus:o4").assertTextContains("OnePlus 13 EU")
+    rule.onNodeWithTag("row-oppo:p1").assertTextContains("OPPO Find X8 EU")
+    rule.onNodeWithTag("row-realme:r1").assertTextContains("Realme 10 TH")
   }
 
   @Test
@@ -121,7 +126,7 @@ class AppUiTest {
     rule.onNodeWithTag("row-oppo:p1").assertIsDisplayed()
 
     rule.onNodeWithTag("chip-device").performClick()
-    rule.onAllNodesWithText("OPPO Find X8").assertCountEquals(2) // the card and the OPPO device offered by the menu…
+    rule.onAllNodesWithText("OPPO Find X8").assertCountEquals(1) // the OPPO device offered by the menu…
     rule.onAllNodesWithText("Realme 10").assertCountEquals(0) // …and not the Realme one, in the menu or in the list
   }
 
@@ -142,6 +147,8 @@ class AppUiTest {
     rule.onNodeWithText("Linux version 6.6.30-android15-8-g1", substring = true).assertIsDisplayed()
     rule.onNodeWithTag("copy-linux").performScrollTo().assertIsDisplayed()
 
+    // the page is titled with the device too (the star's label names it)
+    rule.onNodeWithContentDescription("Add OnePlus 13 EU to the favorites").assertIsDisplayed()
     rule.onNodeWithTag("favorite").performClick()
     rule.waitUntil(5_000) { app.container.prefs.favorites.value == setOf("oneplus|13|EU") }
     // what exists at the moment of becoming a favorite is not "new"; 13 CN is another device
@@ -307,6 +314,8 @@ class AppUiTest {
 
     rule.onNodeWithTag("device-bar").assertTextContains("OnePlus 13 EU")
     rule.onNodeWithText("2 of 2 firmware").assertIsDisplayed()
+    rule.onNodeWithTag("row-oneplus:o4").assertTextContains("OnePlus 13 EU") // each result carries the device name
+    rule.onNodeWithTag("row-oneplus:o1").assertTextContains("OnePlus 13 EU")
     rule.onAllNodesWithTag("row-oneplus:o2").assertCountEquals(0) // 13 CN is another device
     rule.onAllNodesWithTag("row-oneplus:o3").assertCountEquals(0) // 13 IN, and it failed
     val newer = rule.onNodeWithTag("row-oneplus:o4").getBoundsInRoot().top // 16.0.0.200…
