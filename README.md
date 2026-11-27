@@ -54,12 +54,14 @@ the updated results to the default branch. `archive` is a manual command.
 - Beta tracks (`taste`) cannot be found by `discover`; they depend on the catalog.
 
 ## Android app
-[`android/`](android/) is a small native app (Kotlin, Jetpack Compose, Android 8.0+) with the same table as the web page: search, filters
-(brand, device, region, Android, kernel), sorting, and a detail page with the full `Linux version …` string to copy or share.
+[`android/`](android/) is a small native app (Kotlin, Jetpack Compose, Android 8.0+) built around the device you own:
+pick brand, device and region (for example *OnePlus 13 EU*) and it lists the firmware of exactly that device, newest version first, each with
+its kernel and build date. The Android version and the kernel branch narrow the list down, and a firmware page has the full `Linux version …`
+string to copy or share. *All devices* keeps the whole table with search and filters, for questions across devices ("who has kernel 6.6.89?").
 English and Italian; another language is a `res/values-xx/strings.xml` away.
 
 - It reads `oneplus.json`, `oppo.json` and `realme.json` from the Pages site when it starts (conditional requests, a copy is kept on the phone and works offline), so the app does not need a new release when the data changes.
-- Follow a model to be notified when new firmware of it appears (checked twice a day on the phone; no account, no server of ours).
+- Mark any number of devices as favorites (the star next to the device): each is a one-tap shortcut, and you are notified when new firmware of that very device appears (checked twice a day on the phone; no account, no server of ours).
 - Build and test: `cd android && ./gradlew assembleDebug testDebugUnitTest lintDebug` (JDK 17, Android SDK 36).
 - Releases: a tag `app-vX.Y.Z` runs `android-release.yml`, which builds the signed APK and leaves it in a draft GitHub release.
   It needs the secrets `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`.
