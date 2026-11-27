@@ -7,6 +7,9 @@ pluginManagement {
         includeGroupByRegex("com\\.google.*")
       }
     }
+    // Google's mirror of Maven Central first: Maven Central answers 429 to the shared addresses of CI runners. Same files, and Maven Central
+    // stays as the fallback for anything the mirror does not have yet.
+    maven("https://maven-central.storage-download.googleapis.com/maven2/")
     mavenCentral()
     gradlePluginPortal()
   }
@@ -22,6 +25,9 @@ dependencyResolutionManagement {
         includeGroupByRegex("com\\.google.*")
       }
     }
+    // Google's mirror of Maven Central first: Maven Central answers 429 to the shared addresses of CI runners. Same files, and Maven Central
+    // stays as the fallback for anything the mirror does not have yet.
+    maven("https://maven-central.storage-download.googleapis.com/maven2/")
     mavenCentral()
   }
 }
