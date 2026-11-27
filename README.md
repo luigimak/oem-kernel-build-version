@@ -65,6 +65,10 @@ English and Italian; another language is a `res/values-xx/strings.xml` away.
 - Build and test: `cd android && ./gradlew assembleDebug testDebugUnitTest lintDebug` (JDK 17, Android SDK 36).
 - Releases: a tag `app-vX.Y.Z` runs `android-release.yml`, which builds the signed APK and leaves it in a draft GitHub release.
   It needs the secrets `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`.
+- Check what you download: the APK is signed with a key only the maintainer holds, so it can only be updated by the maintainer's builds. The certificate SHA-256 is
+  `1fd1591e1c47cdde316d77f9a4e30ecbffbb8c40ac4d2a83b9ef3748e1adb92f` (`apksigner verify --print-certs app.apk`), and `gh attestation verify app.apk --repo luigimak/oem-kernel-build-version`
+  proves it was built by the release workflow. If the fingerprint differs, it is not this app.
+- The app looks for a newer release once a day (it can be switched off in the settings) and only links to the release page: it never downloads or installs anything by itself.
 - A new brand must also be added to `Brand` in `android/app/src/main/kotlin/io/github/oemkbv/data/Firmware.kt`.
 
 ## Development
