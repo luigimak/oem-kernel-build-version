@@ -198,7 +198,8 @@ class AppUiTest {
     rule.onNodeWithText("OnePlus 13 CN").assertIsDisplayed()
     rule.onNodeWithTag("remove-oneplus|13|CN").performClick()
     rule.waitUntil(5_000) { app.container.prefs.favorites.value == setOf("oneplus|13|EU") }
-    rule.onAllNodesWithText("OnePlus 13 CN").assertCountEquals(0)
+    // the screen follows the preference a moment later (the state travels through flows)
+    rule.waitUntil(5_000) { rule.onAllNodesWithText("OnePlus 13 CN").fetchSemanticsNodes().isEmpty() }
   }
 
   @Test
@@ -208,7 +209,7 @@ class AppUiTest {
     waitForTag("favorite-oneplus|13|EU")
     rule.onNodeWithTag("favorite-current").performClick()
     rule.waitUntil(5_000) { app.container.prefs.favorites.value.isEmpty() }
-    rule.onAllNodesWithTag("favorite-oneplus|13|EU").assertCountEquals(0)
+    rule.waitUntil(5_000) { rule.onAllNodesWithTag("favorite-oneplus|13|EU").fetchSemanticsNodes().isEmpty() }
   }
 
   @Test
