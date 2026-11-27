@@ -35,6 +35,29 @@ data class FirmwareDto(
   val error: String? = null,
 )
 
+/**
+ * What a user means by "my device": brand + device + region, e.g. `OnePlus 13 EU`.
+ * Two regional variants of the same phone are different devices: they get different firmware.
+ */
+data class DeviceId(val brand: Brand, val device: String, val region: String) {
+  /** Stable text form for storage: `oneplus|13|EU`. */
+  val key: String get() = "${brand.key}|$device|$region"
+
+  /** `OnePlus 13 EU` */
+  val label: String get() = "${brand.label} $device $region".trim()
+
+  companion object {
+    /** The inverse of [key]; `null` for anything else. The device may itself contain `|`, brand and region cannot. */
+    fun parse(key: String): DeviceId? {
+      val first = key.indexOf('|')
+      val last = key.lastIndexOf('|')
+      if (first <= 0 || last <= first) return null
+      val brand = Brand.entries.firstOrNull { it.key == key.substring(0, first) } ?: return null
+      return DeviceId(brand, key.substring(first + 1, last), key.substring(last + 1))
+    }
+  }
+}
+
 /** A firmware row prepared for display, search and sorting. */
 data class Firmware(
   val uid: String,
@@ -66,6 +89,9 @@ data class Firmware(
 
   /** Brand and device as one label ("OnePlus 13R"): the device alone is ambiguous, OnePlus 11 and Realme 11 are both "11". */
   val name: String get() = "${brand.label} ${device.ifEmpty { model }}".trim()
+
+  /** Brand, device and region: the "device" the user picks and follows. */
+  val deviceId: DeviceId get() = DeviceId(brand, device.ifEmpty { model }, region)
 
   companion object {
     fun followKey(brand: Brand, model: String): String = "${brand.key}:$model"

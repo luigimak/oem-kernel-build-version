@@ -3,6 +3,29 @@
     <string name="app_name">OEM-KernelBuildVersion</string>
     <string name="title">Versioni kernel build</string>
 
+    <!-- device choice -->
+    <string name="choose_device">Scegli un dispositivo</string>
+    <string name="choose_device_hint">Scegli brand, dispositivo e regione per vedere i suoi firmware.</string>
+    <string name="picker_title">Scegli un dispositivo</string>
+    <string name="picker_all_hint">Cerca tra tutti i firmware</string>
+    <string name="picker_search">Cerca dispositivi…</string>
+    <string name="picker_no_match">Nessun dispositivo corrisponde.</string>
+    <plurals name="devices_count">
+        <item quantity="one">%1$d dispositivo</item>
+        <item quantity="many">%1$d dispositivi</item>
+        <item quantity="other">%1$d dispositivi</item>
+    </plurals>
+    <plurals name="regions_count">
+        <item quantity="one">%1$d regione</item>
+        <item quantity="many">%1$d regioni</item>
+        <item quantity="other">%1$d regioni</item>
+    </plurals>
+    <plurals name="firmware_count">
+        <item quantity="one">%1$d firmware</item>
+        <item quantity="many">%1$d firmware</item>
+        <item quantity="other">%1$d firmware</item>
+    </plurals>
+
     <!-- list -->
     <string name="search_hint">Cerca firmware, modello, kernel, build…</string>
     <string name="clear_search">Cancella ricerca</string>

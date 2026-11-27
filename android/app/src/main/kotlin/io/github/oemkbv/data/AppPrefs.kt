@@ -2,6 +2,7 @@ package io.github.oemkbv.data
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import io.github.oemkbv.domain.Selection
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -10,6 +11,7 @@ class AppPrefs(private val sp: SharedPreferences) {
   private val followedState = MutableStateFlow(sp.getStringSet(FOLLOWED, null).orEmpty().toSet())
   private val notifyState = MutableStateFlow(sp.getBoolean(NOTIFY, true))
   private val refreshedState = MutableStateFlow(sp.getLong(REFRESHED, 0L).takeIf { it > 0 })
+  private val selectionState = MutableStateFlow(Selection.parse(sp.getString(SELECTION, null)))
 
   /** Follow keys (`brand:model`), see [Firmware.followKey]. */
   val followed: StateFlow<Set<String>> = followedState
@@ -18,12 +20,20 @@ class AppPrefs(private val sp: SharedPreferences) {
   /** Epoch millis of the last successful refresh of any brand, `null` before the first one. */
   val lastRefresh: StateFlow<Long?> = refreshedState
 
+  /** What the home screen shows; remembered between runs. */
+  val selection: StateFlow<Selection> = selectionState
+
   val seen: Set<String> get() = sp.getStringSet(SEEN, null).orEmpty().toSet()
 
   fun setFollowed(key: String, follow: Boolean) {
     val next = if (follow) followedState.value + key else followedState.value - key
     sp.edit { putStringSet(FOLLOWED, next) }
     followedState.value = next
+  }
+
+  fun setSelection(selection: Selection) {
+    sp.edit { putString(SELECTION, selection.stored) }
+    selectionState.value = selection
   }
 
   fun setNotifications(on: Boolean) {
@@ -46,5 +56,6 @@ class AppPrefs(private val sp: SharedPreferences) {
     const val NOTIFY = "notifications"
     const val SEEN = "seen"
     const val REFRESHED = "refreshed"
+    const val SELECTION = "selection"
   }
 }

@@ -12,6 +12,7 @@ import io.github.oemkbv.domain.FilterField
 import io.github.oemkbv.domain.Filters
 import io.github.oemkbv.domain.FirmwareQuery
 import io.github.oemkbv.domain.QueryResult
+import io.github.oemkbv.domain.Selection
 import io.github.oemkbv.domain.Sort
 import io.github.oemkbv.domain.SortKey
 import kotlinx.coroutines.Dispatchers
@@ -29,12 +30,17 @@ data class UiState(
   val loaded: Boolean = false,
   val refreshing: Boolean = false,
   val result: QueryResult = QueryResult(Filters(), emptyList(), emptyMap(), 0),
-  val sort: Sort = Sort(),
+  /** The sort in use: the one the user picked, or the default of the current selection. */
+  val sort: Sort = Sort.ForAll,
+  val defaultSort: Sort = Sort.ForAll,
+  val selection: Selection = Selection.None,
   val allRows: List<Firmware> = emptyList(),
   val failedBrands: Set<Brand> = emptySet(),
   val followed: Set<String> = emptySet(),
   val notifications: Boolean = true,
   val lastChecked: Long? = null,
+  /** Grows every time the user's search and filters are wiped (a new device, "Reset"): screens drop their own copies of them. */
+  val epoch: Int = 0,
 ) {
   val filters: Filters get() = result.filters
 }
@@ -47,31 +53,51 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
   private val refreshing = MutableStateFlow(false)
   private val failedBrands = MutableStateFlow<Set<Brand>>(emptySet())
   private val filters = MutableStateFlow(Filters())
-  private val sort = MutableStateFlow(Sort())
+  /** `null`: the default sort of the selection (newest version for one device, newest kernel build for all). */
+  private val sortChoice = MutableStateFlow<Sort?>(null)
 
   private val query =
-    combine(rows, filters, sort, prefs.followed) { rows, filters, sort, followed ->
-      Query(rows, FirmwareQuery.run(rows, filters, sort, followed), sort, followed)
+    combine(rows, filters, sortChoice, prefs.followed, prefs.selection) { rows, filters, choice, followed, selection ->
+      val default = defaultSort(selection)
+      val sort = choice ?: default
+      val device = (selection as? Selection.Device)?.id
+      // before the first choice nothing is listed: the home asks for a device
+      val result = if (selection is Selection.None) {
+        QueryResult(filters, emptyList(), emptyMap(), 0)
+      } else {
+        FirmwareQuery.run(rows, filters.copy(device = device), sort, followed)
+      }
+      Query(rows, result, sort, default, selection, followed)
     }.flowOn(Dispatchers.Default)
 
-  private val prefsState = combine(prefs.notifications, prefs.lastRefresh) { notifications, lastChecked -> notifications to lastChecked }
+  private val epoch = MutableStateFlow(0)
+
+  /** Read right away, unlike [UiState.epoch] which arrives with the next state: lets a screen tell its saved text is stale. */
+  val currentEpoch: Int get() = epoch.value
+
+  private class Extras(val notifications: Boolean, val lastChecked: Long?, val epoch: Int)
+
+  private val extras = combine(prefs.notifications, prefs.lastRefresh, epoch, ::Extras)
 
   val state: StateFlow<UiState> =
-    combine(query, loaded, refreshing, failedBrands, prefsState) { q, loaded, refreshing, failed, (notifications, lastChecked) ->
+    combine(query, loaded, refreshing, failedBrands, extras) { q, loaded, refreshing, failed, extras ->
       UiState(
         loaded = loaded,
         refreshing = refreshing,
         result = q.result,
         sort = q.sort,
+        defaultSort = q.defaultSort,
+        selection = q.selection,
         allRows = q.rows,
         failedBrands = failed,
         followed = q.followed,
-        notifications = notifications,
-        lastChecked = lastChecked,
+        notifications = extras.notifications,
+        lastChecked = extras.lastChecked,
+        epoch = extras.epoch,
       )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UiState())
 
-  private class Query(val rows: List<Firmware>, val result: QueryResult, val sort: Sort, val followed: Set<String>)
+  private class Query(val rows: List<Firmware>, val result: QueryResult, val sort: Sort, val defaultSort: Sort, val selection: Selection, val followed: Set<String>)
 
   init {
     viewModelScope.launch {
@@ -108,12 +134,27 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
 
   fun setFollowedOnly(on: Boolean) = edit { it.copy(followedOnly = on) }
 
-  fun sortBy(key: SortKey) = sort.update { if (it.key == key) it.copy(descending = !it.descending) else Sort(key, descending = key == SortKey.BUILT) }
+  fun sortBy(key: SortKey) = sortChoice.update { choice ->
+    val current = choice ?: defaultSort(prefs.selection.value)
+    if (current.key == key) current.copy(descending = !current.descending) else Sort(key, descending = key == SortKey.BUILT || key == SortKey.VERSION)
+  }
 
+  /** Back to the plain list of the current selection: no search, filters or sort of the user. */
   fun reset() {
     filters.value = Filters()
-    sort.value = Sort()
+    sortChoice.value = null
+    epoch.update { it + 1 }
   }
+
+  /** A new device (or "all"): what was narrowed down for the previous one does not carry over. */
+  fun choose(selection: Selection) {
+    filters.update { Filters(showFailed = it.showFailed) }
+    sortChoice.value = null
+    epoch.update { it + 1 }
+    prefs.setSelection(selection)
+  }
+
+  private fun defaultSort(selection: Selection) = if (selection is Selection.Device) Sort.ForDevice else Sort.ForAll
 
   fun toggleFollow(row: Firmware) = setFollowed(row.followKey, row.followKey !in prefs.followed.value)
 
