@@ -5,6 +5,8 @@ import io.github.oemkbv.data.FetchResult
 import io.github.oemkbv.data.Firmware
 import io.github.oemkbv.data.FirmwareApi
 import io.github.oemkbv.data.FirmwareDto
+import io.github.oemkbv.data.ReleaseDto
+import io.github.oemkbv.data.UpdateApi
 import io.github.oemkbv.data.toFirmware
 import java.io.File
 import java.io.IOException
@@ -69,15 +71,38 @@ class FakeApi(private val bodies: MutableMap<Brand, String> = HashMap()) : Firmw
   }
 }
 
+/** The GitHub releases of the app, in memory: what the update check sees. */
+class FakeUpdateApi : UpdateApi {
+  var releases: List<ReleaseDto> = emptyList()
+  var failing = false
+  var calls = 0
+
+  override suspend fun releases(): List<ReleaseDto> {
+    calls++
+    if (failing) throw IOException("offline")
+    return releases
+  }
+}
+
+fun release(version: String, draft: Boolean = false, prerelease: Boolean = false, tag: String = "app-v$version") = ReleaseDto(
+  tagName = tag,
+  htmlUrl = "https://github.com/luigimak/oem-kernel-build-version/releases/tag/$tag",
+  draft = draft,
+  prerelease = prerelease,
+)
+
 /** What the UI and worker tests talk to: the test application reads it, each test sets it up. */
 object TestWorld {
   var api = FakeApi()
+  var updates = FakeUpdateApi()
 }
 
 class TestApp : OemKbvApp() {
   override fun createContainer() = AppContainer(
     this,
     api = { brand, etag -> TestWorld.api.fetch(brand, etag) },
+    updateApi = { TestWorld.updates.releases() },
+    appVersion = "1.0.0",
     cacheDir = File(cacheDir, "data-${System.nanoTime()}"),
     scheduleChecks = {},
   )
