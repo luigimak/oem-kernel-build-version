@@ -56,8 +56,8 @@ the updated results to the default branch. `archive` is a manual command.
 ## Android app
 [`android/`](android/) is a small native app (Kotlin, Jetpack Compose, Android 8.0+) built around the device you own:
 pick brand, device and region (for example *OnePlus 13 EU*) and it lists the firmware of exactly that device, newest version first, each with
-its kernel and build date. The Android version and the kernel branch narrow the list down, and a firmware page has the full `Linux version …`
-string to copy or share. *All devices* keeps the whole table with search and filters, for questions across devices ("who has kernel 6.6.89?").
+its kernel and build date. The Android version and the kernel branch narrow the list down, and a firmware page shows the full `Linux version …`
+string, with buttons to copy the kernel version and the build, and to share it. *All devices* keeps the whole table with search and filters, for questions across devices ("who has kernel 6.6.89?").
 English and Italian; another language is a `res/values-xx/strings.xml` away.
 
 - It reads `oneplus.json`, `oppo.json` and `realme.json` from the Pages site when it starts (conditional requests, a copy is kept on the phone and works offline), so the app does not need a new release when the data changes.

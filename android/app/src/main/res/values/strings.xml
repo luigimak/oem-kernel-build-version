@@ -80,8 +80,8 @@
     <string name="field_size">Size</string>
     <string name="field_md5">MD5</string>
     <string name="field_error">Error</string>
-    <string name="copy_linux_version">Copy Linux version</string>
-    <string name="copy_kernel">Copy kernel</string>
+    <string name="copy_kernel_version">Copy kernel version</string>
+    <string name="copy_build_version">Copy build version</string>
     <string name="copied">Copied</string>
     <string name="share">Share</string>
     <string name="favorite_add">Add %1$s to the favorites</string>

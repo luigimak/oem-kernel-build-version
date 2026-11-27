@@ -107,14 +107,15 @@ fun DetailScreen(row: Firmware?, favorite: Boolean, onBack: () -> Unit, onToggle
         Field(R.string.field_error, row.error, mono = true, error = true)
 
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-          if (row.linuxVersion.isNotEmpty()) {
-            OutlinedButton(onClick = { copy("Linux version", row.linuxVersion) }, modifier = Modifier.testTag("copy-linux")) {
-              Text(stringResource(R.string.copy_linux_version))
+          // the kernel release (`6.6.30-android15-8-g1d2c3b4a5f6e`) and the build (`#1 SMP PREEMPT Wed Dec 10 04:46:02 UTC 2025`)
+          if (row.kernel.isNotEmpty()) {
+            OutlinedButton(onClick = { copy("Kernel version", row.kernel) }, modifier = Modifier.testTag("copy-kernel")) {
+              Text(stringResource(R.string.copy_kernel_version))
             }
           }
-          if (row.kernel.isNotEmpty()) {
-            OutlinedButton(onClick = { copy("Kernel", row.kernel) }, modifier = Modifier.testTag("copy-kernel")) {
-              Text(stringResource(R.string.copy_kernel))
+          if (row.build.isNotEmpty()) {
+            OutlinedButton(onClick = { copy("Build version", row.build) }, modifier = Modifier.testTag("copy-build")) {
+              Text(stringResource(R.string.copy_build_version))
             }
           }
           OutlinedButton(onClick = { share(context, row) }, modifier = Modifier.testTag("share")) {

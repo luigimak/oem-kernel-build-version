@@ -83,8 +83,8 @@
     <string name="field_size">Dimensione</string>
     <string name="field_md5">MD5</string>
     <string name="field_error">Errore</string>
-    <string name="copy_linux_version">Copia Linux version</string>
-    <string name="copy_kernel">Copia kernel</string>
+    <string name="copy_kernel_version">Copia versione kernel</string>
+    <string name="copy_build_version">Copia versione build</string>
     <string name="copied">Copiato</string>
     <string name="share">Condividi</string>
     <string name="favorite_add">Aggiungi %1$s ai preferiti</string>
