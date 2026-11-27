@@ -24,7 +24,7 @@ dev = [
     "py7zr>=1.0",
     "pytest>=8",
     "pytest-cov>=5",
-    "ruff==0.17.3",
+    "ruff==0.17.6",
     "mypy==2.4.1",
 ]
 
