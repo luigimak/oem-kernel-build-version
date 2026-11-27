@@ -50,8 +50,8 @@ class FirmwareQueryTest {
 
   @Test
   fun `device sort is natural, not alphabetical`() {
-    val devices = run(sort = Sort(SortKey.DEVICE, descending = false)).rows.map { it.name }.distinct()
-    assertEquals(listOf("OnePlus 10 Pro", "OnePlus 13", "OPPO Find X8", "Realme 10"), devices)
+    val devices = run(sort = Sort(SortKey.DEVICE, descending = false)).rows.map { it.deviceId.label }.distinct()
+    assertEquals(listOf("OnePlus 10 Pro GLO", "OnePlus 13 CN", "OnePlus 13 EU", "OPPO Find X8 EU", "Realme 10 TH"), devices)
   }
 
   @Test

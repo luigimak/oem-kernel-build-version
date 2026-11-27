@@ -55,9 +55,7 @@ class NewFirmwareNotifier(private val context: Context) {
     NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
   }
 
-  private fun line(row: Firmware): String {
-    return "${row.name} · ${row.version} · ${row.kernel}"
-  }
+  private fun line(row: Firmware): String = "${row.deviceId.label} · ${row.version} · ${row.kernel}"
 
   private fun ensureChannel() {
     val channel = NotificationChannel(CHANNEL_ID, context.getString(R.string.channel_name), NotificationManager.IMPORTANCE_DEFAULT)

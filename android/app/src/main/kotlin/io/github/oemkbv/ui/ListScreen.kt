@@ -337,12 +337,14 @@ fun FirmwareCard(row: Firmware, favorite: Boolean, onClick: () -> Unit, modifier
   Card(onClick = onClick, modifier = modifier.fillMaxWidth().testTag("row-${row.uid}")) {
     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
       Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(row.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+        Text(row.deviceId.label, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
         if (favorite) Icon(Icons.Default.Star, null, tint = MaterialTheme.colorScheme.primary)
       }
       Text(
-        listOf(row.model, row.region).filter { it.isNotEmpty() }.joinToString(" · ") +
-          if (row.android.isNotEmpty()) " · " + stringResource(R.string.android_version, row.android) else "",
+        // the title already says brand, device and region
+        listOf(row.model, if (row.android.isNotEmpty()) stringResource(R.string.android_version, row.android) else "")
+          .filter { it.isNotEmpty() }
+          .joinToString(" · "),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
