@@ -36,7 +36,7 @@
     <string name="all_regions">All regions</string>
     <string name="all_android">All Android</string>
     <string name="all_kernels">All kernels</string>
-    <string name="filter_followed">Followed</string>
+    <string name="filter_favorites">Favorites</string>
     <string name="filter_failed">Show failed</string>
     <string name="sort">Sort</string>
     <string name="reset">Reset</string>
@@ -52,7 +52,7 @@
     <string name="sort_descending">descending</string>
     <string name="count">%1$d of %2$d firmware</string>
     <string name="no_match">No firmware matches.</string>
-    <string name="no_followed">No followed models yet. Open a firmware and tap the star.</string>
+    <string name="no_favorites">No favorite devices yet. Tap the star next to a device.</string>
     <string name="loading">Loading…</string>
     <string name="load_failed">No data could be loaded. Check the connection and try again.</string>
     <string name="retry">Try again</string>
@@ -84,17 +84,17 @@
     <string name="copy_kernel">Copy kernel</string>
     <string name="copied">Copied</string>
     <string name="share">Share</string>
-    <string name="follow">Follow %1$s</string>
-    <string name="unfollow">Stop following %1$s</string>
+    <string name="favorite_add">Add %1$s to the favorites</string>
+    <string name="favorite_remove">Remove %1$s from the favorites</string>
     <string name="firmware_not_found">This firmware is no longer in the data.</string>
     <string name="size_gib">%1$s GiB</string>
 
     <!-- settings -->
     <string name="settings_notifications">New firmware notifications</string>
-    <string name="settings_notifications_summary">Checks twice a day and tells you when a followed model gets new firmware.</string>
+    <string name="settings_notifications_summary">Checks twice a day and tells you when a favorite device gets new firmware.</string>
     <string name="settings_notifications_denied">Notifications are blocked for this app. Allow them in the system settings.</string>
-    <string name="settings_followed">Followed models</string>
-    <string name="settings_followed_empty">None. Follow a model from its firmware page.</string>
+    <string name="settings_favorites">Favorite devices</string>
+    <string name="settings_favorites_empty">None. Tap the star next to a device to add it.</string>
     <string name="settings_language">Language</string>
     <string name="settings_language_summary">Choose the language of this app.</string>
     <string name="settings_data">Data</string>
@@ -108,7 +108,7 @@
 
     <!-- notifications -->
     <string name="channel_name">New firmware</string>
-    <string name="channel_description">New firmware of the models you follow</string>
+    <string name="channel_description">New firmware of your favorite devices</string>
     <plurals name="notification_title">
         <item quantity="one">%1$d new firmware</item>
         <item quantity="other">%1$d new firmware</item>

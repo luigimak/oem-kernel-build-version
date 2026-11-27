@@ -27,7 +27,7 @@ data class Filters(
   val query: String = "",
   val selected: Map<FilterField, String> = emptyMap(),
   val showFailed: Boolean = false,
-  val followedOnly: Boolean = false,
+  val favoritesOnly: Boolean = false,
   /** Only the firmware of this device (brand + device + region); `null` = all of them. */
   val device: DeviceId? = null,
 ) {
@@ -51,10 +51,10 @@ data class QueryResult(
 )
 
 object FirmwareQuery {
-  fun run(all: List<Firmware>, filters: Filters, sort: Sort, followed: Set<String>): QueryResult {
+  fun run(all: List<Firmware>, filters: Filters, sort: Sort, favorites: Set<String>): QueryResult {
     val base = all.filter {
       (filters.showFailed || it.ok) &&
-        (!filters.followedOnly || it.followKey in followed) &&
+        (!filters.favoritesOnly || it.deviceId.key in favorites) &&
         (filters.device == null || it.deviceId == filters.device)
     }
     val applied = normalize(base, filters)
@@ -153,8 +153,8 @@ fun naturalCompare(a: String, b: String): Int {
   return (a.length - i).compareTo(b.length - j)
 }
 
-/** Firmware of followed models that were never seen before and now have a kernel string. */
+/** Firmware of favorite devices that were never seen before and now have a kernel string. */
 object NewFirmware {
-  fun find(rows: List<Firmware>, followed: Set<String>, seen: Set<String>): List<Firmware> =
-    rows.filter { it.ok && it.followKey in followed && it.uid !in seen }
+  fun find(rows: List<Firmware>, favorites: Set<String>, seen: Set<String>): List<Firmware> =
+    rows.filter { it.ok && it.deviceId.key in favorites && it.uid !in seen }
 }

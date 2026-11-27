@@ -35,14 +35,14 @@ private val sample = listOf(
 private fun sampleState(selection: Selection = Selection.All, filters: Filters = Filters(showFailed = true)): UiState {
   val device = (selection as? Selection.Device)?.id
   val sort = if (device != null) Sort.ForDevice else Sort.ForAll
-  val result = FirmwareQuery.run(sample, filters.copy(device = device), sort, setOf("oneplus:CPH2655"))
+  val result = FirmwareQuery.run(sample, filters.copy(device = device), sort, setOf("oneplus|13|EU"))
   return UiState(
     loaded = true, result = result, sort = sort, defaultSort = sort, selection = selection, allRows = sample,
-    followed = setOf("oneplus:CPH2655"), lastChecked = 1_764_000_000_000,
+    favorites = setOf("oneplus|13|EU", "oppo|Find X8|CN"), lastChecked = 1_764_000_000_000,
   )
 }
 
-private val noCallbacks = ListCallbacks({}, { _, _ -> }, {}, {}, {}, {}, {}, {}, {}, {}, { 0 })
+private val noCallbacks = ListCallbacks({}, { _, _ -> }, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, { 0 })
 
 @Preview(name = "list light", showBackground = true, widthDp = 400, heightDp = 800)
 @Composable
@@ -63,11 +63,11 @@ private fun FirstRun() = OEMKernelBuildVersionTheme(darkTheme = false, dynamicCo
 @Preview(name = "detail", showBackground = true, widthDp = 400, heightDp = 900)
 @Composable
 private fun DetailLight() = OEMKernelBuildVersionTheme(darkTheme = false, dynamicColor = false) {
-  DetailScreen(sample.first(), followed = true, onBack = {}, onToggleFollow = {})
+  DetailScreen(sample.first(), favorite = true, onBack = {}, onToggleFavorite = {})
 }
 
 @Preview(name = "settings", showBackground = true, widthDp = 400, heightDp = 800)
 @Composable
 private fun SettingsLight() = OEMKernelBuildVersionTheme(darkTheme = false, dynamicColor = false) {
-  SettingsScreen(sampleState(), onBack = {}, onNotifications = {}, onUnfollow = {})
+  SettingsScreen(sampleState(), onBack = {}, onNotifications = {}, onRemoveFavorite = {})
 }

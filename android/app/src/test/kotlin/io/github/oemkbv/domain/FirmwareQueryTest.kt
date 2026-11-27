@@ -19,8 +19,8 @@ class FirmwareQueryTest {
     dto("6", "13", "CPH2655", "IN", "CPH2655_15.0.0.101(EX01)", ok = false).toFirmware(Brand.ONEPLUS),
   )
 
-  private fun run(filters: Filters = Filters(), sort: Sort = Sort(), followed: Set<String> = emptySet()) =
-    FirmwareQuery.run(rows, filters, sort, followed)
+  private fun run(filters: Filters = Filters(), sort: Sort = Sort(), favorites: Set<String> = emptySet()) =
+    FirmwareQuery.run(rows, filters, sort, favorites)
 
   private fun ids(r: QueryResult) = r.rows.map { it.uid.substringAfter(':') }
 
@@ -106,11 +106,12 @@ class FirmwareQueryTest {
   }
 
   @Test
-  fun `followed only shows the followed models`() {
-    val r = run(Filters(followedOnly = true), followed = setOf("oneplus:CPH2655"))
+  fun `favorites only shows the favorite devices, a region at a time`() {
+    val r = run(Filters(favoritesOnly = true), favorites = setOf("oneplus|13|EU"))
     assertEquals(listOf("1"), ids(r))
     assertEquals(1, r.total)
-    assertTrue(run(Filters(followedOnly = true)).rows.isEmpty())
+    assertEquals(setOf("1", "2"), ids(run(Filters(favoritesOnly = true), favorites = setOf("oneplus|13|EU", "oneplus|13|CN"))).toSet())
+    assertTrue(run(Filters(favoritesOnly = true)).rows.isEmpty())
   }
 
   @Test
@@ -124,10 +125,12 @@ class FirmwareQueryTest {
   }
 
   @Test
-  fun `new firmware are the unseen ones of followed models with a kernel`() {
-    val followed = setOf("oneplus:CPH2655")
-    assertEquals(listOf("oneplus:1"), NewFirmware.find(rows, followed, emptySet()).map { it.uid }) // 6 has no kernel yet
-    assertEquals(emptyList(), NewFirmware.find(rows, followed, setOf("oneplus:1")))
+  fun `new firmware are the unseen ones of favorite devices with a kernel`() {
+    val favorites = setOf("oneplus|13|EU")
+    assertEquals(listOf("oneplus:1"), NewFirmware.find(rows, favorites, emptySet()).map { it.uid })
+    assertEquals(emptyList(), NewFirmware.find(rows, favorites, setOf("oneplus:1")))
+    // the same phone in another region is another device: 13 IN (id 6) has no kernel yet, 13 CN (id 2) is not a favorite
+    assertEquals(listOf("oneplus:6"), NewFirmware.find(rows.map { if (it.uid == "oneplus:6") it.copy(ok = true) else it }, setOf("oneplus|13|IN"), emptySet()).map { it.uid })
     assertEquals(emptyList(), NewFirmware.find(rows, emptySet(), emptySet()))
   }
 

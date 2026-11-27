@@ -28,11 +28,13 @@ class FirmwareTest {
   }
 
   @Test
-  fun `row keeps the kernel branch, the search text and a follow key`() {
+  fun `row keeps the kernel branch, the search text and its device`() {
     val row = dto("a1", device = "13", model = "CPH2655", kernel = "6.6.30-android15-8-g1234").toFirmware(Brand.ONEPLUS)
     assertEquals("oneplus:a1", row.uid)
     assertEquals("6.6", row.branch)
-    assertEquals("oneplus:CPH2655", row.followKey)
+    assertEquals(DeviceId(Brand.ONEPLUS, "13", "EU"), row.deviceId)
+    assertEquals("oneplus|13|EU", row.deviceId.key)
+    assertEquals("OnePlus 13 EU", row.deviceId.label)
     assertTrue("oneplus 13" in row.haystack && "cph2655" in row.haystack && "6.6.30" in row.haystack && "oneplus" in row.haystack)
     assertNotNull(row.builtMs)
     assertTrue(row.ok)
@@ -49,8 +51,8 @@ class FirmwareTest {
   }
 
   @Test
-  fun `follow key falls back to the device when the model is empty`() {
-    assertEquals("realme:10", dto("x", device = "10", model = "").toFirmware(Brand.REALME).followKey)
+  fun `the device falls back to the model when the row has no device`() {
+    assertEquals("realme|RMX1|EU", dto("x", device = "", model = "RMX1").toFirmware(Brand.REALME).deviceId.key)
   }
 
   @Test

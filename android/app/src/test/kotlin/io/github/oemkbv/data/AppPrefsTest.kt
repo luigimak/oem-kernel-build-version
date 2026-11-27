@@ -14,18 +14,18 @@ class AppPrefsTest {
   private fun prefs() = AppPrefs(ApplicationProvider.getApplicationContext<Context>().getSharedPreferences("test", Context.MODE_PRIVATE))
 
   @Test
-  fun `defaults, then follow and unfollow are kept across instances`() {
+  fun `defaults, then adding and removing favorites is kept across instances`() {
     val p = prefs()
-    assertTrue(p.followed.value.isEmpty())
+    assertTrue(p.favorites.value.isEmpty())
     assertTrue(p.notifications.value)
     assertNull(p.lastRefresh.value)
 
-    p.setFollowed("oneplus:CPH2655", true)
-    p.setFollowed("oppo:CPH2651", true)
-    assertEquals(setOf("oneplus:CPH2655", "oppo:CPH2651"), prefs().followed.value)
+    p.setFavorite("oneplus|13|EU", true)
+    p.setFavorite("oppo|Find X8|CN", true)
+    assertEquals(setOf("oneplus|13|EU", "oppo|Find X8|CN"), prefs().favorites.value)
 
-    p.setFollowed("oppo:CPH2651", false)
-    assertEquals(setOf("oneplus:CPH2655"), prefs().followed.value)
+    p.setFavorite("oppo|Find X8|CN", false)
+    assertEquals(setOf("oneplus|13|EU"), prefs().favorites.value)
   }
 
   @Test

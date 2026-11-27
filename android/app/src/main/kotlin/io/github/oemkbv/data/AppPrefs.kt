@@ -6,15 +6,15 @@ import io.github.oemkbv.domain.Selection
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-/** What the user chose (followed models, notifications) and what was already notified, kept in plain SharedPreferences. */
+/** What the user chose (favorite devices, notifications) and what was already notified, kept in plain SharedPreferences. */
 class AppPrefs(private val sp: SharedPreferences) {
-  private val followedState = MutableStateFlow(sp.getStringSet(FOLLOWED, null).orEmpty().toSet())
+  private val favoritesState = MutableStateFlow(sp.getStringSet(FAVORITES, null).orEmpty().toSet())
   private val notifyState = MutableStateFlow(sp.getBoolean(NOTIFY, true))
   private val refreshedState = MutableStateFlow(sp.getLong(REFRESHED, 0L).takeIf { it > 0 })
   private val selectionState = MutableStateFlow(Selection.parse(sp.getString(SELECTION, null)))
 
-  /** Follow keys (`brand:model`), see [Firmware.followKey]. */
-  val followed: StateFlow<Set<String>> = followedState
+  /** Keys (`brand|device|region`, see [DeviceId.key]) of the favorite devices: the ones notified about. */
+  val favorites: StateFlow<Set<String>> = favoritesState
   val notifications: StateFlow<Boolean> = notifyState
 
   /** Epoch millis of the last successful refresh of any brand, `null` before the first one. */
@@ -25,10 +25,10 @@ class AppPrefs(private val sp: SharedPreferences) {
 
   val seen: Set<String> get() = sp.getStringSet(SEEN, null).orEmpty().toSet()
 
-  fun setFollowed(key: String, follow: Boolean) {
-    val next = if (follow) followedState.value + key else followedState.value - key
-    sp.edit { putStringSet(FOLLOWED, next) }
-    followedState.value = next
+  fun setFavorite(key: String, favorite: Boolean) {
+    val next = if (favorite) favoritesState.value + key else favoritesState.value - key
+    sp.edit { putStringSet(FAVORITES, next) }
+    favoritesState.value = next
   }
 
   fun setSelection(selection: Selection) {
@@ -52,7 +52,7 @@ class AppPrefs(private val sp: SharedPreferences) {
   }
 
   private companion object {
-    const val FOLLOWED = "followed"
+    const val FAVORITES = "favorites"
     const val NOTIFY = "notifications"
     const val SEEN = "seen"
     const val REFRESHED = "refreshed"

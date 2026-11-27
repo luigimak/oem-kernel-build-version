@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Android 12+: back up and transfer the preferences (followed models), not the downloaded data -->
+<!-- Android 12+: back up and transfer the preferences (favorite devices), not the downloaded data -->
 <data-extraction-rules>
     <cloud-backup>
         <include domain="sharedpref" path="prefs.xml" />

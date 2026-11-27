@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import io.github.oemkbv.AppContainer
 import io.github.oemkbv.OemKbvApp
 import io.github.oemkbv.data.Brand
+import io.github.oemkbv.data.DeviceId
 import io.github.oemkbv.data.Firmware
 import io.github.oemkbv.domain.FilterField
 import io.github.oemkbv.domain.Filters
@@ -36,7 +37,8 @@ data class UiState(
   val selection: Selection = Selection.None,
   val allRows: List<Firmware> = emptyList(),
   val failedBrands: Set<Brand> = emptySet(),
-  val followed: Set<String> = emptySet(),
+  /** Keys of the favorite devices, see [DeviceId.key]. */
+  val favorites: Set<String> = emptySet(),
   val notifications: Boolean = true,
   val lastChecked: Long? = null,
   /** Grows every time the user's search and filters are wiped (a new device, "Reset"): screens drop their own copies of them. */
@@ -57,7 +59,7 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
   private val sortChoice = MutableStateFlow<Sort?>(null)
 
   private val query =
-    combine(rows, filters, sortChoice, prefs.followed, prefs.selection) { rows, filters, choice, followed, selection ->
+    combine(rows, filters, sortChoice, prefs.favorites, prefs.selection) { rows, filters, choice, favorites, selection ->
       val default = defaultSort(selection)
       val sort = choice ?: default
       val device = (selection as? Selection.Device)?.id
@@ -65,9 +67,9 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
       val result = if (selection is Selection.None) {
         QueryResult(filters, emptyList(), emptyMap(), 0)
       } else {
-        FirmwareQuery.run(rows, filters.copy(device = device), sort, followed)
+        FirmwareQuery.run(rows, filters.copy(device = device), sort, favorites)
       }
-      Query(rows, result, sort, default, selection, followed)
+      Query(rows, result, sort, default, selection, favorites)
     }.flowOn(Dispatchers.Default)
 
   private val epoch = MutableStateFlow(0)
@@ -90,14 +92,14 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
         selection = q.selection,
         allRows = q.rows,
         failedBrands = failed,
-        followed = q.followed,
+        favorites = q.favorites,
         notifications = extras.notifications,
         lastChecked = extras.lastChecked,
         epoch = extras.epoch,
       )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UiState())
 
-  private class Query(val rows: List<Firmware>, val result: QueryResult, val sort: Sort, val defaultSort: Sort, val selection: Selection, val followed: Set<String>)
+  private class Query(val rows: List<Firmware>, val result: QueryResult, val sort: Sort, val defaultSort: Sort, val selection: Selection, val favorites: Set<String>)
 
   init {
     viewModelScope.launch {
@@ -132,7 +134,7 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
 
   fun setShowFailed(on: Boolean) = edit { it.copy(showFailed = on) }
 
-  fun setFollowedOnly(on: Boolean) = edit { it.copy(followedOnly = on) }
+  fun setFavoritesOnly(on: Boolean) = edit { it.copy(favoritesOnly = on) }
 
   fun sortBy(key: SortKey) = sortChoice.update { choice ->
     val current = choice ?: defaultSort(prefs.selection.value)
@@ -156,12 +158,17 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
 
   private fun defaultSort(selection: Selection) = if (selection is Selection.Device) Sort.ForDevice else Sort.ForAll
 
-  fun toggleFollow(row: Firmware) = setFollowed(row.followKey, row.followKey !in prefs.followed.value)
+  /** Adds the device to the favorites or takes it out; `true` when it is a favorite now. */
+  fun toggleFavorite(device: DeviceId): Boolean {
+    val add = device.key !in prefs.favorites.value
+    setFavorite(device.key, add)
+    return add
+  }
 
-  fun setFollowed(key: String, follow: Boolean) {
-    // what exists now is not "new": only firmware that appears after the follow is reported
-    if (follow) prefs.markSeen(rows.value.filter { it.followKey == key && it.ok }.map { it.uid })
-    prefs.setFollowed(key, follow)
+  fun setFavorite(key: String, favorite: Boolean) {
+    // what exists now is not "new": only firmware that appears after it became a favorite is reported
+    if (favorite) prefs.markSeen(rows.value.filter { it.deviceId.key == key && it.ok }.map { it.uid })
+    prefs.setFavorite(key, favorite)
   }
 
   fun setNotifications(on: Boolean) = prefs.setNotifications(on)

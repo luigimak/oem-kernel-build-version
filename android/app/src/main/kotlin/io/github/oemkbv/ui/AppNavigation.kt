@@ -35,18 +35,24 @@ fun AppNavigation(viewModel: MainViewModel) {
     }
   }
 
+  fun toggleFavorite(device: DeviceId) {
+    if (viewModel.toggleFavorite(device) && viewModel.state.value.notifications) askToNotify()
+  }
+
   val callbacks = remember(viewModel) {
     ListCallbacks(
       onQuery = viewModel::setQuery,
       onSelect = viewModel::select,
       onShowFailed = viewModel::setShowFailed,
-      onFollowedOnly = viewModel::setFollowedOnly,
+      onFavoritesOnly = viewModel::setFavoritesOnly,
       onSort = viewModel::sortBy,
       onReset = viewModel::reset,
       onRefresh = viewModel::refresh,
       onOpen = { stack.add(Screen.Detail(it.uid)) },
       onSettings = { stack.add(Screen.Settings) },
       onPickDevice = { stack.add(Screen.PickBrand) },
+      onChoose = viewModel::choose,
+      onToggleFavorite = ::toggleFavorite,
       epoch = { viewModel.currentEpoch },
     )
   }
@@ -70,13 +76,9 @@ fun AppNavigation(viewModel: MainViewModel) {
         val row: Firmware? = remember(key.uid, state.allRows) { state.allRows.firstOrNull { it.uid == key.uid } }
         DetailScreen(
           row = row,
-          followed = row != null && row.followKey in state.followed,
+          favorite = row != null && row.deviceId.key in state.favorites,
           onBack = ::back,
-          onToggleFollow = {
-            val following = it.followKey in state.followed
-            viewModel.toggleFollow(it)
-            if (!following && state.notifications) askToNotify()
-          },
+          onToggleFavorite = ::toggleFavorite,
         )
       }
       entry<Screen.PickBrand> {
@@ -96,7 +98,7 @@ fun AppNavigation(viewModel: MainViewModel) {
             viewModel.setNotifications(it)
             if (it) askToNotify()
           },
-          onUnfollow = { viewModel.setFollowed(it, false) },
+          onRemoveFavorite = { viewModel.setFavorite(it, false) },
         )
       }
     },
