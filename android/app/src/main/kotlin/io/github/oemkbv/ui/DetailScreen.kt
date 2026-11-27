@@ -144,10 +144,14 @@ private fun Field(label: Int, value: String, mono: Boolean = false, error: Boole
   }
 }
 
-/** `OnePlus 13 EU (CPH2653) CPH2653_16.0.9.401(EX01)` and, below, the Linux version string (or at least the kernel). */
+/**
+ * `OnePlus 13 EU (CPH2653) CPH2653_16.0.9.401(EX01)`, then the kernel version (`kernel_release`) and the build, one per line,
+ * each when the firmware has it. The same two values the copy buttons copy.
+ */
 internal fun shareText(row: Firmware): String = buildString {
   append(row.deviceId.label).append(" (").append(row.model).append(") ").append(row.version)
-  if (row.linuxVersion.isNotEmpty()) append('\n').append(row.linuxVersion) else if (row.kernel.isNotEmpty()) append('\n').append(row.kernel)
+  if (row.kernel.isNotEmpty()) append('\n').append(row.kernel)
+  if (row.build.isNotEmpty()) append('\n').append(row.build)
 }
 
 private fun share(context: android.content.Context, row: Firmware) {
