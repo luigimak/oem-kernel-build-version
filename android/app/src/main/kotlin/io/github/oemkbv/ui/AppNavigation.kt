@@ -53,6 +53,7 @@ fun AppNavigation(viewModel: MainViewModel) {
       onPickDevice = { stack.add(Screen.PickBrand) },
       onChoose = viewModel::choose,
       onToggleFavorite = ::toggleFavorite,
+      onDismissUpdate = viewModel::dismissUpdate,
       epoch = { viewModel.currentEpoch },
     )
   }
@@ -99,6 +100,8 @@ fun AppNavigation(viewModel: MainViewModel) {
             if (it) askToNotify()
           },
           onRemoveFavorite = { viewModel.setFavorite(it, false) },
+          onUpdateChecks = viewModel::setUpdateChecks,
+          onCheckUpdates = viewModel::checkForAppUpdate,
         )
       }
     },

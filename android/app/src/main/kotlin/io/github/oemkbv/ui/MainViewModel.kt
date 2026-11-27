@@ -6,9 +6,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import io.github.oemkbv.AppContainer
 import io.github.oemkbv.OemKbvApp
+import io.github.oemkbv.data.AppUpdate
 import io.github.oemkbv.data.Brand
 import io.github.oemkbv.data.DeviceId
 import io.github.oemkbv.data.Firmware
+import io.github.oemkbv.data.UpdateChecker
 import io.github.oemkbv.domain.FilterField
 import io.github.oemkbv.domain.Filters
 import io.github.oemkbv.domain.FirmwareQuery
@@ -25,6 +27,9 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+/** What the settings screen says about the last "Check now". */
+enum class UpdateStatus { IDLE, CHECKING, UP_TO_DATE, FAILED }
 
 data class UiState(
   /** `false` until the cached copy has been read: the very first run shows a spinner, later runs the cached list at once. */
@@ -43,6 +48,12 @@ data class UiState(
   val lastChecked: Long? = null,
   /** Grows every time the user's search and filters are wiped (a new device, "Reset"): screens drop their own copies of them. */
   val epoch: Int = 0,
+  /** A published release newer than this app, `null` when there is none (or it is not known yet). */
+  val update: AppUpdate? = null,
+  /** The user closed the banner of [update]; the settings still show it. */
+  val updateDismissed: Boolean = false,
+  val updateChecks: Boolean = true,
+  val updateStatus: UpdateStatus = UpdateStatus.IDLE,
 ) {
   val filters: Filters get() = result.filters
 }
@@ -77,9 +88,19 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
   /** Read right away, unlike [UiState.epoch] which arrives with the next state: lets a screen tell its saved text is stale. */
   val currentEpoch: Int get() = epoch.value
 
-  private class Extras(val notifications: Boolean, val lastChecked: Long?, val epoch: Int)
+  private val updateStatus = MutableStateFlow(UpdateStatus.IDLE)
 
-  private val extras = combine(prefs.notifications, prefs.lastRefresh, epoch, ::Extras)
+  private class UpdateInfo(val update: AppUpdate?, val dismissed: Boolean, val checks: Boolean, val status: UpdateStatus)
+
+  private val updateInfo = combine(prefs.availableUpdate, prefs.dismissedUpdate, prefs.updateChecks, updateStatus) { available, dismissed, checks, status ->
+    // the app may have been updated since the check: a release that is not newer than the running app is nothing to offer
+    val update = available?.takeIf { it.isNewerThan(container.appVersion) }
+    UpdateInfo(update, update != null && update.version == dismissed, checks, status)
+  }
+
+  private class Extras(val notifications: Boolean, val lastChecked: Long?, val epoch: Int, val updates: UpdateInfo)
+
+  private val extras = combine(prefs.notifications, prefs.lastRefresh, epoch, updateInfo, ::Extras)
 
   val state: StateFlow<UiState> =
     combine(query, loaded, refreshing, failedBrands, extras) { q, loaded, refreshing, failed, extras ->
@@ -96,6 +117,10 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
         notifications = extras.notifications,
         lastChecked = extras.lastChecked,
         epoch = extras.epoch,
+        update = extras.updates.update,
+        updateDismissed = extras.updates.dismissed,
+        updateChecks = extras.updates.checks,
+        updateStatus = extras.updates.status,
       )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UiState())
 
@@ -107,6 +132,26 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
       loaded.value = true
       refresh()
     }
+    // at most once a day, and never in the way of the list
+    viewModelScope.launch { container.updates.checkIfDue() }
+  }
+
+  /** "Check now" in the settings. */
+  fun checkForAppUpdate() {
+    if (updateStatus.value == UpdateStatus.CHECKING) return
+    updateStatus.value = UpdateStatus.CHECKING
+    viewModelScope.launch {
+      updateStatus.value = when (container.updates.check()) {
+        UpdateChecker.Outcome.FAILED -> UpdateStatus.FAILED
+        else -> if (prefs.availableUpdate.value?.isNewerThan(container.appVersion) == true) UpdateStatus.IDLE else UpdateStatus.UP_TO_DATE
+      }
+    }
+  }
+
+  fun setUpdateChecks(on: Boolean) = prefs.setUpdateChecks(on)
+
+  fun dismissUpdate() {
+    state.value.update?.let { prefs.dismissUpdate(it.version) }
   }
 
   fun refresh() {

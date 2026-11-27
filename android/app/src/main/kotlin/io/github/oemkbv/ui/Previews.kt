@@ -2,6 +2,7 @@ package io.github.oemkbv.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import io.github.oemkbv.data.AppUpdate
 import io.github.oemkbv.data.Brand
 import io.github.oemkbv.data.FirmwareDto
 import io.github.oemkbv.data.toFirmware
@@ -39,10 +40,11 @@ private fun sampleState(selection: Selection = Selection.All, filters: Filters =
   return UiState(
     loaded = true, result = result, sort = sort, defaultSort = sort, selection = selection, allRows = sample,
     favorites = setOf("oneplus|13|EU", "oppo|Find X8|CN"), lastChecked = 1_764_000_000_000,
+    update = AppUpdate("1.1.0", "https://github.com/luigimak/oem-kernel-build-version/releases/tag/app-v1.1.0"),
   )
 }
 
-private val noCallbacks = ListCallbacks({}, { _, _ -> }, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, { 0 })
+private val noCallbacks = ListCallbacks({}, { _, _ -> }, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, { 0 })
 
 @Preview(name = "list light", showBackground = true, widthDp = 400, heightDp = 800)
 @Composable
@@ -69,5 +71,5 @@ private fun DetailLight() = OEMKernelBuildVersionTheme(darkTheme = false, dynami
 @Preview(name = "settings", showBackground = true, widthDp = 400, heightDp = 800)
 @Composable
 private fun SettingsLight() = OEMKernelBuildVersionTheme(darkTheme = false, dynamicColor = false) {
-  SettingsScreen(sampleState(), onBack = {}, onNotifications = {}, onRemoveFavorite = {})
+  SettingsScreen(sampleState(), onBack = {}, onNotifications = {}, onRemoveFavorite = {}, onUpdateChecks = {}, onCheckUpdates = {})
 }

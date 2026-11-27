@@ -106,6 +106,20 @@
     <string name="settings_source_code">Source code and method on GitHub</string>
     <string name="settings_license">Apache License 2.0</string>
 
+    <!-- app updates -->
+    <string name="update_available">App update available: %1$s</string>
+    <string name="update_view">View</string>
+    <string name="update_dismiss">Dismiss</string>
+    <string name="settings_updates">App updates</string>
+    <string name="settings_updates_check">Check for app updates</string>
+    <string name="settings_updates_summary">Asks GitHub once a day for the latest release of this app. Nothing is downloaded or installed by itself: you open the release page and install the APK yourself.</string>
+    <string name="settings_updates_now">Check now</string>
+    <string name="settings_updates_checking">Checking…</string>
+    <string name="settings_updates_latest">You have the latest version.</string>
+    <string name="settings_updates_failed">Could not check for updates.</string>
+    <string name="settings_updates_found">Version %1$s is available.</string>
+    <string name="settings_updates_open">View release</string>
+
     <!-- notifications -->
     <string name="channel_name">New firmware</string>
     <string name="channel_description">New firmware of your favorite devices</string>

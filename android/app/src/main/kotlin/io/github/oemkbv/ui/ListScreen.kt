@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -47,12 +48,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.oemkbv.R
+import io.github.oemkbv.data.AppUpdate
 import io.github.oemkbv.data.DeviceId
 import io.github.oemkbv.data.Firmware
 import io.github.oemkbv.domain.FilterField
@@ -74,6 +77,7 @@ class ListCallbacks(
   val onPickDevice: () -> Unit,
   val onChoose: (Selection) -> Unit,
   val onToggleFavorite: (DeviceId) -> Unit,
+  val onDismissUpdate: () -> Unit,
   /** The ViewModel's current epoch, see [UiState.epoch]. */
   val epoch: () -> Int,
 )
@@ -106,6 +110,7 @@ fun ListScreen(state: UiState, callbacks: ListCallbacks, modifier: Modifier = Mo
   ) { padding ->
     Column(Modifier.padding(padding).fillMaxSize()) {
       if (state.refreshing) LinearProgressIndicator(Modifier.fillMaxWidth().testTag("refreshing"))
+      state.update?.takeIf { !state.updateDismissed }?.let { UpdateBanner(it, callbacks.onDismissUpdate) }
       DeviceBar(state.selection, state.favorites, callbacks.onPickDevice, callbacks.onToggleFavorite)
       FavoriteShortcuts(state.selection, state.favorites, callbacks.onChoose)
       if (state.selection != Selection.None) OutlinedTextField(
@@ -130,6 +135,22 @@ fun ListScreen(state: UiState, callbacks: ListCallbacks, modifier: Modifier = Mo
       if (state.selection != Selection.None) FilterRow(state, callbacks, onReset = callbacks.onReset)
       Banner(state)
       Content(state, callbacks)
+    }
+  }
+}
+
+/** A newer release of the app exists: a link to its page (nothing is downloaded or installed from here) and a way to close it. */
+@Composable
+private fun UpdateBanner(update: AppUpdate, onDismiss: () -> Unit) {
+  val context = LocalContext.current
+  Card(
+    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer, contentColor = MaterialTheme.colorScheme.onTertiaryContainer),
+    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp).testTag("update-banner"),
+  ) {
+    Row(Modifier.padding(start = 16.dp, top = 4.dp, bottom = 4.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+      Text(stringResource(R.string.update_available, update.version), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+      TextButton(onClick = { openUrl(context, update.url) }, modifier = Modifier.testTag("update-view")) { Text(stringResource(R.string.update_view)) }
+      IconButton(onClick = onDismiss, modifier = Modifier.testTag("update-dismiss")) { Icon(Icons.Default.Clear, stringResource(R.string.update_dismiss)) }
     }
   }
 }

@@ -109,6 +109,20 @@
     <string name="settings_source_code">Codice sorgente e metodo su GitHub</string>
     <string name="settings_license">Licenza Apache 2.0</string>
 
+    <!-- app updates -->
+    <string name="update_available">Aggiornamento dell\'app disponibile: %1$s</string>
+    <string name="update_view">Apri</string>
+    <string name="update_dismiss">Chiudi</string>
+    <string name="settings_updates">Aggiornamenti dell\'app</string>
+    <string name="settings_updates_check">Cerca aggiornamenti dell\'app</string>
+    <string name="settings_updates_summary">Chiede a GitHub una volta al giorno l\'ultima versione di questa app. Non scarica né installa nulla da solo: apri la pagina della release e installi tu l\'APK.</string>
+    <string name="settings_updates_now">Controlla ora</string>
+    <string name="settings_updates_checking">Controllo in corso…</string>
+    <string name="settings_updates_latest">Hai l\'ultima versione.</string>
+    <string name="settings_updates_failed">Impossibile cercare aggiornamenti.</string>
+    <string name="settings_updates_found">È disponibile la versione %1$s.</string>
+    <string name="settings_updates_open">Apri la release</string>
+
     <!-- notifications -->
     <string name="channel_name">Nuovi firmware</string>
     <string name="channel_description">Nuovi firmware dei tuoi dispositivi preferiti</string>

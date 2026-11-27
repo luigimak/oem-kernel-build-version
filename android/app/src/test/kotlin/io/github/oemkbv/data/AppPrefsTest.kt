@@ -3,13 +3,17 @@ package io.github.oemkbv.data
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.oemkbv.TestApp
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
+// the test application: the real one starts WorkManager, which Robolectric does not provide
+@Config(application = TestApp::class)
 class AppPrefsTest {
   private fun prefs() = AppPrefs(ApplicationProvider.getApplicationContext<Context>().getSharedPreferences("test", Context.MODE_PRIVATE))
 

@@ -26,6 +26,7 @@ import io.github.oemkbv.data.Brand
 import io.github.oemkbv.data.DeviceId
 import io.github.oemkbv.domain.Selection
 import io.github.oemkbv.dto
+import io.github.oemkbv.release
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.After
@@ -47,6 +48,7 @@ class AppUiTest {
   @Before
   fun setUp() {
     shadowOf(app).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+    TestWorld.updates = io.github.oemkbv.FakeUpdateApi()
     TestWorld.api = FakeApi().apply {
       publish(
         Brand.ONEPLUS,
@@ -451,5 +453,78 @@ class AppUiTest {
     rule.onNodeWithTag("pick-region-EU").performClick()
     waitForList()
     rule.onNodeWithTag("device-bar").assertTextContains("OnePlus 13 EU")
+  }
+
+  // ---- app updates
+
+  @Test
+  fun `a newer release shows a banner on the home screen, which can be closed for good`() {
+    TestWorld.updates.releases = listOf(release("1.1.0"), release("1.0.0"))
+    launch()
+    waitForList()
+    waitForTag("update-banner")
+    rule.onNodeWithText("App update available: 1.1.0").assertIsDisplayed()
+
+    rule.onNodeWithTag("update-dismiss").performClick()
+    rule.waitUntil(5_000) { rule.onAllNodesWithTag("update-banner").fetchSemanticsNodes().isEmpty() }
+    assertEquals("1.1.0", app.container.prefs.dismissedUpdate.value)
+
+    // closed for that version only: a still newer one shows again
+    app.container.prefs.setAvailableUpdate(io.github.oemkbv.data.AppUpdate("1.2.0", "https://github.com/luigimak/oem-kernel-build-version/releases/tag/app-v1.2.0"))
+    waitForTag("update-banner")
+    rule.onNodeWithText("App update available: 1.2.0").assertIsDisplayed()
+  }
+
+  @Test
+  fun `no banner when the app is up to date, or for drafts and other tags`() {
+    TestWorld.updates.releases = listOf(release("1.0.0"), release("2.0.0", draft = true), release("3.0.0", tag = "data-3.0.0"))
+    launch()
+    waitForList()
+    rule.waitUntil(5_000) { TestWorld.updates.calls > 0 }
+    rule.waitForIdle()
+    rule.onAllNodesWithTag("update-banner").assertCountEquals(0)
+  }
+
+  @Test
+  fun `no network or no releases never get in the way`() {
+    TestWorld.updates.failing = true
+    launch()
+    waitForList()
+    rule.waitUntil(5_000) { TestWorld.updates.calls > 0 }
+    rule.onAllNodesWithTag("update-banner").assertCountEquals(0)
+    rule.onNodeWithText("5 of 5 firmware").assertIsDisplayed()
+  }
+
+  @Test
+  fun `the settings check on demand, and say what they found`() {
+    app.container.prefs.setUpdateChecks(false) // nothing asked at start
+    launch()
+    waitForList()
+    rule.onNodeWithContentDescription("Settings").performClick()
+    assertEquals(0, TestWorld.updates.calls)
+
+    rule.onNodeWithTag("update-check-now").performScrollTo().performClick()
+    rule.waitUntil(5_000) { rule.onAllNodesWithText("You have the latest version.").fetchSemanticsNodes().isNotEmpty() }
+
+    TestWorld.updates.releases = listOf(release("1.4.0"))
+    rule.onNodeWithTag("update-check-now").performClick()
+    rule.waitUntil(5_000) { rule.onAllNodesWithText("Version 1.4.0 is available.").fetchSemanticsNodes().isNotEmpty() }
+    rule.onNodeWithTag("update-open").assertIsDisplayed()
+
+    TestWorld.updates.failing = true
+    TestWorld.updates.releases = emptyList()
+    app.container.prefs.setAvailableUpdate(null)
+    rule.onNodeWithTag("update-check-now").performClick()
+    rule.waitUntil(5_000) { rule.onAllNodesWithText("Could not check for updates.").fetchSemanticsNodes().isNotEmpty() }
+  }
+
+  @Test
+  fun `the switch turns the daily check off`() {
+    launch()
+    waitForList()
+    rule.waitUntil(5_000) { TestWorld.updates.calls > 0 }
+    rule.onNodeWithContentDescription("Settings").performClick()
+    rule.onNodeWithTag("update-checks-switch").performScrollTo().performClick()
+    rule.waitUntil(5_000) { !app.container.prefs.updateChecks.value }
   }
 }

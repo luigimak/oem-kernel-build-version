@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -57,6 +58,8 @@ fun SettingsScreen(
   onBack: () -> Unit,
   onNotifications: (Boolean) -> Unit,
   onRemoveFavorite: (String) -> Unit,
+  onUpdateChecks: (Boolean) -> Unit,
+  onCheckUpdates: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
   val context = LocalContext.current
@@ -142,6 +145,39 @@ fun SettingsScreen(
       )
 
       HorizontalDivider(Modifier.padding(vertical = 8.dp))
+      Section(R.string.settings_updates)
+      Row(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+      ) {
+        Column(Modifier.weight(1f)) {
+          Text(stringResource(R.string.settings_updates_check), style = MaterialTheme.typography.titleMedium)
+          Text(stringResource(R.string.settings_updates_summary), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Switch(checked = state.updateChecks, onCheckedChange = onUpdateChecks, modifier = Modifier.testTag("update-checks-switch"))
+      }
+      val update = state.update
+      val status = when {
+        update != null -> stringResource(R.string.settings_updates_found, update.version)
+        state.updateStatus == UpdateStatus.CHECKING -> stringResource(R.string.settings_updates_checking)
+        state.updateStatus == UpdateStatus.UP_TO_DATE -> stringResource(R.string.settings_updates_latest)
+        state.updateStatus == UpdateStatus.FAILED -> stringResource(R.string.settings_updates_failed)
+        else -> ""
+      }
+      if (status.isNotEmpty()) {
+        Text(status, Modifier.padding(horizontal = 16.dp, vertical = 4.dp).testTag("update-status"), style = MaterialTheme.typography.bodyMedium)
+      }
+      Row(Modifier.padding(horizontal = 8.dp)) {
+        TextButton(onClick = onCheckUpdates, enabled = state.updateStatus != UpdateStatus.CHECKING, modifier = Modifier.testTag("update-check-now")) {
+          Text(stringResource(R.string.settings_updates_now))
+        }
+        if (update != null) {
+          TextButton(onClick = { openUrl(context, update.url) }, modifier = Modifier.testTag("update-open")) { Text(stringResource(R.string.settings_updates_open)) }
+        }
+      }
+
+      HorizontalDivider(Modifier.padding(vertical = 8.dp))
       Section(R.string.settings_about)
       Text(stringResource(R.string.app_name) + " · " + stringResource(R.string.settings_version, BuildConfig.VERSION_NAME), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
       Text(
@@ -173,8 +209,4 @@ private fun openLanguageSettings(context: Context) {
   if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
   val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS, Uri.fromParts("package", context.packageName, null))
   runCatching { context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
-}
-
-private fun openUrl(context: Context, url: String) {
-  runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
 }

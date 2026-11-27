@@ -7,6 +7,9 @@ import io.github.oemkbv.data.FirmwareApi
 import io.github.oemkbv.data.FirmwareCache
 import io.github.oemkbv.data.FirmwareRepository
 import io.github.oemkbv.data.HttpFirmwareApi
+import io.github.oemkbv.data.HttpUpdateApi
+import io.github.oemkbv.data.UpdateApi
+import io.github.oemkbv.data.UpdateChecker
 import io.github.oemkbv.background.CheckScheduler
 import io.github.oemkbv.background.NewFirmwareNotifier
 import java.io.File
@@ -22,12 +25,16 @@ class AppContainer(
   context: Context,
   api: FirmwareApi = HttpFirmwareApi(userAgent = "OEM-KernelBuildVersion/${BuildConfig.VERSION_NAME}"),
   cacheDir: File = File(context.filesDir, "data"),
+  updateApi: UpdateApi = HttpUpdateApi(userAgent = "OEM-KernelBuildVersion/${BuildConfig.VERSION_NAME}"),
+  /** The running app's version name, what a release found on GitHub is compared with. */
+  val appVersion: String = BuildConfig.VERSION_NAME,
   /** Called whenever the periodic "new firmware" check should start (`true`) or stop (`false`). */
   val scheduleChecks: (Boolean) -> Unit = { CheckScheduler.sync(context, it) },
 ) {
   val prefs = AppPrefs(context.getSharedPreferences("prefs", Context.MODE_PRIVATE))
   val repository = FirmwareRepository(api, FirmwareCache(cacheDir))
   val notifier = NewFirmwareNotifier(context)
+  val updates = UpdateChecker(updateApi, prefs, appVersion)
 }
 
 open class OemKbvApp : Application() {
