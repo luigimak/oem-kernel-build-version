@@ -60,6 +60,8 @@ android {
       // Robolectric needs the merged resources and manifest to render Compose screens on the JVM
       isIncludeAndroidResources = true
       isReturnDefaultValues = true
+      // Robolectric downloads its Android jars from Maven Central when a test starts: use the same mirror as the build (see settings.gradle.kts)
+      all { it.systemProperty("robolectric.dependency.repo.url", "https://maven-central.storage-download.googleapis.com/maven2/") }
     }
   }
 
