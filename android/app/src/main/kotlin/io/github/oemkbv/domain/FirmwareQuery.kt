@@ -1,5 +1,6 @@
 package io.github.oemkbv.domain
 
+import io.github.oemkbv.data.DeviceId
 import io.github.oemkbv.data.Firmware
 
 enum class FilterField(val value: (Firmware) -> String) {
@@ -12,20 +13,31 @@ enum class FilterField(val value: (Firmware) -> String) {
 
 enum class SortKey { BRAND, DEVICE, MODEL, REGION, ANDROID, VERSION, KERNEL, BUILT }
 
-data class Sort(val key: SortKey = SortKey.BUILT, val descending: Boolean = true)
+data class Sort(val key: SortKey = SortKey.BUILT, val descending: Boolean = true) {
+  companion object {
+    /** All firmware of one device: newest firmware version first. */
+    val ForDevice = Sort(SortKey.VERSION, descending = true)
+
+    /** Across devices a version number means little: newest kernel build first. */
+    val ForAll = Sort(SortKey.BUILT, descending = true)
+  }
+}
 
 data class Filters(
   val query: String = "",
   val selected: Map<FilterField, String> = emptyMap(),
   val showFailed: Boolean = false,
   val followedOnly: Boolean = false,
+  /** Only the firmware of this device (brand + device + region); `null` = all of them. */
+  val device: DeviceId? = null,
 ) {
   operator fun get(field: FilterField): String = selected[field].orEmpty()
 
   fun with(field: FilterField, value: String): Filters =
     copy(selected = if (value.isEmpty()) selected - field else selected + (field to value))
 
-  val isDefault: Boolean get() = this == Filters()
+  /** Nothing narrowed down by the user (the device of the home selection does not count). */
+  val isDefault: Boolean get() = copy(device = null) == Filters()
 }
 
 data class QueryResult(
@@ -40,7 +52,11 @@ data class QueryResult(
 
 object FirmwareQuery {
   fun run(all: List<Firmware>, filters: Filters, sort: Sort, followed: Set<String>): QueryResult {
-    val base = all.filter { (filters.showFailed || it.ok) && (!filters.followedOnly || it.followKey in followed) }
+    val base = all.filter {
+      (filters.showFailed || it.ok) &&
+        (!filters.followedOnly || it.followKey in followed) &&
+        (filters.device == null || it.deviceId == filters.device)
+    }
     val applied = normalize(base, filters)
     val options = FilterField.entries.associateWith { field ->
       base.asSequence()
@@ -99,11 +115,14 @@ object FirmwareQuery {
       SortKey.MODEL -> row.model
       SortKey.REGION -> row.region
       SortKey.ANDROID -> row.android
-      SortKey.VERSION -> row.version
+      SortKey.VERSION -> versionNumber(row.version)
       SortKey.KERNEL -> row.kernel
       SortKey.BUILT -> row.builtMs
     }?.takeIf { it != "" }
 }
+
+/** `CPH2653_16.0.9.401(EX01)` -> `16.0.9.401(EX01)`: the model code in front says nothing about which firmware is newer. */
+fun versionNumber(version: String): String = version.substringAfter('_', version)
 
 /** Case-insensitive, digit runs compared as numbers: `A2` < `A10`, `5.10.9` < `5.10.100`. */
 fun naturalCompare(a: String, b: String): Int {

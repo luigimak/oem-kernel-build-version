@@ -5,8 +5,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import io.github.oemkbv.data.Brand
 import io.github.oemkbv.data.FirmwareDto
 import io.github.oemkbv.data.toFirmware
+import io.github.oemkbv.data.DeviceId
+import io.github.oemkbv.domain.FilterField
 import io.github.oemkbv.domain.Filters
 import io.github.oemkbv.domain.FirmwareQuery
+import io.github.oemkbv.domain.Selection
 import io.github.oemkbv.domain.Sort
 import io.github.oemkbv.ui.theme.OEMKernelBuildVersionTheme
 
@@ -29,21 +32,32 @@ private val sample = listOf(
     .toFirmware(Brand.ONEPLUS),
 )
 
-private fun sampleState(filters: Filters = Filters(showFailed = true)): UiState {
-  val result = FirmwareQuery.run(sample, filters, Sort(), setOf("oneplus:CPH2655"))
-  return UiState(loaded = true, result = result, allRows = sample, followed = setOf("oneplus:CPH2655"), lastChecked = 1_764_000_000_000)
+private fun sampleState(selection: Selection = Selection.All, filters: Filters = Filters(showFailed = true)): UiState {
+  val device = (selection as? Selection.Device)?.id
+  val sort = if (device != null) Sort.ForDevice else Sort.ForAll
+  val result = FirmwareQuery.run(sample, filters.copy(device = device), sort, setOf("oneplus:CPH2655"))
+  return UiState(
+    loaded = true, result = result, sort = sort, defaultSort = sort, selection = selection, allRows = sample,
+    followed = setOf("oneplus:CPH2655"), lastChecked = 1_764_000_000_000,
+  )
 }
 
-private val noCallbacks = ListCallbacks({}, { _, _ -> }, {}, {}, {}, {}, {}, {}, {})
+private val noCallbacks = ListCallbacks({}, { _, _ -> }, {}, {}, {}, {}, {}, {}, {}, {}, { 0 })
 
 @Preview(name = "list light", showBackground = true, widthDp = 400, heightDp = 800)
 @Composable
-private fun ListLight() = OEMKernelBuildVersionTheme(darkTheme = false, dynamicColor = false) { ListScreen(sampleState(), noCallbacks) }
+private fun ListLight() = OEMKernelBuildVersionTheme(darkTheme = false, dynamicColor = false) { ListScreen(sampleState(Selection.Device(DeviceId(Brand.ONEPLUS, "13", "EU")), Filters()), noCallbacks) }
 
 @Preview(name = "list dark it", showBackground = true, widthDp = 400, heightDp = 800, locale = "it")
 @Composable
 private fun ListDarkItalian() = OEMKernelBuildVersionTheme(darkTheme = true, dynamicColor = false) {
-  ListScreen(sampleState(Filters().with(io.github.oemkbv.domain.FilterField.BRAND, "OnePlus")), noCallbacks)
+  ListScreen(sampleState(Selection.All, Filters().with(FilterField.BRAND, "OnePlus")), noCallbacks)
+}
+
+@Preview(name = "first run", showBackground = true, widthDp = 400, heightDp = 500)
+@Composable
+private fun FirstRun() = OEMKernelBuildVersionTheme(darkTheme = false, dynamicColor = false) {
+  ListScreen(sampleState(Selection.None, Filters()), noCallbacks)
 }
 
 @Preview(name = "detail", showBackground = true, widthDp = 400, heightDp = 900)

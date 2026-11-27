@@ -1,6 +1,7 @@
 package io.github.oemkbv.domain
 
 import io.github.oemkbv.data.Brand
+import io.github.oemkbv.data.DeviceId
 import io.github.oemkbv.data.Firmware
 import io.github.oemkbv.data.toFirmware
 import io.github.oemkbv.dto
@@ -128,5 +129,60 @@ class FirmwareQueryTest {
     assertEquals(listOf("oneplus:1"), NewFirmware.find(rows, followed, emptySet()).map { it.uid }) // 6 has no kernel yet
     assertEquals(emptyList(), NewFirmware.find(rows, followed, setOf("oneplus:1")))
     assertEquals(emptyList(), NewFirmware.find(rows, emptySet(), emptySet()))
+  }
+
+  @Test
+  fun `one device lists only its own firmware and offers only what varies inside it`() {
+    val op13eu = DeviceId(Brand.ONEPLUS, "13", "EU")
+    val r = run(Filters(device = op13eu))
+    assertEquals(listOf("1"), ids(r))
+    assertEquals(1, r.total)
+    assertEquals(listOf("15"), r.options.getValue(FilterField.ANDROID))
+    assertEquals(listOf("6.6"), r.options.getValue(FilterField.BRANCH))
+    // the same device in another region is another device
+    assertEquals(listOf("2"), ids(run(Filters(device = DeviceId(Brand.ONEPLUS, "13", "CN")))))
+    assertEquals(listOf("1"), ids(run(Filters(device = op13eu, showFailed = true))))
+    assertEquals(listOf("6"), ids(run(Filters(device = DeviceId(Brand.ONEPLUS, "13", "IN"), showFailed = true))))
+  }
+
+  @Test
+  fun `a device with several models lists them together, newest firmware version first`() {
+    val twoModels = listOf(
+      dto("a", "12", "CPH2573", "IN", "CPH2573_16.0.2.1(IN01)", "16").toFirmware(Brand.ONEPLUS),
+      dto("b", "12", "CPH2581", "IN", "CPH2581_16.0.1.5(IN01)", "16").toFirmware(Brand.ONEPLUS),
+      dto("c", "12", "CPH2581", "IN", "CPH2581_15.0.0.9(IN01)", "15").toFirmware(Brand.ONEPLUS),
+    )
+    val r = FirmwareQuery.run(twoModels, Filters(device = DeviceId(Brand.ONEPLUS, "12", "IN")), Sort.ForDevice, emptySet())
+    // 16.0.2.1 is newer than 16.0.1.5 although CPH2573 sorts before CPH2581
+    assertEquals(listOf("a", "b", "c"), r.rows.map { it.uid.substringAfter(':') })
+    assertEquals(listOf("15", "16"), r.options.getValue(FilterField.ANDROID))
+    assertEquals(listOf("b", "a"), FirmwareQuery.run(twoModels, Filters(device = DeviceId(Brand.ONEPLUS, "12", "IN")).with(FilterField.ANDROID, "16"), Sort(SortKey.VERSION, descending = false), emptySet()).rows.map { it.uid.substringAfter(':') })
+  }
+
+  @Test
+  fun `the version number is what comes after the model code`() {
+    assertEquals("16.0.9.401(EX01)", versionNumber("CPH2653_16.0.9.401(EX01)"))
+    assertEquals("whatever", versionNumber("whatever"))
+  }
+
+  @Test
+  fun `default sorts, and reset ignores the chosen device`() {
+    assertEquals(Sort(SortKey.VERSION, descending = true), Sort.ForDevice)
+    assertEquals(Sort(SortKey.BUILT, descending = true), Sort.ForAll)
+    assertTrue(Filters(device = DeviceId(Brand.OPPO, "Find X8", "EU")).isDefault)
+    assertTrue(!Filters(query = "x", device = DeviceId(Brand.OPPO, "Find X8", "EU")).isDefault)
+  }
+
+  @Test
+  fun `device ids and selections survive being stored`() {
+    val id = DeviceId(Brand.ONEPLUS, "10T/ACE PRO", "CN")
+    assertEquals("OnePlus 10T/ACE PRO CN", id.label)
+    assertEquals(id, DeviceId.parse(id.key))
+    assertEquals(DeviceId(Brand.OPPO, "a|b", "EU"), DeviceId.parse(DeviceId(Brand.OPPO, "a|b", "EU").key))
+    assertEquals(null, DeviceId.parse("nothing"))
+    assertEquals(null, DeviceId.parse("unknown|13|EU"))
+    for (s in listOf(Selection.None, Selection.All, Selection.Device(id))) assertEquals(s, Selection.parse(s.stored))
+    assertEquals(Selection.None, Selection.parse(null))
+    assertEquals(Selection.None, Selection.parse("device:garbage"))
   }
 }

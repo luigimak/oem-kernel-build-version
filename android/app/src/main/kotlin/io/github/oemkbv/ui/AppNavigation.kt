@@ -15,7 +15,9 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
+import io.github.oemkbv.data.DeviceId
 import io.github.oemkbv.data.Firmware
+import io.github.oemkbv.domain.Selection
 
 @Composable
 fun AppNavigation(viewModel: MainViewModel) {
@@ -44,12 +46,24 @@ fun AppNavigation(viewModel: MainViewModel) {
       onRefresh = viewModel::refresh,
       onOpen = { stack.add(Screen.Detail(it.uid)) },
       onSettings = { stack.add(Screen.Settings) },
+      onPickDevice = { stack.add(Screen.PickBrand) },
+      epoch = { viewModel.currentEpoch },
     )
+  }
+
+  // what the picker may offer: the firmware the list could show, so no choice ends in an empty list
+  val pickable = remember(state.allRows, state.filters.showFailed) { state.allRows.filter { state.filters.showFailed || it.ok } }
+  fun back() {
+    if (stack.size > 1) stack.removeAt(stack.lastIndex)
+  }
+  fun choose(selection: Selection) {
+    viewModel.choose(selection)
+    stack.removeAll { it is Screen.Pick }
   }
 
   NavDisplay(
     backStack = stack,
-    onBack = { if (stack.size > 1) stack.removeAt(stack.lastIndex) },
+    onBack = ::back,
     entryProvider = entryProvider<Screen> {
       entry<Screen.Main> { ListScreen(state, callbacks) }
       entry<Screen.Detail> { key ->
@@ -57,7 +71,7 @@ fun AppNavigation(viewModel: MainViewModel) {
         DetailScreen(
           row = row,
           followed = row != null && row.followKey in state.followed,
-          onBack = { if (stack.size > 1) stack.removeAt(stack.lastIndex) },
+          onBack = ::back,
           onToggleFollow = {
             val following = it.followKey in state.followed
             viewModel.toggleFollow(it)
@@ -65,10 +79,19 @@ fun AppNavigation(viewModel: MainViewModel) {
           },
         )
       }
+      entry<Screen.PickBrand> {
+        PickBrandScreen(pickable, onBack = ::back, onAll = { choose(Selection.All) }, onBrand = { stack.add(Screen.PickDevice(it)) })
+      }
+      entry<Screen.PickDevice> { key ->
+        PickDeviceScreen(key.brand, pickable, onBack = ::back, onDevice = { stack.add(Screen.PickRegion(key.brand, it)) })
+      }
+      entry<Screen.PickRegion> { key ->
+        PickRegionScreen(key.brand, key.device, pickable, onBack = ::back, onRegion = { choose(Selection.Device(DeviceId(key.brand, key.device, it))) })
+      }
       entry<Screen.Settings> {
         SettingsScreen(
           state = state,
-          onBack = { if (stack.size > 1) stack.removeAt(stack.lastIndex) },
+          onBack = ::back,
           onNotifications = {
             viewModel.setNotifications(it)
             if (it) askToNotify()

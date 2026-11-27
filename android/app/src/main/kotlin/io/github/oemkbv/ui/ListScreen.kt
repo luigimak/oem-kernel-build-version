@@ -38,9 +38,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import io.github.oemkbv.R
 import io.github.oemkbv.data.Firmware
 import io.github.oemkbv.domain.FilterField
+import io.github.oemkbv.domain.Selection
 import io.github.oemkbv.domain.Sort
 import io.github.oemkbv.domain.SortKey
 
@@ -67,15 +68,25 @@ class ListCallbacks(
   val onRefresh: () -> Unit,
   val onOpen: (Firmware) -> Unit,
   val onSettings: () -> Unit,
+  val onPickDevice: () -> Unit,
+  /** The ViewModel's current epoch, see [UiState.epoch]. */
+  val epoch: () -> Int,
 )
+
+private data class SearchText(val epoch: Int, val text: String) {
+  companion object {
+    val Saver = listSaver<SearchText, Any>(save = { listOf(it.epoch, it.text) }, restore = { SearchText(it[0] as Int, it[1] as String) })
+  }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListScreen(state: UiState, callbacks: ListCallbacks, modifier: Modifier = Modifier) {
-  // the text lives here, not in the asynchronous query state, so typing never lags or jumps
-  var text by rememberSaveable { mutableStateOf(state.filters.query) }
-  // after process death the text comes back but the ViewModel is new: hand it the restored text (a no-op otherwise)
-  LaunchedEffect(Unit) { if (text.isNotEmpty()) callbacks.onQuery(text) }
+  // The search text lives here, not in the asynchronous query state, so typing never lags or jumps. It is tagged with the
+  // epoch it was typed in: after a new device or a reset the saved text is stale and reads as empty (a process death
+  // starts a new epoch counter, so it empties the search too, which is what the new ViewModel has).
+  var typed by rememberSaveable(stateSaver = SearchText.Saver) { mutableStateOf(SearchText(callbacks.epoch(), "")) }
+  val text = if (typed.epoch == callbacks.epoch()) typed.text else ""
   Scaffold(
     modifier = modifier,
     topBar = {
@@ -90,10 +101,11 @@ fun ListScreen(state: UiState, callbacks: ListCallbacks, modifier: Modifier = Mo
   ) { padding ->
     Column(Modifier.padding(padding).fillMaxSize()) {
       if (state.refreshing) LinearProgressIndicator(Modifier.fillMaxWidth().testTag("refreshing"))
-      OutlinedTextField(
+      DeviceBar(state.selection, callbacks.onPickDevice)
+      if (state.selection != Selection.None) OutlinedTextField(
         value = text,
         onValueChange = {
-          text = it
+          typed = SearchText(callbacks.epoch(), it)
           callbacks.onQuery(it)
         },
         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp).testTag("search"),
@@ -103,18 +115,34 @@ fun ListScreen(state: UiState, callbacks: ListCallbacks, modifier: Modifier = Mo
         trailingIcon = {
           if (text.isNotEmpty()) {
             IconButton(onClick = {
-              text = ""
+              typed = SearchText(callbacks.epoch(), "")
               callbacks.onQuery("")
             }) { Icon(Icons.Default.Clear, stringResource(R.string.clear_search)) }
           }
         },
       )
-      FilterRow(state, callbacks, onReset = {
-        text = ""
-        callbacks.onReset()
-      })
+      if (state.selection != Selection.None) FilterRow(state, callbacks, onReset = callbacks.onReset)
       Banner(state)
       Content(state, callbacks)
+    }
+  }
+}
+
+/** The device whose firmware the list shows; tap to change it. */
+@Composable
+private fun DeviceBar(selection: Selection, onClick: () -> Unit) {
+  val name = when (selection) {
+    Selection.None -> stringResource(R.string.choose_device)
+    Selection.All -> stringResource(R.string.all_devices)
+    is Selection.Device -> selection.id.label
+  }
+  Card(onClick = onClick, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp).testTag("device-bar")) {
+    Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+      Column(Modifier.weight(1f)) {
+        Text(stringResource(R.string.filter_device), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+      }
+      Icon(Icons.Default.ArrowDropDown, null)
     }
   }
 }
@@ -128,17 +156,21 @@ private fun FilterRow(state: UiState, callbacks: ListCallbacks, onReset: () -> U
     verticalAlignment = Alignment.CenterVertically,
   ) {
     // first, so it is in view as soon as something is filtered
-    if (!filters.isDefault || state.sort != Sort()) {
+    if (!filters.isDefault || state.sort != state.defaultSort) {
       AssistChip(onClick = onReset, label = { Text(stringResource(R.string.reset)) }, modifier = Modifier.testTag("chip-reset"))
     }
-    FilterChip(
-      selected = filters.followedOnly,
-      onClick = { callbacks.onFollowedOnly(!filters.followedOnly) },
-      label = { Text(stringResource(R.string.filter_followed)) },
-      leadingIcon = { Icon(Icons.Default.Star, null) },
-      modifier = Modifier.testTag("chip-followed"),
-    )
-    for (field in FilterField.entries) {
+    // one device: brand, device and region are the choice itself, only what varies inside it is offered
+    val all = state.selection == Selection.All
+    if (all) {
+      FilterChip(
+        selected = filters.followedOnly,
+        onClick = { callbacks.onFollowedOnly(!filters.followedOnly) },
+        label = { Text(stringResource(R.string.filter_followed)) },
+        leadingIcon = { Icon(Icons.Default.Star, null) },
+        modifier = Modifier.testTag("chip-followed"),
+      )
+    }
+    for (field in if (all) FilterField.entries else listOf(FilterField.ANDROID, FilterField.BRANCH)) {
       DropdownChip(
         label = stringResource(field.label()),
         allLabel = stringResource(field.allLabel()),
@@ -214,7 +246,7 @@ private fun Banner(state: UiState) {
       modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp).testTag("partial-failure"),
     )
   }
-  if (state.loaded && state.allRows.isNotEmpty()) {
+  if (state.loaded && state.allRows.isNotEmpty() && state.selection != Selection.None) {
     Text(
       stringResource(R.string.count, state.result.rows.size, state.result.total),
       color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -232,6 +264,10 @@ private fun Content(state: UiState, callbacks: ListCallbacks) {
     state.allRows.isEmpty() -> Centered {
       Text(stringResource(R.string.load_failed), modifier = Modifier.testTag("load-failed"))
       TextButton(onClick = callbacks.onRefresh) { Text(stringResource(R.string.retry)) }
+    }
+    state.selection == Selection.None -> Centered {
+      Text(stringResource(R.string.choose_device_hint), modifier = Modifier.testTag("choose-device"))
+      TextButton(onClick = callbacks.onPickDevice) { Text(stringResource(R.string.choose_device)) }
     }
     else -> PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = callbacks.onRefresh, modifier = Modifier.fillMaxSize()) {
       if (state.result.rows.isEmpty()) {
