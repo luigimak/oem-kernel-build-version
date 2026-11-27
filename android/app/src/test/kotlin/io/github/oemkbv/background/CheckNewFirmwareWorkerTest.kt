@@ -12,6 +12,7 @@ import io.github.oemkbv.OemKbvApp
 import io.github.oemkbv.TestApp
 import io.github.oemkbv.TestWorld
 import io.github.oemkbv.data.Brand
+import io.github.oemkbv.data.DeviceId
 import io.github.oemkbv.dto
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -41,23 +42,27 @@ class CheckNewFirmwareWorkerTest {
 
   private fun run(): Result = runBlocking { TestListenableWorkerBuilder<CheckNewFirmwareWorker>(app).build().doWork() }
 
-  /** The user follows OnePlus 13 while its first firmware is already known. */
-  private fun followOp13() = runBlocking {
+  private val op13 = DeviceId(Brand.ONEPLUS, "13", "EU")
+
+  /** The user makes OnePlus 13 EU a favorite while its first firmware is already known. */
+  private fun followOp13() = favorite(op13)
+
+  private fun favorite(device: DeviceId) = runBlocking {
     val c = app.container
     val rows = c.repository.refresh().rows
-    c.prefs.markSeen(rows.filter { it.followKey == "oneplus:CPH2655" }.map { it.uid })
-    c.prefs.setFollowed("oneplus:CPH2655", true)
+    c.prefs.markSeen(rows.filter { it.deviceId == device }.map { it.uid })
+    c.prefs.setFavorite(device.key, true)
   }
 
   @Test
-  fun `nothing followed means no network and no notification`() {
+  fun `no favorites means no network and no notification`() {
     assertEquals(Result.success(), run())
     assertTrue(TestWorld.api.calls.isEmpty())
     assertTrue(notifications.isEmpty())
   }
 
   @Test
-  fun `a new firmware of a followed model is notified once`() {
+  fun `a new firmware of a favorite device is notified once`() {
     followOp13()
     TestWorld.api.publish(
       Brand.ONEPLUS,
@@ -68,6 +73,8 @@ class CheckNewFirmwareWorkerTest {
     val n = notifications.single()
     assertEquals("1 new firmware", n.extras.getString("android.title"))
     assertTrue(n.extras.getString("android.text")!!.contains("CPH2655_15.0.0.200(EX01)"))
+    // a tap opens that device
+    assertEquals(op13.key, shadowOf(n.contentIntent).savedIntent.getStringExtra("device"))
 
     manager.cancelAll()
     assertEquals(Result.success(), run())
@@ -75,7 +82,33 @@ class CheckNewFirmwareWorkerTest {
   }
 
   @Test
-  fun `other models and failed rows do not notify`() {
+  fun `the same phone in another region is another device`() {
+    followOp13() // OP 13 EU
+    TestWorld.api.publish(
+      Brand.ONEPLUS,
+      dto("o1", "13", "CPH2655", version = "CPH2655_15.0.0.100(EX01)"),
+      dto("o7", "13", "CPH2655", region = "IN", version = "CPH2655_15.0.0.300(IN01)"),
+    )
+    assertEquals(Result.success(), run())
+    assertTrue(notifications.isEmpty())
+  }
+
+  @Test
+  fun `several devices with news make one notification that opens the favorites`() {
+    followOp13()
+    favorite(DeviceId(Brand.OPPO, "Find X8", "EU"))
+    TestWorld.api.publish(Brand.ONEPLUS, dto("o1", "13", "CPH2655"), dto("o9", "13", "CPH2655", version = "CPH2655_15.0.0.200(EX01)"))
+    TestWorld.api.publish(Brand.OPPO, dto("p1", "Find X8", "CPH2651"), dto("p9", "Find X8", "CPH2651", version = "CPH2651_15.0.0.99(EX01)"))
+    assertEquals(Result.success(), run())
+    val n = notifications.single()
+    assertEquals("2 new firmware", n.extras.getString("android.title"))
+    val intent = shadowOf(n.contentIntent).savedIntent
+    assertEquals(null, intent.getStringExtra("device"))
+    assertTrue(intent.getBooleanExtra("show_favorites", false))
+  }
+
+  @Test
+  fun `other devices and failed rows do not notify`() {
     followOp13()
     TestWorld.api.publish(Brand.OPPO, dto("p1", "Find X8", "CPH2651"), dto("p2", "Find X8", "CPH2651", version = "CPH2651_15.0.0.99(EX01)"))
     TestWorld.api.publish(Brand.ONEPLUS, dto("o1", "13", "CPH2655"), dto("o8", "13", "CPH2655", ok = false))

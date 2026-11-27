@@ -43,6 +43,8 @@ import androidx.core.net.toUri
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import io.github.oemkbv.BuildConfig
 import io.github.oemkbv.R
+import io.github.oemkbv.data.DeviceId
+import io.github.oemkbv.domain.naturalCompare
 import io.github.oemkbv.background.NewFirmwareNotifier
 import java.util.Date
 
@@ -54,7 +56,7 @@ fun SettingsScreen(
   state: UiState,
   onBack: () -> Unit,
   onNotifications: (Boolean) -> Unit,
-  onUnfollow: (String) -> Unit,
+  onRemoveFavorite: (String) -> Unit,
   modifier: Modifier = Modifier,
 ) {
   val context = LocalContext.current
@@ -65,6 +67,9 @@ fun SettingsScreen(
     onPauseOrDispose {}
   }
   val preview = LocalInspectionMode.current // no system services in an IDE preview
+  val favoriteLabels = remember(state.favorites) {
+    state.favorites.map { it to (DeviceId.parse(it)?.label ?: it) }.sortedWith { a, b -> naturalCompare(a.second, b.second) }
+  }
   val blocked = remember(resumes, state.notifications) { !preview && state.notifications && !NewFirmwareNotifier(context).canNotify() }
 
   Scaffold(
@@ -97,20 +102,19 @@ fun SettingsScreen(
         Switch(checked = state.notifications, onCheckedChange = onNotifications, modifier = Modifier.testTag("notifications-switch"))
       }
 
-      Section(R.string.settings_followed)
-      if (state.followed.isEmpty()) {
+      Section(R.string.settings_favorites)
+      if (state.favorites.isEmpty()) {
         Text(
-          stringResource(R.string.settings_followed_empty),
+          stringResource(R.string.settings_favorites_empty),
           style = MaterialTheme.typography.bodyMedium,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
           modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
         )
       }
-      for (key in state.followed.sorted()) {
-        val label = state.allRows.firstOrNull { it.followKey == key }?.let { "${it.name} (${it.model})" } ?: key
+      for ((key, label) in favoriteLabels) {
         Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
           Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-          IconButton(onClick = { onUnfollow(key) }) { Icon(Icons.Default.Clear, stringResource(R.string.unfollow, label)) }
+          IconButton(onClick = { onRemoveFavorite(key) }, modifier = Modifier.testTag("remove-$key")) { Icon(Icons.Default.Clear, stringResource(R.string.favorite_remove, label)) }
         }
       }
 

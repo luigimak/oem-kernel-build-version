@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -52,23 +53,27 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.oemkbv.R
+import io.github.oemkbv.data.DeviceId
 import io.github.oemkbv.data.Firmware
 import io.github.oemkbv.domain.FilterField
 import io.github.oemkbv.domain.Selection
 import io.github.oemkbv.domain.Sort
 import io.github.oemkbv.domain.SortKey
+import io.github.oemkbv.domain.naturalCompare
 
 class ListCallbacks(
   val onQuery: (String) -> Unit,
   val onSelect: (FilterField, String) -> Unit,
   val onShowFailed: (Boolean) -> Unit,
-  val onFollowedOnly: (Boolean) -> Unit,
+  val onFavoritesOnly: (Boolean) -> Unit,
   val onSort: (SortKey) -> Unit,
   val onReset: () -> Unit,
   val onRefresh: () -> Unit,
   val onOpen: (Firmware) -> Unit,
   val onSettings: () -> Unit,
   val onPickDevice: () -> Unit,
+  val onChoose: (Selection) -> Unit,
+  val onToggleFavorite: (DeviceId) -> Unit,
   /** The ViewModel's current epoch, see [UiState.epoch]. */
   val epoch: () -> Int,
 )
@@ -101,7 +106,8 @@ fun ListScreen(state: UiState, callbacks: ListCallbacks, modifier: Modifier = Mo
   ) { padding ->
     Column(Modifier.padding(padding).fillMaxSize()) {
       if (state.refreshing) LinearProgressIndicator(Modifier.fillMaxWidth().testTag("refreshing"))
-      DeviceBar(state.selection, callbacks.onPickDevice)
+      DeviceBar(state.selection, state.favorites, callbacks.onPickDevice, callbacks.onToggleFavorite)
+      FavoriteShortcuts(state.selection, state.favorites, callbacks.onChoose)
       if (state.selection != Selection.None) OutlinedTextField(
         value = text,
         onValueChange = {
@@ -130,7 +136,7 @@ fun ListScreen(state: UiState, callbacks: ListCallbacks, modifier: Modifier = Mo
 
 /** The device whose firmware the list shows; tap to change it. */
 @Composable
-private fun DeviceBar(selection: Selection, onClick: () -> Unit) {
+private fun DeviceBar(selection: Selection, favorites: Set<String>, onClick: () -> Unit, onToggleFavorite: (DeviceId) -> Unit) {
   val name = when (selection) {
     Selection.None -> stringResource(R.string.choose_device)
     Selection.All -> stringResource(R.string.all_devices)
@@ -142,7 +148,38 @@ private fun DeviceBar(selection: Selection, onClick: () -> Unit) {
         Text(stringResource(R.string.filter_device), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
       }
+      if (selection is Selection.Device) {
+        val favorite = selection.id.key in favorites
+        IconButton(onClick = { onToggleFavorite(selection.id) }, modifier = Modifier.testTag("favorite-current")) {
+          Icon(
+            if (favorite) Icons.Default.Star else Icons.Outlined.Star,
+            stringResource(if (favorite) R.string.favorite_remove else R.string.favorite_add, selection.id.label),
+            tint = if (favorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+          )
+        }
+      }
       Icon(Icons.Default.ArrowDropDown, null)
+    }
+  }
+}
+
+/** The favorites as one-tap choices: switching between the devices one follows should not take three screens. */
+@Composable
+private fun FavoriteShortcuts(selection: Selection, favorites: Set<String>, onChoose: (Selection) -> Unit) {
+  if (favorites.isEmpty()) return
+  val devices = remember(favorites) { favorites.mapNotNull(DeviceId::parse).sortedWith { a, b -> naturalCompare(a.label, b.label) } }
+  Row(
+    Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp),
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
+  ) {
+    for (id in devices) {
+      FilterChip(
+        selected = selection == Selection.Device(id),
+        onClick = { onChoose(Selection.Device(id)) },
+        label = { Text(id.label, maxLines = 1) },
+        leadingIcon = { Icon(Icons.Default.Star, null) },
+        modifier = Modifier.testTag("favorite-${id.key}"),
+      )
     }
   }
 }
@@ -163,11 +200,11 @@ private fun FilterRow(state: UiState, callbacks: ListCallbacks, onReset: () -> U
     val all = state.selection == Selection.All
     if (all) {
       FilterChip(
-        selected = filters.followedOnly,
-        onClick = { callbacks.onFollowedOnly(!filters.followedOnly) },
-        label = { Text(stringResource(R.string.filter_followed)) },
+        selected = filters.favoritesOnly,
+        onClick = { callbacks.onFavoritesOnly(!filters.favoritesOnly) },
+        label = { Text(stringResource(R.string.filter_favorites)) },
         leadingIcon = { Icon(Icons.Default.Star, null) },
-        modifier = Modifier.testTag("chip-followed"),
+        modifier = Modifier.testTag("chip-favorites"),
       )
     }
     for (field in if (all) FilterField.entries else listOf(FilterField.ANDROID, FilterField.BRANCH)) {
@@ -271,7 +308,7 @@ private fun Content(state: UiState, callbacks: ListCallbacks) {
     }
     else -> PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = callbacks.onRefresh, modifier = Modifier.fillMaxSize()) {
       if (state.result.rows.isEmpty()) {
-        val none = if (state.filters.followedOnly && state.followed.isEmpty()) R.string.no_followed else R.string.no_match
+        val none = if (state.filters.favoritesOnly && state.favorites.isEmpty()) R.string.no_favorites else R.string.no_match
         Centered { Text(stringResource(none), modifier = Modifier.testTag("no-match")) }
       } else {
         LazyColumn(
@@ -280,7 +317,7 @@ private fun Content(state: UiState, callbacks: ListCallbacks) {
           verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
           items(state.result.rows, key = { it.uid }) { row ->
-            FirmwareCard(row, followed = row.followKey in state.followed, onClick = { callbacks.onOpen(row) })
+            FirmwareCard(row, favorite = row.deviceId.key in state.favorites, onClick = { callbacks.onOpen(row) })
           }
         }
       }
@@ -296,12 +333,12 @@ private fun Centered(content: @Composable () -> Unit) {
 }
 
 @Composable
-fun FirmwareCard(row: Firmware, followed: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun FirmwareCard(row: Firmware, favorite: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
   Card(onClick = onClick, modifier = modifier.fillMaxWidth().testTag("row-${row.uid}")) {
     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
       Row(verticalAlignment = Alignment.CenterVertically) {
         Text(row.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-        if (followed) Icon(Icons.Default.Star, null, tint = MaterialTheme.colorScheme.primary)
+        if (favorite) Icon(Icons.Default.Star, null, tint = MaterialTheme.colorScheme.primary)
       }
       Text(
         listOf(row.model, row.region).filter { it.isNotEmpty() }.joinToString(" · ") +

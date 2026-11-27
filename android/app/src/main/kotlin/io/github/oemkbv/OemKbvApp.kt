@@ -43,7 +43,7 @@ open class OemKbvApp : Application() {
     container = createContainer()
     // the check runs only while there is something to notify about
     scope.launch {
-      combine(container.prefs.notifications, container.prefs.followed) { on, followed -> on && followed.isNotEmpty() }
+      combine(container.prefs.notifications, container.prefs.favorites) { on, favorites -> on && favorites.isNotEmpty() }
         .distinctUntilChanged()
         .collect { container.scheduleChecks(it) }
     }

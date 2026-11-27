@@ -38,13 +38,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import io.github.oemkbv.R
+import io.github.oemkbv.data.DeviceId
 import io.github.oemkbv.data.Firmware
 import java.util.Locale
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailScreen(row: Firmware?, followed: Boolean, onBack: () -> Unit, onToggleFollow: (Firmware) -> Unit, modifier: Modifier = Modifier) {
+fun DetailScreen(row: Firmware?, favorite: Boolean, onBack: () -> Unit, onToggleFavorite: (DeviceId) -> Unit, modifier: Modifier = Modifier) {
   val snackbar = remember { SnackbarHostState() }
   val scope = rememberCoroutineScope()
   val clipboard = LocalClipboard.current
@@ -68,9 +69,9 @@ fun DetailScreen(row: Firmware?, followed: Boolean, onBack: () -> Unit, onToggle
         navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } },
         actions = {
           if (row != null) {
-            val label = stringResource(if (followed) R.string.unfollow else R.string.follow, row.model.ifEmpty { name })
-            IconButton(onClick = { onToggleFollow(row) }, modifier = Modifier.testTag("follow")) {
-              Icon(if (followed) Icons.Default.Star else Icons.Outlined.Star, label)
+            val label = stringResource(if (favorite) R.string.favorite_remove else R.string.favorite_add, row.deviceId.label)
+            IconButton(onClick = { onToggleFavorite(row.deviceId) }, modifier = Modifier.testTag("favorite")) {
+              Icon(if (favorite) Icons.Default.Star else Icons.Outlined.Star, label)
             }
           }
         },

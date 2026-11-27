@@ -39,7 +39,7 @@
     <string name="all_regions">Tutte le regioni</string>
     <string name="all_android">Tutti gli Android</string>
     <string name="all_kernels">Tutti i kernel</string>
-    <string name="filter_followed">Seguiti</string>
+    <string name="filter_favorites">Preferiti</string>
     <string name="filter_failed">Mostra falliti</string>
     <string name="sort">Ordina</string>
     <string name="reset">Azzera</string>
@@ -55,7 +55,7 @@
     <string name="sort_descending">decrescente</string>
     <string name="count">%1$d di %2$d firmware</string>
     <string name="no_match">Nessun firmware corrisponde.</string>
-    <string name="no_followed">Nessun modello seguito. Apri un firmware e tocca la stella.</string>
+    <string name="no_favorites">Nessun dispositivo preferito. Tocca la stella accanto a un dispositivo.</string>
     <string name="loading">Caricamento…</string>
     <string name="load_failed">Impossibile caricare i dati. Controlla la connessione e riprova.</string>
     <string name="retry">Riprova</string>
@@ -87,17 +87,17 @@
     <string name="copy_kernel">Copia kernel</string>
     <string name="copied">Copiato</string>
     <string name="share">Condividi</string>
-    <string name="follow">Segui %1$s</string>
-    <string name="unfollow">Smetti di seguire %1$s</string>
+    <string name="favorite_add">Aggiungi %1$s ai preferiti</string>
+    <string name="favorite_remove">Rimuovi %1$s dai preferiti</string>
     <string name="firmware_not_found">Questo firmware non è più nei dati.</string>
     <string name="size_gib">%1$s GiB</string>
 
     <!-- settings -->
     <string name="settings_notifications">Notifiche sui nuovi firmware</string>
-    <string name="settings_notifications_summary">Controlla due volte al giorno e ti avvisa quando un modello seguito riceve un nuovo firmware.</string>
+    <string name="settings_notifications_summary">Controlla due volte al giorno e ti avvisa quando un dispositivo preferito riceve un nuovo firmware.</string>
     <string name="settings_notifications_denied">Le notifiche sono bloccate per questa app. Consentile dalle impostazioni di sistema.</string>
-    <string name="settings_followed">Modelli seguiti</string>
-    <string name="settings_followed_empty">Nessuno. Segui un modello dalla pagina del suo firmware.</string>
+    <string name="settings_favorites">Dispositivi preferiti</string>
+    <string name="settings_favorites_empty">Nessuno. Tocca la stella accanto a un dispositivo per aggiungerlo.</string>
     <string name="settings_language">Lingua</string>
     <string name="settings_language_summary">Scegli la lingua di questa app.</string>
     <string name="settings_data">Dati</string>
@@ -111,7 +111,7 @@
 
     <!-- notifications -->
     <string name="channel_name">Nuovi firmware</string>
-    <string name="channel_description">Nuovi firmware dei modelli che segui</string>
+    <string name="channel_description">Nuovi firmware dei tuoi dispositivi preferiti</string>
     <plurals name="notification_title">
         <item quantity="one">%1$d nuovo firmware</item>
         <item quantity="many">%1$d nuovi firmware</item>

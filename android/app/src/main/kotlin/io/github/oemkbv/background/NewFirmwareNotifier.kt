@@ -25,12 +25,14 @@ class NewFirmwareNotifier(private val context: Context) {
   fun notifyNew(rows: List<Firmware>) {
     if (rows.isEmpty() || !canNotify()) return
     ensureChannel()
+    // one device: open its list; several: the firmware of all the favorites
+    val devices = rows.map { it.deviceId.key }.toSet()
+    val target = Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+    if (devices.size == 1) target.putExtra(MainActivity.EXTRA_DEVICE, devices.single()) else target.putExtra(MainActivity.EXTRA_SHOW_FAVORITES, true)
     val open = PendingIntent.getActivity(
       context,
       0,
-      Intent(context, MainActivity::class.java)
-        .putExtra(MainActivity.EXTRA_SHOW_FOLLOWED, true)
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+      target,
       PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
     val title = context.resources.getQuantityString(R.plurals.notification_title, rows.size, rows.size)

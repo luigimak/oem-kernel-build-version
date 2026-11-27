@@ -135,26 +135,90 @@ class AppUiTest {
   }
 
   @Test
-  fun `opening a row shows the full Linux version, following it is remembered and listed in settings`() {
+  fun `opening a row shows the full Linux version, making its device a favorite is remembered and listed in settings`() {
     launch()
     waitForList()
     rule.onNodeWithTag("row-oneplus:o1").performClick()
     rule.onNodeWithText("Linux version 6.6.30-android15-8-g1", substring = true).assertIsDisplayed()
     rule.onNodeWithTag("copy-linux").performScrollTo().assertIsDisplayed()
 
-    rule.onNodeWithTag("follow").performClick()
-    rule.waitUntil(5_000) { app.container.prefs.followed.value == setOf("oneplus:CPH2655") }
-    // what exists at the moment of following is not "new"
+    rule.onNodeWithTag("favorite").performClick()
+    rule.waitUntil(5_000) { app.container.prefs.favorites.value == setOf("oneplus|13|EU") }
+    // what exists at the moment of becoming a favorite is not "new"; 13 CN is another device
     assertEquals(setOf("oneplus:o1", "oneplus:o4"), app.container.prefs.seen)
 
     back()
     rule.waitUntil(5_000) { rule.onAllNodesWithTag("list").fetchSemanticsNodes().isNotEmpty() }
-    rule.onNodeWithTag("chip-followed").performClick()
+    rule.onNodeWithTag("chip-favorites").performClick()
     rule.waitUntil(5_000) { rule.onAllNodesWithTag("row-oppo:p1").fetchSemanticsNodes().isEmpty() }
     rule.onNodeWithText("2 of 2 firmware").assertIsDisplayed()
 
     rule.onNodeWithContentDescription("Settings").performClick()
-    rule.onNodeWithText("OnePlus 13 (CPH2655)").assertIsDisplayed()
+    rule.onNodeWithText("OnePlus 13 EU").assertIsDisplayed()
+  }
+
+  @Test
+  fun `the star next to the device makes it a favorite, and favorites are one-tap shortcuts`() {
+    launch(Selection.Device(DeviceId(Brand.ONEPLUS, "13", "EU")))
+    waitForList()
+    rule.onAllNodesWithTag("favorite-oneplus|13|EU").assertCountEquals(0)
+    rule.onNodeWithTag("favorite-current").performClick()
+    rule.waitUntil(5_000) { app.container.prefs.favorites.value == setOf("oneplus|13|EU") }
+    waitForTag("favorite-oneplus|13|EU")
+
+    // another device: the shortcut of the first is still there, one tap away
+    rule.onNodeWithTag("device-bar").performClick()
+    rule.onNodeWithTag("pick-brand-oneplus").performClick()
+    rule.onNodeWithTag("pick-device-13").performClick()
+    rule.onNodeWithTag("pick-region-CN").performClick()
+    waitForTag("row-oneplus:o2")
+    rule.onNodeWithTag("favorite-current").performClick() // now 13 CN is a favorite too
+    rule.waitUntil(5_000) { app.container.prefs.favorites.value == setOf("oneplus|13|EU", "oneplus|13|CN") }
+    waitForTag("favorite-oneplus|13|CN")
+
+    rule.onNodeWithTag("favorite-oneplus|13|EU").performClick()
+    waitForTag("row-oneplus:o4")
+    rule.onNodeWithTag("device-bar").assertTextContains("OnePlus 13 EU")
+    rule.onAllNodesWithTag("row-oneplus:o2").assertCountEquals(0)
+    assertEquals(Selection.Device(DeviceId(Brand.ONEPLUS, "13", "EU")), app.container.prefs.selection.value)
+
+    // settings lists both, and removing one takes its shortcut away
+    rule.onNodeWithContentDescription("Settings").performClick()
+    rule.onNodeWithText("OnePlus 13 CN").assertIsDisplayed()
+    rule.onNodeWithTag("remove-oneplus|13|CN").performClick()
+    rule.waitUntil(5_000) { app.container.prefs.favorites.value == setOf("oneplus|13|EU") }
+    rule.onAllNodesWithText("OnePlus 13 CN").assertCountEquals(0)
+  }
+
+  @Test
+  fun `the star takes a favorite out again`() {
+    app.container.prefs.setFavorite("oneplus|13|EU", true)
+    launch(Selection.Device(DeviceId(Brand.ONEPLUS, "13", "EU")))
+    waitForTag("favorite-oneplus|13|EU")
+    rule.onNodeWithTag("favorite-current").performClick()
+    rule.waitUntil(5_000) { app.container.prefs.favorites.value.isEmpty() }
+    rule.onAllNodesWithTag("favorite-oneplus|13|EU").assertCountEquals(0)
+  }
+
+  @Test
+  fun `a tap on the notification of one device opens that device`() {
+    app.container.prefs.setSelection(Selection.All)
+    scenario = ActivityScenario.launch(
+      android.content.Intent(app, MainActivity::class.java).putExtra(MainActivity.EXTRA_DEVICE, DeviceId(Brand.ONEPLUS, "13", "CN").key),
+    )
+    waitForTag("row-oneplus:o2")
+    rule.onNodeWithTag("device-bar").assertTextContains("OnePlus 13 CN")
+    rule.onAllNodesWithTag("row-oneplus:o4").assertCountEquals(0)
+  }
+
+  @Test
+  fun `a tap on the notification of several devices opens the firmware of the favorites`() {
+    app.container.prefs.setFavorite("oneplus|13|CN", true)
+    app.container.prefs.setSelection(Selection.Device(DeviceId(Brand.OPPO, "Find X8", "EU")))
+    scenario = ActivityScenario.launch(android.content.Intent(app, MainActivity::class.java).putExtra(MainActivity.EXTRA_SHOW_FAVORITES, true))
+    waitForTag("row-oneplus:o2")
+    rule.onNodeWithTag("device-bar").assertTextContains("All devices")
+    rule.onNodeWithText("1 of 1 firmware").assertIsDisplayed()
   }
 
   @Test
@@ -195,7 +259,7 @@ class AppUiTest {
     launch()
     waitForList()
     rule.onNodeWithTag("row-oneplus:o1").performClick()
-    rule.onNodeWithTag("follow").assertIsDisplayed()
+    rule.onNodeWithTag("favorite").assertIsDisplayed()
     back()
     waitForList()
     rule.onNodeWithTag("search").assertIsDisplayed()
@@ -214,10 +278,10 @@ class AppUiTest {
     rule.onNodeWithTag("search").performTextInput("oneplus 13")
     rule.waitUntil(5_000) { rule.onAllNodesWithTag("row-oppo:p1").fetchSemanticsNodes().isEmpty() }
     rule.onNodeWithTag("row-oneplus:o1").performClick()
-    rule.onNodeWithTag("follow").assertIsDisplayed()
+    rule.onNodeWithTag("favorite").assertIsDisplayed()
 
     scenario!!.recreate()
-    rule.onNodeWithTag("follow").assertIsDisplayed() // still on the detail
+    rule.onNodeWithTag("favorite").assertIsDisplayed() // still on the detail
 
     back()
     waitForList()
@@ -250,7 +314,7 @@ class AppUiTest {
     assertTrue(newer < older, "newest version first")
 
     // brand, device and region are the choice itself: not offered again as filters
-    for (tag in listOf("chip-brand", "chip-device", "chip-region", "chip-followed")) rule.onAllNodesWithTag(tag).assertCountEquals(0)
+    for (tag in listOf("chip-brand", "chip-device", "chip-region", "chip-favorites")) rule.onAllNodesWithTag(tag).assertCountEquals(0)
 
     // inside the device, the Android version narrows the list
     rule.onNodeWithTag("chip-android").performClick()
