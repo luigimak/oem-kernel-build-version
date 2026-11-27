@@ -145,7 +145,9 @@ class AppUiTest {
     waitForList()
     rule.onNodeWithTag("row-oneplus:o1").performClick()
     rule.onNodeWithText("Linux version 6.6.30-android15-8-g1", substring = true).assertIsDisplayed()
-    rule.onNodeWithTag("copy-linux").performScrollTo().assertIsDisplayed()
+    rule.onNodeWithTag("copy-kernel").performScrollTo().assertIsDisplayed()
+    rule.onNodeWithTag("copy-build").performScrollTo().assertIsDisplayed()
+    rule.onAllNodesWithTag("copy-linux").assertCountEquals(0) // the whole Linux version string is shown and shared, not copied
 
     // the page is titled with the device too (the star's label names it)
     rule.onNodeWithContentDescription("Add OnePlus 13 EU to the favorites").assertIsDisplayed()
@@ -226,6 +228,34 @@ class AppUiTest {
     waitForTag("row-oneplus:o2")
     rule.onNodeWithTag("device-bar").assertTextContains("All devices")
     rule.onNodeWithText("1 of 1 firmware").assertIsDisplayed()
+  }
+
+  @Test
+  fun `the copy buttons copy the kernel version and the build, one each`() {
+    launch()
+    waitForList()
+    rule.onNodeWithTag("row-oneplus:o1").performClick()
+    val clipboard = app.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+    fun copied() = clipboard.primaryClip?.getItemAt(0)?.text?.toString()
+
+    rule.onNodeWithTag("copy-kernel").performScrollTo().performClick()
+    rule.waitUntil(5_000) { copied() != null }
+    assertEquals("6.6.30-android15-8-g1", copied()) // kernel_release
+
+    rule.onNodeWithTag("copy-build").performScrollTo().performClick()
+    rule.waitUntil(5_000) { copied() == "#1 SMP PREEMPT Wed Dec 10 04:46:02 UTC 2025" }
+  }
+
+  @Test
+  fun `a firmware that failed has nothing to copy`() {
+    launch()
+    waitForList()
+    rule.onNodeWithTag("chip-failed").performClick()
+    waitForTag("row-oneplus:o3")
+    rule.onNodeWithTag("row-oneplus:o3").performClick()
+    rule.onNodeWithTag("share").performScrollTo().assertIsDisplayed()
+    rule.onAllNodesWithTag("copy-kernel").assertCountEquals(0)
+    rule.onAllNodesWithTag("copy-build").assertCountEquals(0)
   }
 
   @Test
