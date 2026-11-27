@@ -48,6 +48,8 @@ code { font: 13px ui-monospace, monospace; overflow-wrap: anywhere; }
 /* in the table nothing breaks inside a word (it scrolls sideways anyway): the kernel stays on one line, the build wraps at its spaces */
 tbody tr:not(.detail) code { overflow-wrap: normal; }
 td.nowrap code { white-space: nowrap; }
+/* on a narrow screen the build stays on one line too: the table scrolls sideways instead of growing very tall (wide screens keep the wrap, and fit) */
+@media (max-width: 1200px) { td.build code { white-space: nowrap; } }
 .bad { color: var(--bad); }
 #msg { padding: 16px; color: var(--muted); }
 footer { color: var(--muted); margin-top: 16px; font-size: .9rem; }
@@ -252,7 +254,7 @@ function render() {
     const k = el("td", undefined, "nowrap");
     k.append(row.kernel ? el("code", row.kernel) : el("span", "failed", "bad"));
     tr.append(k);
-    const b = el("td");
+    const b = el("td", undefined, "build");
     if (row.build) b.append(el("code", row.build));
     tr.append(b);
     body.append(tr);
