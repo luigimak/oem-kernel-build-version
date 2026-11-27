@@ -21,6 +21,7 @@ body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45 syste
 main { max-width: 1400px; margin: 0 auto; padding: 16px; }
 h1 { font-size: 1.4rem; margin: 0 0 4px; }
 .sub { color: var(--muted); margin: 0 0 16px; }
+.app { margin: 0 0 16px; padding: 10px 12px; background: var(--head); border: 1px solid var(--line); border-radius: 6px; }
 a { color: var(--accent); }
 .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
 .controls input[type=search] { flex: 1 1 260px; }
@@ -54,6 +55,9 @@ footer { color: var(--muted); margin-top: 16px; font-size: .9rem; }
   <h1>OnePlus, OPPO and Realme kernel build versions</h1>
   <p class="sub">Linux kernel and build of OnePlus, OPPO and Realme firmware, read from the OTA packages.
     <a href="https://github.com/luigimak/oem-kernel-build-version">Source and method on GitHub</a>.</p>
+  <p class="app"><strong>Android app:</strong> choose your device and get a notification when new firmware appears for it.
+    <a href="https://github.com/luigimak/oem-kernel-build-version/releases/latest">Download the APK</a>.
+    Prefer not to install anything? This table works in the browser, as before.</p>
 
   <div class="controls">
     <input id="q" type="search" placeholder="Search firmware, model, kernel, build…" aria-label="Search">
