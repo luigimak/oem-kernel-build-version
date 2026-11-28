@@ -57,6 +57,12 @@ jobs:
           python -m opkv discover $RESCAN
           python -m opkv run --retry-failed --workers 6
 
+      # Nothing has no catalog: its firmware comes from the spike0en archive (boot images). The archive listing is read
+      # without a token, so a rate-limited runner must not stop the rest of the run
+      - name: Add new Nothing firmware from the archive
+        continue-on-error: true
+        run: python -m opkv archive --brand nothing --workers 3
+
       - name: Regenerate table
         run: python -m opkv report
 
