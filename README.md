@@ -20,7 +20,7 @@ python3 -m venv .venv && .venv/bin/pip install .       # '.[archive]' adds what 
 opkv fetch      # update the local release catalog (roms.danielspringer.at API)
 opkv discover   # find firmware missing from the catalog: OTA servers, Oxygen Updater, VioletToolBox, the lolinet mirror; then search the failed ones again
 opkv run        # extract kernel/build of new firmware -> data/<brand>.json
-opkv archive    # add Android 14+ OnePlus and Nothing firmware missing from the results (spike0en archives, boot.7z)
+opkv archive    # add Android 14+ OnePlus and Nothing firmware missing from the results (spike0en archives, boot.7z); --latest: Nothing, latest releases only
 opkv report     # data/<brand>.md
 opkv url <URL>  # a single OTA zip
 ```
@@ -30,7 +30,7 @@ opkv url <URL>  # a single OTA zip
 OnePlus from the 10 series onward, every OPPO, Realme, Xiaomi, POCO, Redmi, Nothing, Motorola and Lenovo model, and only firmware from Android 14 onward (older rows are dropped). `run` is resumable.
 
 A GitHub Actions workflow (`.github/workflows/update.yml`) runs `fetch`, `discover`, `run --retry-failed` and `report` every day and commits
-the updated results to the default branch, then add the new Nothing firmware with `archive --brand nothing`. For OnePlus `archive` is a manual command.
+the updated results to the default branch, then add the new Nothing firmware with `archive --brand nothing --latest` (the latest releases, listed from the repository's public feed: the GitHub API without a token is rate limited on a shared runner). For OnePlus `archive` is a manual command.
 
 ## Results
 `data/<brand>.json` is a list of rows, one per firmware, sorted by device, model and build time:

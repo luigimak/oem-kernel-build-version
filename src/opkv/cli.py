@@ -399,7 +399,9 @@ def _archive_brand(a, brand: Brand) -> None:
             if r["ok"] or (r.get("origin") == "spike0en-archive" and not a.retry_failed)}
     device_of = {**normalize.labels_by_model(rows.values()), **archive.devices(brand.archive)}
     todo, seen = [], set()
-    for rel in archive.releases(brand.archive, os.environ.get("GITHUB_TOKEN")):
+    listed = (archive.latest_releases(brand.archive) if a.latest and brand.archive.endswith("nothing_archive")
+              else archive.releases(brand.archive, os.environ.get("GITHUB_TOKEN")))
+    for rel in listed:
         v = normalize.version(rel["version"])
         key = (v, rel["region"])
         if key in have or key in seen or v.split("_")[0] not in device_of:
@@ -417,6 +419,9 @@ def _archive_brand(a, brand: Brand) -> None:
         futs = {ex.submit(archive.extract_asset, t["asset_url"]): t for t in todo}
         for n, fu in enumerate(as_completed(futs), 1):
             t, res = futs[fu], fu.result()
+            if a.latest and not res.ok and "HTTP Error 404" in (res.error or ""):
+                print(f"[{n}/{len(todo)}] {t['version']}: asset not published yet, left for the next run", file=sys.stderr)
+                continue                               # the feed lists a release before its assets: try again tomorrow
             code = t["version"].split("_")[0]
             rid = "sp-" + hashlib.sha1(f"{t['version']}|{t['region']}".encode(), usedforsecurity=False).hexdigest()[:10]
             rows[rid] = {
@@ -555,6 +560,8 @@ def main(argv=None):
     ar.add_argument("--workers", type=int, default=3)
     ar.add_argument("--limit", type=int, default=0); ar.add_argument("--dry-run", action="store_true")
     ar.add_argument("--retry-failed", action="store_true", help="download again the archive assets that failed before")
+    ar.add_argument("--latest", action="store_true",
+                    help="Nothing: only the latest releases, listed from the public feed instead of the GitHub API (no token needed)")
     ar.set_defaults(fn=cmd_archive)
     g = sub.add_parser("report", help="<brand>.json -> markdown table")
     common(g)

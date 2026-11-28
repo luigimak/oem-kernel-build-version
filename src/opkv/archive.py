@@ -9,6 +9,7 @@ import json
 import os
 import re
 import tempfile
+import urllib.parse
 import urllib.request
 
 from . import bootimg, catalog
@@ -66,6 +67,23 @@ def releases(repo: str, token: str | None = None) -> list[dict]:
             if tag and boot and catalog.wanted_version(tag[0]):
                 out.append({"version": tag[0], "region": tag[1], "asset_url": boot["browser_download_url"]})
         page += 1
+
+
+_ATOM_TAG = re.compile(r'/releases/tag/([^"<>\s]+)"')
+
+
+def latest_releases(repo: str) -> list[dict]:
+    """The same listing as `releases`, for the latest releases only (the repository's public Atom feed, 10 entries) and
+    without the GitHub API, whose unauthenticated limit a shared runner has already used up. The feed does not list
+    assets: the boot asset of a Nothing release is named `<tag>-image-boot.7z`."""
+    feed = _get(f"https://github.com/{repo}/releases.atom").decode("utf-8", "replace")
+    out: list[dict] = []
+    for tag in dict.fromkeys(urllib.parse.unquote(t) for t in _ATOM_TAG.findall(feed)):
+        parsed = parse_tag(repo, tag)
+        if parsed and catalog.wanted_version(parsed[0]):
+            out.append({"version": parsed[0], "region": parsed[1],
+                        "asset_url": f"https://github.com/{repo}/releases/download/{urllib.parse.quote(tag)}/{urllib.parse.quote(tag)}-image-boot.7z"})
+    return out
 
 
 def extract_asset(url: str) -> Result:

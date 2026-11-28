@@ -189,3 +189,39 @@ def test_nothing_firmware_is_added_with_the_device_of_its_codename(tmp_path, mon
 def test_brands_without_an_archive_are_said_so(tmp_path, capsys):
     assert cli.main(["archive", "--brand", "xiaomi", "--data-dir", str(tmp_path), "--dry-run"]) == 0
     assert "no Xiaomi firmware" in capsys.readouterr().err
+
+
+FEED = b"""<?xml version="1.0" encoding="UTF-8"?><feed><entry><link rel="alternate" href="https://github.com/spike0en/nothing_archive/releases/tag/Pacman_C5.0-261112-1938"/></entry>
+<entry><link href="/spike0en/nothing_archive/releases/tag/Spacewar_S1.1-230112-1613-GLO"/></entry>
+<entry><link href="/spike0en/nothing_archive/releases/tag/0.0.0-dev+pong.240625"/></entry>
+<entry><link href="/spike0en/nothing_archive/releases/tag/Pong_T2.5-230901-1200"/></entry>
+<entry><link href="/spike0en/nothing_archive/releases/tag/Pacman_C5.0-261112-1938"/></entry></feed>"""
+
+
+def test_latest_releases_come_from_the_public_feed_without_the_api(monkeypatch):
+    asked = []
+    monkeypatch.setattr(archive, "_get", lambda url, token=None: asked.append(url) or FEED)
+    got = archive.latest_releases("spike0en/nothing_archive")
+    assert asked == ["https://github.com/spike0en/nothing_archive/releases.atom"]          # a page, not api.github.com
+    assert got == [{"version": "Pacman_C5.0-261112-1938", "region": "GLO", "asset_url":
+                    "https://github.com/spike0en/nothing_archive/releases/download/Pacman_C5.0-261112-1938/Pacman_C5.0-261112-1938-image-boot.7z"}]
+
+
+def test_latest_option_never_calls_the_api(tmp_path, monkeypatch):
+    def api(*a, **k):
+        raise AssertionError("the GitHub API must not be used")
+
+    monkeypatch.setattr(archive, "releases", api)
+    monkeypatch.setattr(archive, "latest_releases", lambda repo: [rel("Pacman_C5.0-261112-1938", "GLO")])
+    monkeypatch.setattr(archive, "extract_asset", lambda url: result(source="boot.img"))
+    assert cli.main(["archive", "--brand", "nothing", "--data-dir", str(tmp_path), "--workers", "1", "--latest"]) == 0
+    (new,) = read_json(tmp_path / "nothing.json")
+    assert (new["device"], new["version"]) == ("Phone (2a)", "Pacman_C5.0-261112-1938")
+
+
+def test_latest_release_whose_asset_is_not_there_yet_is_left_for_the_next_run(tmp_path, monkeypatch):
+    from opkv.extract import Result
+    monkeypatch.setattr(archive, "latest_releases", lambda repo: [rel("Pacman_C5.0-261112-1938", "GLO")])
+    monkeypatch.setattr(archive, "extract_asset", lambda url: Result(error="HTTPError: HTTP Error 404: Not Found"))
+    assert cli.main(["archive", "--brand", "nothing", "--data-dir", str(tmp_path), "--workers", "1", "--latest"]) == 0
+    assert read_json(tmp_path / "nothing.json") == []                    # no failed row: it is tried again tomorrow
