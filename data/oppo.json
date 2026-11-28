@@ -2425,15 +2425,15 @@
   "build_timestamp": "2026-08-10T15:56:00",
   "md5": "50d3953c8c373bc7983d9037df09c543",
   "size": 6807514083,
-  "origin": "oxygen-updater",
-  "ok": false,
+  "origin": "ota-scan",
+  "ok": true,
   "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "linux_version": "Linux version 6.6.127-android15-8-g1a029ed73e0c-ab15135097-4k (kleaf@build-host) (Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0) #1 SMP PREEMPT Wed Apr  1 13:57:24 UTC 2026",
+  "kernel_release": "6.6.127-android15-8-g1a029ed73e0c-ab15135097-4k",
+  "build": "#1 SMP PREEMPT Wed Apr  1 13:57:24 UTC 2026",
+  "compiler": "Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "ou-7cce364461651c249556",
@@ -5847,16 +5847,16 @@
   "ota_version": "PLS120_11.C.59_1590_202610122056",
   "build_timestamp": "2026-10-12T20:56:00",
   "md5": "33dbf95405439ae8419b025192c70436",
-  "size": 6415187968,
-  "origin": "oxygen-updater",
-  "ok": false,
+  "size": 6415196693,
+  "origin": "ota-scan",
+  "ok": true,
   "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "linux_version": "Linux version 5.15.197-android13-8-o-g00d4e8e246c3 (build-user@build-host) (Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7) #1 SMP PREEMPT Wed Jul 29 13:21:00 UTC 2026",
+  "kernel_release": "5.15.197-android13-8-o-g00d4e8e246c3",
+  "build": "#1 SMP PREEMPT Wed Jul 29 13:21:00 UTC 2026",
+  "compiler": "Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "ou-df54f25cade4db27a29d",
@@ -7697,14 +7697,14 @@
   "md5": "d19f00310fe51a24c9cfe2979bad0b25",
   "size": 6207722112,
   "origin": "ota-scan",
-  "ok": false,
+  "ok": true,
   "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "URLError: <urlopen error _ssl.c:994: The handshake operation timed out>"
+  "linux_version": "Linux version 5.15.197-android13-8-o-01073-g6604d9ee0099 (build-user@build-host) (Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7) #1 SMP PREEMPT Tue Sep 15 13:39:52 UTC 2026",
+  "kernel_release": "5.15.197-android13-8-o-01073-g6604d9ee0099",
+  "build": "#1 SMP PREEMPT Tue Sep 15 13:39:52 UTC 2026",
+  "compiler": "Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "ou-ed7df27464d145c7251d",
@@ -15467,14 +15467,14 @@
   "md5": "7a7c7c952a4f1e02ea9c121dfbbd2e96",
   "size": 10481095447,
   "origin": "oxygen-updater",
-  "ok": false,
+  "ok": true,
   "android_version": "17",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "linux_version": "Linux version 6.12.69-android16-6-g5fd39602326e-ab16372235-4k (kleaf@build-host) (Android (14043575, +pgo, +bolt, +lto, +mlgo, based on r536225) clang version 19.0.1 (https://android.googlesource.com/toolchain/llvm-project b3a530ec6537146650e42be89f1089e9a3588460), LLD 19.0.1) #1 SMP PREEMPT Thu Sep 17 08:57:15 UTC 2026",
+  "kernel_release": "6.12.69-android16-6-g5fd39602326e-ab16372235-4k",
+  "build": "#1 SMP PREEMPT Thu Sep 17 08:57:15 UTC 2026",
+  "compiler": "Android (14043575, +pgo, +bolt, +lto, +mlgo, based on r536225) clang version 19.0.1 (https://android.googlesource.com/toolchain/llvm-project b3a530ec6537146650e42be89f1089e9a3588460), LLD 19.0.1",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "ou-e39fecf6b49a87b2fcb2",
@@ -18519,7 +18519,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "URLError: <urlopen error _ssl.c:994: The handshake operation timed out>"
+  "error": "HTTPError: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-8db256b9f92d8ff135bf",
@@ -24504,7 +24504,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "URLError: <urlopen error _ssl.c:994: The handshake operation timed out>"
+  "error": "HTTPError: HTTP Error 404: Not Found"
  },
  {
   "id": "bf535f1ed85b8741ef6d3633",
@@ -30293,14 +30293,14 @@
   "md5": "cf964790f7239d0d70ad2079bc165562",
   "size": 8367281016,
   "origin": "oxygen-updater",
-  "ok": false,
+  "ok": true,
   "android_version": "17",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "linux_version": "Linux version 6.1.157-android14-11-o-g480d2ac7ac4f (build-user@build-host) (Android (10087095, +pgo, +bolt, +lto, -mlgo, based on r487747c) clang version 17.0.2 (https://android.googlesource.com/toolchain/llvm-project d9f89f4d16663d5012e5c09495f3b30ece3d2362), LLD 17.0.2) #1 SMP PREEMPT Thu Nov  5 13:12:33 UTC 2026",
+  "kernel_release": "6.1.157-android14-11-o-g480d2ac7ac4f",
+  "build": "#1 SMP PREEMPT Thu Nov  5 13:12:33 UTC 2026",
+  "compiler": "Android (10087095, +pgo, +bolt, +lto, -mlgo, based on r487747c) clang version 17.0.2 (https://android.googlesource.com/toolchain/llvm-project d9f89f4d16663d5012e5c09495f3b30ece3d2362), LLD 17.0.2",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "ou-c74718477e5ebacfd149",
@@ -37391,14 +37391,14 @@
   "md5": "01296a53a75aa1b33d0c9ba71307e8d4",
   "size": 6804854514,
   "origin": "oxygen-updater",
-  "ok": false,
+  "ok": true,
   "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "linux_version": "Linux version 6.6.127-android15-8-g1a029ed73e0c-ab15135097-4k (kleaf@build-host) (Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0) #1 SMP PREEMPT Wed Apr  1 13:57:24 UTC 2026",
+  "kernel_release": "6.6.127-android15-8-g1a029ed73e0c-ab15135097-4k",
+  "build": "#1 SMP PREEMPT Wed Apr  1 13:57:24 UTC 2026",
+  "compiler": "Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "ou-aa42c8e2145eb1586cde",
@@ -39889,15 +39889,15 @@
   "build_timestamp": "2026-11-03T22:44:00",
   "md5": "596928925f2ee74f7128505817e987e9",
   "size": 7491994492,
-  "origin": "oxygen-updater",
-  "ok": false,
+  "origin": "ota-scan",
+  "ok": true,
   "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "linux_version": "Linux version 6.6.127-android15-8-g1a029ed73e0c-ab15135097-4k (kleaf@build-host) (Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0) #1 SMP PREEMPT Wed Apr  1 13:57:24 UTC 2026",
+  "kernel_release": "6.6.127-android15-8-g1a029ed73e0c-ab15135097-4k",
+  "build": "#1 SMP PREEMPT Wed Apr  1 13:57:24 UTC 2026",
+  "compiler": "Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "ou-409e851fa063c500cb21",
@@ -39973,15 +39973,15 @@
   "build_timestamp": "2026-11-03T22:45:00",
   "md5": "cec9544d86e78b4ae117876ab4ba96ce",
   "size": 7249549150,
-  "origin": "oxygen-updater",
-  "ok": false,
+  "origin": "ota-scan",
+  "ok": true,
   "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "linux_version": "Linux version 6.6.127-android15-8-g1a029ed73e0c-ab15135097-4k (kleaf@build-host) (Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0) #1 SMP PREEMPT Wed Apr  1 13:57:24 UTC 2026",
+  "kernel_release": "6.6.127-android15-8-g1a029ed73e0c-ab15135097-4k",
+  "build": "#1 SMP PREEMPT Wed Apr  1 13:57:24 UTC 2026",
+  "compiler": "Android (11368308, +pgo, +bolt, +lto, +mlgo, based on r510928) clang version 18.0.0 (https://android.googlesource.com/toolchain/llvm-project 477610d4d0d988e69dbc3fae4fe86bff3f07f2b5), LLD 18.0.0",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "ou-0337321850f7e84a99d8",
@@ -42165,7 +42165,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "IncompleteRead: IncompleteRead(171552 bytes read, 3420604 more expected)"
+  "error": "HTTPError: HTTP Error 403: Forbidden"
  },
  {
   "id": "ou-59bdf2dfb1050063b5ab",
