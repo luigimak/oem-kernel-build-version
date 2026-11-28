@@ -14375,14 +14375,14 @@
   "md5": "6bc0709fd1918fd877b27c9259157a99",
   "size": 7481063107,
   "origin": "oxygen-updater",
-  "ok": false,
+  "ok": true,
   "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "HTTPError: HTTP Error 403: Forbidden"
+  "linux_version": "Linux version 5.15.197-android13-8-o-g00d4e8e246c3 (build-user@build-host) (Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7) #1 SMP PREEMPT Wed Jul 29 13:21:00 UTC 2026",
+  "kernel_release": "5.15.197-android13-8-o-g00d4e8e246c3",
+  "build": "#1 SMP PREEMPT Wed Jul 29 13:21:00 UTC 2026",
+  "compiler": "Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "ou-298035b1cf18f5f0f55c",
@@ -14458,6 +14458,27 @@
   "build_timestamp": "2026-11-24T19:10:00",
   "md5": "110c6eddc41e9be7ccafabde7287475e",
   "size": 7482784145,
+  "origin": "oxygen-updater",
+  "ok": true,
+  "android_version": "16",
+  "linux_version": "Linux version 5.15.197-android13-8-o-g00d4e8e246c3 (build-user@build-host) (Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7) #1 SMP PREEMPT Wed Jul 29 13:21:00 UTC 2026",
+  "kernel_release": "5.15.197-android13-8-o-g00d4e8e246c3",
+  "build": "#1 SMP PREEMPT Wed Jul 29 13:21:00 UTC 2026",
+  "compiler": "Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7",
+  "source": "payload.bin",
+  "error": null
+ },
+ {
+  "id": "ou-e5540311c414bcba05e4",
+  "brand": "Realme",
+  "device": "15T",
+  "region": "IN",
+  "model": "RMX5111",
+  "version": "RMX5111_16.0.5.1303(EX01)",
+  "ota_version": "RMX5111_11.F.30_2300_202611241912",
+  "build_timestamp": "2026-11-24T19:12:00",
+  "md5": "d3e42b553689f2ea844910a91118dd44",
+  "size": 7450687218,
   "origin": "oxygen-updater",
   "ok": true,
   "android_version": "16",
@@ -21543,7 +21564,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "no download link"
+  "error": "HTTPError: HTTP Error 403: Forbidden"
  },
  {
   "id": "vt-cc5ebd7bba7c3efd33c7",
