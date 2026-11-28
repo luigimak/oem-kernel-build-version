@@ -22,6 +22,7 @@ class FirmwareRepositoryTest {
     api.publish(Brand.ONEPLUS, dto("o1"), dto("o2", ok = false))
     api.publish(Brand.OPPO, dto("p1", device = "Find X8", model = "CPH2651"))
     api.publish(Brand.REALME, dto("r1", device = "10", model = "RMX3630"))
+    Brand.entries.drop(3).forEach { api.publish(it) } // the newer brands have a file, with nothing in it yet
   }
 
   private fun repo() = FirmwareRepository(api, FirmwareCache(dir))

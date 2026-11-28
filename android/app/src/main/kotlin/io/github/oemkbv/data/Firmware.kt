@@ -11,6 +11,12 @@ enum class Brand(val key: String, val label: String) {
   ONEPLUS("oneplus", "OnePlus"),
   OPPO("oppo", "OPPO"),
   REALME("realme", "Realme"),
+  XIAOMI("xiaomi", "Xiaomi"),
+  POCO("poco", "POCO"),
+  REDMI("redmi", "Redmi"),
+  NOTHING("nothing", "Nothing"),
+  MOTOROLA("motorola", "Motorola"),
+  LENOVO("lenovo", "Lenovo"),
 }
 
 /** A row of `data/<brand>.json`. Every field is optional so a new or missing field never breaks the whole file. */
@@ -109,7 +115,7 @@ fun FirmwareDto.toFirmware(brand: Brand): Firmware {
     kernel = kernel,
     branch = BRANCH.find(kernel)?.value.orEmpty(),
     build = build,
-    builtMs = BuildTime.parse(build),
+    builtMs = BuildTime.parse(build, brand),
     linuxVersion = linuxVersion.orEmpty(),
     compiler = compiler.orEmpty(),
     source = source.orEmpty(),
@@ -128,13 +134,16 @@ object BuildTime {
   private val PATTERN = Regex("""([A-Z][a-z]{2}) +(\d{1,2}) (\d\d:\d\d:\d\d) ([A-Z]{2,4}) (\d{4})""")
   private val MONTHS = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 
-  // CST: China Standard Time, as in the CN builds
-  private val ZONES = mapOf("UTC" to ZoneOffset.UTC, "CST" to ZoneOffset.ofHours(8))
+  // CST: China Standard Time, as in the builds of Chinese build servers
+  private val ZONES = mapOf("UTC" to ZoneOffset.UTC, "CST" to ZoneOffset.ofHours(8), "HKT" to ZoneOffset.ofHours(8))
 
-  fun parse(build: String): Long? {
+  // Motorola builds in US Central time: CST is UTC-6 there, CDT UTC-5
+  private val US_CENTRAL = ZONES + mapOf("CST" to ZoneOffset.ofHours(-6), "CDT" to ZoneOffset.ofHours(-5))
+
+  fun parse(build: String, brand: Brand? = null): Long? {
     val m = PATTERN.find(build) ?: return null
     val (month, day, time, zone, year) = m.destructured
-    val offset = ZONES[zone] ?: return null
+    val offset = (if (brand == Brand.MOTOROLA) US_CENTRAL else ZONES)[zone] ?: return null
     val monthIndex = MONTHS.indexOf(month).takeIf { it >= 0 } ?: return null
     val (h, min, s) = time.split(':').map { it.toInt() }
     return try {

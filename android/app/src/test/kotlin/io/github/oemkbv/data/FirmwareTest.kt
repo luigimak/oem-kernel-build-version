@@ -20,6 +20,38 @@ class FirmwareTest {
   }
 
   @Test
+  fun `build time of Hong Kong is eight hours ahead of UTC`() {
+    assertEquals(Instant.parse("2025-07-21T04:31:09Z").toEpochMilli(), BuildTime.parse("#1 SMP PREEMPT Mon Jul 21 12:31:09 HKT 2025"))
+  }
+
+  @Test
+  fun `Motorola builds in US Central time, the other brands keep CST as China Standard Time`() {
+    val cst = "#1 SMP PREEMPT Mon Dec 22 22:41:20 CST 2025"
+    assertEquals(Instant.parse("2025-12-23T04:41:20Z").toEpochMilli(), BuildTime.parse(cst, Brand.MOTOROLA))
+    assertEquals(Instant.parse("2025-12-22T14:41:20Z").toEpochMilli(), BuildTime.parse(cst, Brand.LENOVO))
+    assertEquals(Instant.parse("2025-12-22T14:41:20Z").toEpochMilli(), BuildTime.parse(cst))
+    assertEquals(Instant.parse("2025-07-21T17:31:09Z").toEpochMilli(), BuildTime.parse("#1 SMP PREEMPT Mon Jul 21 12:31:09 CDT 2025", Brand.MOTOROLA))
+    assertNull(BuildTime.parse("#1 SMP PREEMPT Mon Jul 21 12:31:09 CDT 2025", Brand.NOTHING))        // CDT only means something in the US
+  }
+
+  @Test
+  fun `row of a Motorola firmware is dated in US Central time`() {
+    val row = dto("m", device = "AVR").copy(build = "#1 SMP PREEMPT Mon Dec 22 22:41:20 CST 2025").toFirmware(Brand.MOTOROLA)
+    assertEquals(Instant.parse("2025-12-23T04:41:20Z").toEpochMilli(), row.builtMs)
+  }
+
+  @Test
+  fun `every brand has the key of its data file and a distinct label`() {
+    assertEquals(
+      listOf("oneplus", "oppo", "realme", "xiaomi", "poco", "redmi", "nothing", "motorola", "lenovo"),
+      Brand.entries.map { it.key },
+    )
+    assertEquals(Brand.entries.size, Brand.entries.map { it.label }.toSet().size)
+    assertEquals(DeviceId(Brand.POCO, "F7 PRO", "GLO"), DeviceId.parse("poco|F7 PRO|GLO"))
+    assertEquals("Nothing Phone (2a) GLO", DeviceId(Brand.NOTHING, "Phone (2a)", "GLO").label)
+  }
+
+  @Test
   fun `build time is null when it cannot be read`() {
     assertNull(BuildTime.parse(""))
     assertNull(BuildTime.parse("#1 SMP PREEMPT Wed Dec 10 04:46:02 PST 2025"))
