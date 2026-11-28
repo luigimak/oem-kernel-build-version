@@ -746,14 +746,14 @@
   "md5": "",
   "size": 8567962735,
   "origin": "catalog",
-  "ok": false,
+  "ok": true,
   "android_version": "16",
-  "linux_version": null,
-  "kernel_release": null,
-  "build": null,
-  "compiler": null,
-  "source": null,
-  "error": "IncompleteRead: IncompleteRead(195565 bytes read, 618543 more expected)"
+  "linux_version": "Linux version 6.12.69-android16-6-g014ca48a80ee-ab15889839-4k (kleaf@build-host) (Android (14043575, +pgo, +bolt, +lto, +mlgo, based on r536225) clang version 19.0.1 (https://android.googlesource.com/toolchain/llvm-project b3a530ec6537146650e42be89f1089e9a3588460), LLD 19.0.1) #1 SMP PREEMPT Fri Jul 17 18:06:00 UTC 2026",
+  "kernel_release": "6.12.69-android16-6-g014ca48a80ee-ab15889839-4k",
+  "build": "#1 SMP PREEMPT Fri Jul 17 18:06:00 UTC 2026",
+  "compiler": "Android (14043575, +pgo, +bolt, +lto, +mlgo, based on r536225) clang version 19.0.1 (https://android.googlesource.com/toolchain/llvm-project b3a530ec6537146650e42be89f1089e9a3588460), LLD 19.0.1",
+  "source": "payload.bin",
+  "error": null
  },
  {
   "id": "c60f3807a76062da80d27f7b",

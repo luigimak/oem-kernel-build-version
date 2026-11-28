@@ -6654,7 +6654,7 @@
   "build": null,
   "compiler": null,
   "source": null,
-  "error": "HTTPError: HTTP Error 404: Not Found"
+  "error": "no download link"
  },
  {
   "id": "vt-2dc2b3a8deef87f8f8d8",
