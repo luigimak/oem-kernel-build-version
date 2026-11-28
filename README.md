@@ -79,7 +79,7 @@ its kernel and build date. The Android version and the kernel branch narrow the 
 string, with buttons to copy the kernel version and the build, and to share it. *All devices* keeps the whole table with search and filters, for questions across devices ("who has kernel 6.6.89?").
 English and Italian; another language is a `res/values-xx/strings.xml` away.
 
-- It reads `oneplus.json`, `oppo.json` and `realme.json` from the Pages site when it starts (conditional requests, a copy is kept on the phone and works offline), so the app does not need a new release when the data changes.
+- It reads the data file of every brand (`oneplus.json`, `oppo.json`, `realme.json`, `xiaomi.json`, `poco.json`, `redmi.json`, `nothing.json`, `motorola.json`, `lenovo.json`) from the Pages site when it starts (conditional requests, a copy is kept on the phone and works offline), so the app does not need a new release when the data changes.
 - Mark any number of devices as favorites (the star next to the device): each is a one-tap shortcut, and you are notified when new firmware of that very device appears (checked twice a day on the phone; no account, no server of ours).
 - Build and test: `cd android && ./gradlew assembleDebug testDebugUnitTest lintDebug` (JDK 17, Android SDK 36).
 - Releases: a tag `app-vX.Y.Z` runs `android-release.yml`, which builds the signed APK and leaves it in a draft GitHub release.
