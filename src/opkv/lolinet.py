@@ -60,6 +60,7 @@ def listing(path: str, pause: float = 0.4) -> list[Entry]:
             page = r.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as e:
         if e.code == 404:
+            e.close()
             return []
         raise
     out = []

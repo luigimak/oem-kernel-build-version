@@ -1,3 +1,4 @@
+import io
 import urllib.error
 
 import pytest
@@ -93,7 +94,8 @@ def test_extraction_refuses_a_non_http_url():
 
 
 def _busy(code=503):
-    return urllib.error.HTTPError("http://example.invalid/f", code, "Service Temporarily Unavailable", {}, None)
+    # with a body: Python 3.14 reports the temporary file an error without one leaves behind
+    return urllib.error.HTTPError("http://example.invalid/f", code, "Service Temporarily Unavailable", {}, io.BytesIO())
 
 
 def test_busy_server_is_given_time_and_more_attempts(served, monkeypatch):
