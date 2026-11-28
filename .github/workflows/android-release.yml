@@ -113,5 +113,5 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           gh release create "$TAG" dist/* --repo "$REPO" --draft --verify-tag \
-            --title "App ${TAG#app-}" \
+            --title "OEM-kbv ${TAG#app-}" \
             --notes "Signed APK of the OEM-KernelBuildVersion app. Signing certificate SHA-256: ${EXPECTED_CERT_SHA256}. Check a download with apksigner verify --print-certs, or with gh attestation verify <file> --repo ${REPO}. The checksums are in SHA256SUMS."
