@@ -59,8 +59,8 @@ def listing(path: str, pause: float = 0.4) -> list[Entry]:
         with urllib.request.urlopen(urllib.request.Request(url, headers=HEADERS), timeout=40) as r:
             page = r.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as e:
+        e.close()                                   # the error keeps its code; the connection goes
         if e.code == 404:
-            e.close()
             return []
         raise
     out = []

@@ -35,7 +35,9 @@ class Mirror:
         self.asked.append(path)
         what = self.pages.get(path, 404)
         if isinstance(what, int):
-            raise urllib.error.HTTPError(req.full_url, what, "x", {}, io.BytesIO())      # a body: no temp file to leak
+            err = urllib.error.HTTPError(req.full_url, what, "x", {}, io.BytesIO())
+            err.close()                                       # Python 3.14 warns about an HTTPError nobody closed
+            raise err
         return io.BytesIO(what.encode())
 
 
