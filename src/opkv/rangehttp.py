@@ -42,6 +42,22 @@ def traffic() -> tuple[int, int]:
     return getattr(_traffic, "requests", 0), getattr(_traffic, "bytes", 0)
 
 
+def add_traffic(requests: int, nbytes: int) -> None:
+    """Credit the current thread with traffic that a helper thread received for it."""
+    _traffic.requests = getattr(_traffic, "requests", 0) + requests
+    _traffic.bytes = getattr(_traffic, "bytes", 0) + nbytes
+
+
+# hosts that give each connection only a few tens of KB/s: reading from them goes through several connections at once
+THROTTLED_HOSTS = frozenset({"bigota.d.miui.com"})
+PARALLEL = 4
+
+
+def parallelism(url: str) -> int:
+    """How many connections to read `url` with: several for a host that throttles each one, else one."""
+    return PARALLEL if urllib.parse.urlparse(url).netloc in THROTTLED_HOSTS else 1
+
+
 def _count(nbytes: int) -> None:
     _traffic.requests = getattr(_traffic, "requests", 0) + 1
     _traffic.bytes = getattr(_traffic, "bytes", 0) + nbytes
@@ -76,11 +92,17 @@ def _open(url: str, rng: str | None, timeout: float):
     raise HttpError("no request profile")       # not reachable: the last profile returns or raises
 
 
+_BUSY = (429, 503)          # the server is asking to come back later: worth a longer wait and more attempts
+BUSY_RETRIES = 6
+
+
 def fetch_range(url: str, start: int, end: int, timeout: float = 60, retries: int = 3) -> bytes:
     """Fetch bytes [start, end] inclusive."""
     check_scheme(url)
     last: Exception | None = None
-    for i in range(retries):
+    i = 0
+    while i < retries:
+        delay = 1.5 * (i + 1)
         try:
             with _open(url, f"bytes={start}-{end}", timeout) as r:
                 if r.status != 206:
@@ -96,17 +118,29 @@ def fetch_range(url: str, start: int, end: int, timeout: float = 60, retries: in
                 break
         except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
             last = e
-        time.sleep(1.5 * (i + 1))
+            if isinstance(e, urllib.error.HTTPError) and e.code in _BUSY:
+                retries = max(retries, BUSY_RETRIES)
+                delay = 4.0 * (i + 1)
+        i += 1
+        if i < retries:
+            time.sleep(delay)
     raise HttpError(f"range [{start}-{end}] su {urllib.parse.urlparse(url).netloc}: {last}")
 
 
 def remote_size(url: str, timeout: float = 30) -> int:
-    with _open(url, "bytes=0-0", timeout) as r:
-        cr = r.headers.get("Content-Range", "")
-        if r.status == 206 and "/" in cr:
-            _count(1)
-            return int(cr.rsplit("/", 1)[1])
-        raise HttpError(f"no Content-Range (HTTP {r.status})")
+    for attempt in range(BUSY_RETRIES):
+        try:
+            with _open(url, "bytes=0-0", timeout) as r:
+                cr = r.headers.get("Content-Range", "")
+                if r.status == 206 and "/" in cr:
+                    _count(1)
+                    return int(cr.rsplit("/", 1)[1])
+                raise HttpError(f"no Content-Range (HTTP {r.status})")
+        except urllib.error.HTTPError as e:  # noqa: PERF203 - the retry is the point of the loop
+            if e.code not in _BUSY or attempt == BUSY_RETRIES - 1:
+                raise
+            time.sleep(4.0 * (attempt + 1))         # the server asks to come back later
+    raise HttpError("unreachable")                  # the loop returns or raises
 
 
 class RangeFile(io.RawIOBase):

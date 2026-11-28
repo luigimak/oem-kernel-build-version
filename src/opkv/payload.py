@@ -7,13 +7,15 @@ from __future__ import annotations
 import bz2
 import lzma
 import struct
+from collections import deque
 from collections.abc import Callable, Iterator
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from typing import Any
 
 import zstandard
 
-from .rangehttp import fetch_range
+from .rangehttp import add_traffic, fetch_range, reset_traffic, traffic
 
 MAGIC = b"CrAU"
 
@@ -132,46 +134,89 @@ def decode_op(op: Op, data: bytes, block_size: int) -> bytes:
     return out
 
 
-def stream_partition(url: str, hdr: Header, man: Manifest, name: str) -> Iterator[bytes]:
-    """Yield decoded partition bytes in order (full OTA only)."""
-    part = man.partitions[name]
-    bs = man.block_size
-    ops = part.ops
+def _plan(part_ops: list[Op], blob_offset: int, name: str, cap: int) -> Iterator[tuple]:
+    """The reads a partition needs, in order: ("zero", bytes) or ("blob", start, length, ops). Contiguous blob ops are
+    coalesced up to `cap` bytes. An op that needs a source image ends the plan with ("error", exception)."""
+    ops = part_ops
     i = 0
     while i < len(ops):
         op = ops[i]
         if op.type in (6, 7):  # ZERO / DISCARD
-            yield b"\0" * (op.dst_blocks * bs)
+            yield ("zero", op.dst_blocks)
             i += 1
             continue
         if op.type in (2, 3, 4, 5, 9, 10, 11, 12, 13):
-            raise NotImplementedError(f"incremental OTA (op type {op.type}) in {name}")
-        # coalesce contiguous blob ops up to 4 MiB
+            yield ("error", NotImplementedError(f"incremental OTA (op type {op.type}) in {name}"))
+            return
         j = i
         total = op.data_length
         while (j + 1 < len(ops) and ops[j + 1].type not in (6, 7)
                and ops[j + 1].data_offset == ops[j].data_offset + ops[j].data_length
-               and total + ops[j + 1].data_length <= 4 << 20):
+               and total + ops[j + 1].data_length <= cap):
             j += 1
             total += ops[j].data_length
-        start = hdr.blob_offset + op.data_offset
-        blob = fetch_range(url, start, start + total - 1)
-        pos = 0
-        for k in range(i, j + 1):
-            o = ops[k]
-            chunk = blob[pos:pos + o.data_length]
-            pos += o.data_length
-            yield decode_op(o, chunk, bs)
+        yield ("blob", blob_offset + op.data_offset, total, ops[i:j + 1])
         i = j + 1
 
 
+def _fetch_counted(url: str, start: int, end: int) -> tuple[bytes, tuple[int, int]]:
+    """fetch_range on a helper thread: the data and the traffic it took, for the thread that asked."""
+    reset_traffic()
+    return fetch_range(url, start, end), traffic()
+
+
+def stream_partition(url: str, hdr: Header, man: Manifest, name: str, parallel: int = 1) -> Iterator[bytes]:
+    """Yield decoded partition bytes in order (full OTA only). With `parallel` > 1 the next blocks are already being
+    fetched while the current one is decoded (smaller blocks, at most `parallel` of them read ahead and wasted)."""
+    bs = man.block_size
+    plan = _plan(man.partitions[name].ops, hdr.blob_offset if hdr else 0, name, (4 << 20) if parallel <= 1 else (1 << 20))
+
+    def decode(step: tuple, blob: bytes | None) -> Iterator[bytes]:
+        if step[0] == "zero":
+            yield b"\0" * (step[1] * bs)
+            return
+        pos = 0
+        for o in step[3]:
+            yield decode_op(o, (blob or b"")[pos:pos + o.data_length], bs)
+            pos += o.data_length
+
+    if parallel <= 1:
+        for step in plan:
+            if step[0] == "error":
+                raise step[1]
+            yield from decode(step, fetch_range(url, step[1], step[1] + step[2] - 1) if step[0] == "blob" else None)
+        return
+    ex = ThreadPoolExecutor(parallel)
+    try:
+        ahead: deque = deque()
+
+        def refill() -> None:
+            while len(ahead) < parallel and (step := next(plan, None)) is not None:
+                fut = ex.submit(_fetch_counted, url, step[1], step[1] + step[2] - 1) if step[0] == "blob" else None
+                ahead.append((step, fut))
+
+        refill()
+        while ahead:
+            step, fut = ahead.popleft()
+            if step[0] == "error":
+                raise step[1]
+            blob = None
+            if fut is not None:
+                blob, (nreq, nbytes) = fut.result()
+                add_traffic(nreq, nbytes)
+            refill()
+            yield from decode(step, blob)
+    finally:
+        ex.shutdown(wait=False, cancel_futures=True)
+
+
 def read_partition_prefix(url: str, hdr: Header, man: Manifest, name: str,
-                          need: Callable[[bytes], int | None]) -> bytes:
+                          need: Callable[[bytes], int | None], parallel: int = 1) -> bytes:
     """Stream the partition until as many bytes as need() asks for are in. need() sees the first 4096 bytes
     (the header), once; when it gives no target the whole partition is returned."""
     buf = bytearray()
     tgt, asked = None, False
-    for chunk in stream_partition(url, hdr, man, name):
+    for chunk in stream_partition(url, hdr, man, name, parallel):
         buf += chunk
         if not asked and len(buf) >= 4096:
             asked, tgt = True, need(bytes(buf[:4096]))

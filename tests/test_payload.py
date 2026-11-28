@@ -106,3 +106,35 @@ def test_header_is_not_asked_before_4096_bytes_are_in(monkeypatch):
     monkeypatch.setattr(payload, "stream_partition", lambda *a: iter([b"a" * 100, b"b" * 5000, b"c" * 10]))
     got = payload.read_partition_prefix("u", None, None, "boot", lambda head: asked.append(len(head)) or None)
     assert asked == [4096] and got == b"a" * 100 + b"b" * 5000 + b"c" * 10      # no target: the whole partition
+
+
+def test_parallel_reading_gives_the_same_bytes_and_counts_the_traffic_of_its_threads(http_server):
+    from opkv import rangehttp
+    data = boot_image(noise=300_000)
+    hdr, man = partition(http_server, data, chunk=4096)
+    rangehttp.reset_traffic()
+    got = b"".join(payload.stream_partition(http_server.url("/payload.bin"), hdr, man, "boot", parallel=4))
+    requests, nbytes = rangehttp.traffic()
+    assert got == data
+    assert requests >= 1 and nbytes >= len(data) // 2                      # the helper threads' reads are credited to this one
+
+
+def test_parallel_reading_stops_early_and_refuses_incremental_ota(http_server):
+    data = boot_image(noise=300_000)
+    hdr, man = partition(http_server, data, chunk=4096)
+    first = next(payload.stream_partition(http_server.url("/payload.bin"), hdr, man, "boot", parallel=4))
+    assert data.startswith(first)
+    hdr, man = partition(http_server, b"x" * 100, op_type=4)
+    with pytest.raises(NotImplementedError, match="op type 4"):
+        list(payload.stream_partition(http_server.url("/payload.bin"), hdr, man, "boot", parallel=4))
+
+
+def test_parallel_reading_handles_zero_operations():
+    man = payload.Manifest(4096, {"boot": payload.Partition("boot", [payload.Op(6, dst_blocks=2)])})
+    assert list(payload.stream_partition("http://unused.invalid/", None, man, "boot", parallel=3)) == [bytes(8192)]
+
+
+def test_only_throttled_hosts_are_read_through_several_connections():
+    from opkv import rangehttp
+    assert rangehttp.parallelism("https://bigota.d.miui.com/x/y.zip") == rangehttp.PARALLEL > 1
+    assert rangehttp.parallelism("https://example.invalid/x.zip") == 1

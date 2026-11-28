@@ -113,7 +113,7 @@ def extract(url: str) -> Result:
             pname = next((n for n in ("boot", "boot_a") if n in man.partitions), None)
             if not pname:
                 raise ValueError(f"no boot partition: {sorted(man.partitions)[:8]}...")
-            boot = payload.read_partition_prefix(url, hdr, man, pname, _boot_need)
+            boot = payload.read_partition_prefix(url, hdr, man, pname, _boot_need, rangehttp.parallelism(url))
             res.source = "payload.bin"
         else:
             name = bootimg.pick_boot_name(names)

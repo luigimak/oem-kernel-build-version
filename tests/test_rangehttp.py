@@ -90,3 +90,63 @@ def test_only_http_urls_are_fetched(url):
 def test_extraction_refuses_a_non_http_url():
     res = extract.extract("file:///etc/hostname")
     assert not res.ok and "unsupported URL scheme" in res.error
+
+
+def _busy(code=503):
+    return urllib.error.HTTPError("http://example.invalid/f", code, "Service Temporarily Unavailable", {}, None)
+
+
+def test_busy_server_is_given_time_and_more_attempts(served, monkeypatch):
+    waits, real_open, answers = [], rangehttp._open, [_busy(), _busy(429), _busy(), _busy()]
+
+    def flaky(url, rng, timeout):
+        if answers:
+            raise answers.pop(0)
+        return real_open(url, rng, timeout)
+
+    monkeypatch.setattr(rangehttp, "_open", flaky)
+    monkeypatch.setattr(rangehttp.time, "sleep", waits.append)
+    assert rangehttp.fetch_range(served.url("/f.bin"), 0, 9) == DATA[:10]      # the fifth attempt, past the usual three
+    assert waits == [4.0, 8.0, 12.0, 16.0]
+
+
+def test_busy_server_that_never_answers_ends_in_an_error_naming_the_host(monkeypatch):
+    monkeypatch.setattr(rangehttp, "_open", lambda *a: (_ for _ in ()).throw(_busy()))
+    monkeypatch.setattr(rangehttp.time, "sleep", lambda s: None)
+    with pytest.raises(HttpError, match=r"example\.invalid: HTTP Error 503"):
+        rangehttp.fetch_range("http://example.invalid/f", 0, 9)
+
+
+def test_other_failures_keep_the_three_attempts(monkeypatch):
+    calls = []
+
+    def refuse(*a):
+        calls.append(1)
+        raise ConnectionResetError("reset")
+
+    monkeypatch.setattr(rangehttp, "_open", refuse)
+    monkeypatch.setattr(rangehttp.time, "sleep", lambda s: None)
+    with pytest.raises(HttpError):
+        rangehttp.fetch_range("http://example.invalid/f", 0, 9)
+    assert len(calls) == 3
+
+
+def test_size_probe_waits_for_a_busy_server(served, monkeypatch):
+    waits, real_open, answers = [], rangehttp._open, [_busy(), _busy(429)]
+
+    def flaky(url, rng, timeout):
+        if answers:
+            raise answers.pop(0)
+        return real_open(url, rng, timeout)
+
+    monkeypatch.setattr(rangehttp, "_open", flaky)
+    monkeypatch.setattr(rangehttp.time, "sleep", waits.append)
+    assert rangehttp.remote_size(served.url("/f.bin")) == len(DATA)
+    assert waits == [4.0, 8.0]
+
+
+def test_size_probe_gives_up_on_a_server_that_stays_busy(monkeypatch):
+    monkeypatch.setattr(rangehttp, "_open", lambda *a: (_ for _ in ()).throw(_busy()))
+    monkeypatch.setattr(rangehttp.time, "sleep", lambda s: None)
+    with pytest.raises(urllib.error.HTTPError, match="503"):
+        rangehttp.remote_size("http://example.invalid/f")
