@@ -32,8 +32,8 @@ def _save(path: str, rows: dict) -> None:
     for r in rows.values():
         r.pop("source_url", None)              # never persist URLs
         normalize.row(r)                       # fix catalog typos / naming (idempotent)
-        if not r["ok"] and not r.get("android_version"):
-            major = catalog.os_major(r["version"])      # no OTA metadata was read: the OS major equals the Android release
+        if (not r["ok"] or r.get("origin") in ("lolinet", "spike0en-archive")) and not r.get("android_version"):
+            major = catalog.os_major(r["version"])      # no OTA metadata was read: the version names the Android release
             r["android_version"] = str(major) if major else r.get("android_version")
     dropped = normalize.dedupe(rows)           # one row per firmware, whatever the ids it came with
     if dropped:
@@ -118,12 +118,37 @@ def cmd_discover(a):
             letters.setdefault(r["model"], set()).add(m.group(1))
 
     for brand in brands.select(a.brand):
-        if not brand.pulse:                            # its firmware only comes from the catalog or an archive
-            if a.brand != "all":
-                print(f"{brand.label}: no source to discover from, `fetch` lists its firmware", file=sys.stderr)
-            continue
-        _discover_brand(a, brand, cat, by_id, by_key, letters, oq)
+        if brand.lolinet:
+            _discover_lolinet(a, brand, cat, by_id, by_key)
+        elif brand.pulse:
+            _discover_brand(a, brand, cat, by_id, by_key, letters, oq)
+        elif a.brand != "all":                         # its firmware only comes from the catalog or an archive
+            print(f"{brand.label}: no source to discover from, `fetch` lists its firmware", file=sys.stderr)
     return 0
+
+
+def _discover_lolinet(a, brand: Brand, cat: dict, by_id: dict, by_key: dict) -> None:
+    """Add the firmware the lolinet mirror lists for the brand to the local catalog: all of it, or what changed in the last
+    `--lolinet-days` days."""
+    from . import lolinet
+
+    since = datetime.date.today() - datetime.timedelta(days=a.lolinet_days) if a.lolinet_days > 0 else None
+    done = {normalize.firmware_key(r) for r in _load_results(_path(a, brand), brand).values()}
+    added = 0
+    for rel in lolinet.releases(brand, since):
+        key = normalize.firmware_key(rel)
+        if key in by_key:                              # known firmware: keep the link current
+            by_id[by_key[key]]["source_url"] = rel["source_url"]
+            continue
+        by_id[rel["id"]] = rel
+        by_key[key] = rel["id"]
+        if key not in done:
+            added += 1
+            print(f"  + {rel['device']} {rel['region']} {rel['version']}  [lolinet]", file=sys.stderr)
+    cat["releases"] = list(by_id.values())
+    with open(a.catalog, "w", encoding="utf-8") as f:
+        json.dump(cat, f, ensure_ascii=False)
+    print(f"{brand.label}: new releases from lolinet: {added}")
 
 
 def _discover_brand(a, brand: Brand, cat: dict, by_id: dict, by_key: dict, letters: dict, oq) -> None:
@@ -520,6 +545,8 @@ def main(argv=None):
     dsc.add_argument("--no-scan", action="store_true", help="do not search the failed firmware under every OTA letter")
     dsc.add_argument("--rescan-days", type=int, default=7, metavar="N",
                      help="each failed firmware is searched every N days (default 7; 1 = all of them today)")
+    dsc.add_argument("--lolinet-days", type=int, default=14, metavar="N",
+                     help="Motorola and Lenovo: look at what the lolinet mirror changed in the last N days (default 14; 0 = everything)")
     dsc.add_argument("--catalog", default="data/catalog.json")
     dsc.add_argument("--workers", type=int, default=4)
     dsc.set_defaults(fn=cmd_discover)

@@ -88,8 +88,9 @@ def test_each_release_belongs_to_one_brand():
     pick = lambda d: getattr(brands.of_release({"device": d}), "key", None)  # noqa: E731
     assert [pick("OP 13"), pick("OPPO FIND X9"), pick("Realme GT7"), pick("OP 9"), pick("Sony 1")] == [
         "oneplus", "oppo", "realme", None, None]
-    assert [pick("Xiaomi 15T Pro"), pick("POCO F7"), pick("REDMI Note 15"), pick("Redmi Pad 2"), pick("Nothing Phone (2a)")] == [
-        "xiaomi", "poco", "redmi", "redmi", "nothing"]
+    assert [pick("Xiaomi 15T Pro"), pick("POCO F7"), pick("REDMI Note 15"), pick("Redmi Pad 2"), pick("Nothing Phone (2a)"),
+            pick("Motorola AVR"), pick("Lenovo Legion Y700")] == [
+        "xiaomi", "poco", "redmi", "redmi", "nothing", "motorola", "lenovo"]
 
 
 def test_brand_releases_keeps_the_matching_brand_only(tmp_path):

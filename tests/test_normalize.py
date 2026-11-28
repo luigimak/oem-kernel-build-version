@@ -75,11 +75,16 @@ def test_xiaomi_family_names_are_spelled_one_way():
     assert n.device("Xiaomi 15T Pro") == "Xiaomi 15T PRO"
     assert n.device("poco f7 pro") == "POCO F7 PRO"
     assert n.device("Nothing Phone (2a)") == "Nothing Phone (2a)"
+    assert n.device("motorola Avr") == "Motorola AVR" and n.device("Lenovo Legion Y700 5G") == "Lenovo LEGION Y700 5G"
 
 
 @pytest.mark.parametrize("version,android", [
     ("OS3.0.336.0.XOSRUXM", 17), ("OS3.0.311.0.WPSMIXM", 16), ("OS2.0.205.0.VNPINXM", 15), ("OS1.0.5.0.UNQINXM", 14),
     ("V14.0.5.0.TMCMIXM", 13), ("Tetris_B4.1-261028-1606", 16), ("Spacewar_V3.2-260618-1045", 15), ("Pacman_C5.0-261112-1938", 17),
+    ("XT2611-3_16_W3WW36.65-64-4", 16), ("XT2415-1_14_U1UDS34.16-92-4", 14),
+    ("TB390FU_ROW_OPEN_USER_Q00012.1_A16_ZUI_18.0.10.335_ST_260618", 16),
+    ("TB330FU_ROW_OPEN_USER_V15.155_U_ZUI_16.0.198_ST_241220_SVC", 14),
+    ("TB710FU_CN_OPEN_USER_QSM8650_V_ZUI_17.0.04.279_ST_250808", 15),
     ("CPH2653_16.0.10.600(EX01)", None), ("OS3.0", None), ("", None)])
 def test_android_release_of_a_xiaomi_or_nothing_version(version, android):
     assert n.other_android(version) == android

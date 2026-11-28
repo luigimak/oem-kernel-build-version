@@ -20,7 +20,8 @@ def version(v: str) -> str:
 
 
 # brands whose catalogs spell the name and the rest of the device any way: the brand gets its own spelling, the rest upper case
-_SPELLING = {"REALME ": "Realme ", "XIAOMI ": "Xiaomi ", "REDMI ": "Redmi ", "POCO ": "POCO "}
+_SPELLING = {"REALME ": "Realme ", "XIAOMI ": "Xiaomi ", "REDMI ": "Redmi ", "POCO ": "POCO ",
+             "MOTOROLA ": "Motorola ", "LENOVO ": "Lenovo "}
 
 
 def device(name: str) -> str:
@@ -126,15 +127,28 @@ def relabel(rows) -> None:
 _XIAOMI = re.compile(r"^(?:OS|V)\d+(?:\.\d+){3}\.([A-Z])[A-Z]{2,}")
 _NOTHING = re.compile(r"^[A-Za-z]+_([TUVBC])\d\.\d-\d{6}-\d{4}$")
 _NOTHING_ANDROID = {"T": 13, "U": 14, "V": 15, "B": 16, "C": 17}
+# Motorola: XT2611-3_16_W3WW36.65-64-4 (model, Android release, build); Lenovo: TB390FU_ROW_OPEN_USER_Q00012.1_A16_ZUI_18.0.10.335_ST_260618
+# (the release is `A16` or a dessert letter: T = 13, U = 14, V = 15, W = 16)
+_MOTOROLA = re.compile(r"^XT[0-9A-Z-]+_(\d{1,2})_")
+_LENOVO = re.compile(r"^TB[0-9A-Z]+_(?:ROW|CN|PRC)_OPEN_USER_.+?_(?:([TUVWX])|A(\d{2}))_(?:ZUI|ZUXOS)_")
 
 
 def other_android(version: str) -> int | None:
-    """Android release of a firmware version that does not start with the model code (Xiaomi HyperOS, Nothing OS)."""
+    """Android release of a firmware version that does not follow the OxygenOS/ColorOS scheme (Xiaomi HyperOS, Nothing OS,
+    Motorola, Lenovo)."""
     m = _XIAOMI.match(version or "")
     if m:
         return ord(m[1]) - ord("A") - 6
     m = _NOTHING.match(version or "")
-    return _NOTHING_ANDROID[m[1]] if m else None
+    if m:
+        return _NOTHING_ANDROID[m[1]]
+    m = _MOTOROLA.match(version or "")
+    if m:
+        return int(m[1])
+    m = _LENOVO.match(version or "")
+    if m:
+        return int(m[2]) if m[2] else ord(m[1]) - ord("A") - 6
+    return None
 
 
 def android(r: dict) -> str | None:

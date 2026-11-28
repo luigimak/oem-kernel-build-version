@@ -1,7 +1,7 @@
 # oem-kernel-build-version
 
 Extracts the `Linux version …` string (kernel version + build) from the `boot.img` inside the `payload.bin`
-of OnePlus, OPPO, Realme, Xiaomi, POCO, Redmi and Nothing firmware packages, without downloading the firmware: it reads only the needed bytes over HTTP Range
+of OnePlus, OPPO, Realme, Xiaomi, POCO, Redmi, Nothing, Motorola and Lenovo firmware packages, without downloading the firmware: it reads only the needed bytes over HTTP Range
 (about 10 MB per OTA, whose full package is several GB). Results, one pair of files per brand, updated every day by a GitHub Actions workflow:
 [`data/oneplus.md`](data/oneplus.md) / [`data/oneplus.json`](data/oneplus.json),
 [`data/oppo.md`](data/oppo.md) / [`data/oppo.json`](data/oppo.json),
@@ -9,33 +9,36 @@ of OnePlus, OPPO, Realme, Xiaomi, POCO, Redmi and Nothing firmware packages, wit
 [`data/xiaomi.md`](data/xiaomi.md) / [`data/xiaomi.json`](data/xiaomi.json),
 [`data/poco.md`](data/poco.md) / [`data/poco.json`](data/poco.json),
 [`data/redmi.md`](data/redmi.md) / [`data/redmi.json`](data/redmi.json),
-[`data/nothing.md`](data/nothing.md) / [`data/nothing.json`](data/nothing.json).
+[`data/nothing.md`](data/nothing.md) / [`data/nothing.json`](data/nothing.json),
+[`data/motorola.md`](data/motorola.md) / [`data/motorola.json`](data/motorola.json),
+[`data/lenovo.md`](data/lenovo.md) / [`data/lenovo.json`](data/lenovo.json).
 A searchable, filterable table of all of them is published with GitHub Pages: <https://luigimak.github.io/oem-kernel-build-version/> (source in [`docs/`](docs/)).
 
 ## Usage
 ```bash
 python3 -m venv .venv && .venv/bin/pip install .       # '.[archive]' adds what `opkv archive` needs
 opkv fetch      # update the local release catalog (roms.danielspringer.at API)
-opkv discover   # find firmware missing from the catalog: OTA servers, Oxygen Updater, VioletToolBox; then search the failed ones again
+opkv discover   # find firmware missing from the catalog: OTA servers, Oxygen Updater, VioletToolBox, the lolinet mirror; then search the failed ones again
 opkv run        # extract kernel/build of new firmware -> data/<brand>.json
 opkv archive    # add Android 14+ OnePlus and Nothing firmware missing from the results (spike0en archives, boot.7z)
 opkv report     # data/<brand>.md
 opkv url <URL>  # a single OTA zip
 ```
-`fetch`, `discover`, `run`, `archive` and `report` take `--brand oneplus|oppo|realme|xiaomi|poco|redmi|nothing|all` (default `all`) and `--data-dir` (default `data`).
-`discover` also takes `--no-ou`, `--no-violet` and `--no-scan` to skip a source or the new search of the failed firmware.
-OnePlus from the 10 series onward, every OPPO, Realme, Xiaomi, POCO, Redmi and Nothing model, and only firmware from Android 14 onward (older rows are dropped). `run` is resumable.
+`fetch`, `discover`, `run`, `archive` and `report` take `--brand oneplus|oppo|realme|xiaomi|poco|redmi|nothing|motorola|lenovo|all` (default `all`) and `--data-dir` (default `data`).
+`discover` also takes `--no-ou`, `--no-violet` and `--no-scan` to skip a source or the new search of the failed firmware, and `--lolinet-days N`
+(Motorola and Lenovo: look at what the mirror changed in the last N days, default 14; 0 = everything).
+OnePlus from the 10 series onward, every OPPO, Realme, Xiaomi, POCO, Redmi, Nothing, Motorola and Lenovo model, and only firmware from Android 14 onward (older rows are dropped). `run` is resumable.
 
 A GitHub Actions workflow (`.github/workflows/update.yml`) runs `fetch`, `discover`, `run --retry-failed` and `report` every day and commits
-the updated results to the default branch. `archive` is a manual command.
+the updated results to the default branch, then add the new Nothing firmware with `archive --brand nothing`. For OnePlus `archive` is a manual command.
 
 ## Results
 `data/<brand>.json` is a list of rows, one per firmware, sorted by device, model and build time:
 
 | Field | Meaning |
 |---|---|
-| `id`, `origin` | row id and where the firmware was found (`catalog`, `ota-query`, `ota-scan`, `oxygen-updater`, `violettoolbox`, `spike0en-archive`) |
-| `brand`, `device` | brand (`OnePlus`, `OPPO`, `Realme`, `Xiaomi`, `POCO`, `Redmi`, `Nothing`) and device label without the brand (`13R`, `FIND X9`, `GT7 PRO`, `15T PRO`, `Phone (2a)`) |
+| `id`, `origin` | row id and where the firmware was found (`catalog`, `ota-query`, `ota-scan`, `oxygen-updater`, `violettoolbox`, `spike0en-archive`, `lolinet`) |
+| `brand`, `device` | brand (`OnePlus`, `OPPO`, `Realme`, `Xiaomi`, `POCO`, `Redmi`, `Nothing`, `Motorola`, `Lenovo`) and device label without the brand (`13R`, `FIND X9`, `GT7 PRO`, `15T PRO`, `Phone (2a)`) |
 | `model`, `region` | model code (`CPH2645`), region (`EU`, `GLO`, `IN`, `CN`, `NA`, …) |
 | `version`, `ota_version`, `build_timestamp` | firmware version (`CPH2645_15.0.0.840(EX01)`), OTA version string, OTA build time |
 | `android_version` | Android release, from the OTA metadata; for a firmware that could not be read, from its version |
@@ -60,7 +63,13 @@ the updated results to the default branch. `archive` is a manual command.
   comes from the dessert letter of the version (`OS3.0.311.0.WPSMIXM`: `W` = Android 16). The OTA servers, Oxygen Updater and
   VioletToolBox do not list these brands.
 - Nothing has no catalog: its firmware (Phone and CMF Phone, one package per build, region `GLO`) is read from the boot images
-  that the [spike0en/nothing_archive](https://github.com/spike0en/nothing_archive) releases publish.
+  that the [spike0en/nothing_archive](https://github.com/spike0en/nothing_archive) releases publish; the archive states that its
+  files are unmodified and taken from Nothing's own OTA servers, and that a release fits every regional variant of the device.
+- Motorola and Lenovo come from the [lolinet](https://mirrors.lolinet.com) community mirror, which says its files are "collected from
+  the Internet": they are not read from the manufacturers' servers. `discover` walks its directory pages (one request at a time, with a pause;
+  after the first run only what changed lately). Motorola: retail channels (`RET*`, no carrier builds), device = codename (`AVR`), region = channel
+  (`RETEU`), Android from the file name. Lenovo: the ZUI tablet `.zip` packages (the `.7z` ones can not be read in part), device named after
+  the mirror folder, region `ROW` or `CN`.
 - Beta tracks (`taste`) cannot be found by `discover`; they depend on the catalog.
 
 ## Android app

@@ -1,4 +1,4 @@
-"""Load catalog.json (releases list) and keep the entries of one brand (OnePlus, OPPO, Realme, Xiaomi, POCO, Redmi)."""
+"""Load catalog.json (releases list) and keep the entries of one brand (OnePlus, OPPO, Realme, Xiaomi, ..., Motorola, Lenovo)."""
 from __future__ import annotations
 
 import json
@@ -72,6 +72,14 @@ def is_redmi(rel: dict) -> bool:
 
 def is_nothing(rel: dict) -> bool:
     return rel.get("device", "").upper().startswith("NOTHING ")
+
+
+def is_motorola(rel: dict) -> bool:
+    return rel.get("device", "").upper().startswith("MOTOROLA ")
+
+
+def is_lenovo(rel: dict) -> bool:
+    return rel.get("device", "").upper().startswith("LENOVO ")
 
 
 XIAOMI_CDN = "https://bigota.d.miui.com/"

@@ -129,3 +129,18 @@ def test_xiaomi_firmware_is_read_from_the_cdn_and_stored_under_its_brand(tmp_pat
     (stored,) = read_json(tmp_path / "xiaomi.json")
     assert (stored["brand"], stored["device"], stored["version"], stored["android_version"]) == ("Xiaomi", "17T PRO", version, "16")
     assert "source_url" not in stored
+
+
+def test_package_without_ota_metadata_gets_its_android_release_from_the_version(tmp_path, monkeypatch):
+    from helpers import read_json, result, write_json
+    monkeypatch.setattr(cli, "extract", lambda url: result(android_version=None, source="boot.img"))
+    monkeypatch.setattr(cli, "extract_android", lambda url: Result())
+    monkeypatch.setattr(sources, "arb_index", lambda: {})
+    version = "XT2611-3_16_W3WW36.65-64-4"
+    rel = {"id": "lol-1", "device": "Motorola AVR", "region": "RETEU", "model": "XT2611-3", "version": version, "ota_version": "x.zip",
+           "source_url": "https://mirrors.lolinet.com/x.zip", "origin": "lolinet", "size": 1, "md5": ""}
+    cat = write_json(tmp_path / "catalog.json", {"api_version": "1", "releases": [rel]})
+    assert cli.main(["run", "--brand", "motorola", "--data-dir", str(tmp_path), "--catalog", cat]) == 0
+    (stored,) = read_json(tmp_path / "motorola.json")
+    assert (stored["brand"], stored["device"], stored["model"], stored["android_version"], stored["ok"]) == (
+        "Motorola", "AVR", "XT2611-3", "16", True)

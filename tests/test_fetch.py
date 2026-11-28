@@ -8,6 +8,12 @@ from helpers import read_json, release, write_json
 from opkv import cli
 
 
+def _counts(**per_brand):
+    """The per-brand counts `fetch` prints: every brand, in order, 0 where the test names none."""
+    from opkv import brands
+    return ", ".join(f"{per_brand.get(b.label, 0)} {b.label}" for b in brands.BRANDS.values())
+
+
 @pytest.fixture
 def fetch(tmp_path, monkeypatch):
     """`opkv fetch` against a stubbed API: fetch(api_payload, stored_catalog=None) -> (catalog releases, stdout)."""
@@ -27,7 +33,7 @@ def test_first_fetch_creates_the_catalog(fetch, capsys):
     releases = fetch({"api_version": "1", "releases": [release("a"), release("x", device="Sony Xperia 1", version="XQ.1")]})
     assert [r["id"] for r in releases] == ["a", "x"]
     out = capsys.readouterr().out
-    assert "catalog initialized with 2 releases (1 OnePlus, 0 OPPO, 0 Realme, 0 Xiaomi, 0 POCO, 0 Redmi, 0 Nothing)" in out
+    assert f"catalog initialized with 2 releases ({_counts(OnePlus=1)})" in out
 
 
 def test_api_answering_with_a_bare_list_is_accepted(fetch):
@@ -38,7 +44,7 @@ def test_releases_the_api_dropped_are_kept_and_new_ones_added(fetch, capsys):
     releases = fetch({"releases": [release("new", version="CPH2645_16.0.0.100(EX01)")]}, stored=[release("old")])
     assert sorted(r["id"] for r in releases) == ["new", "old"]
     out = capsys.readouterr().out
-    assert "2 releases in total, 1 new (1 OnePlus, 0 OPPO, 0 Realme, 0 Xiaomi, 0 POCO, 0 Redmi, 0 Nothing)" in out
+    assert f"2 releases in total, 1 new ({_counts(OnePlus=1)})" in out
     assert "+ OP 13R" in out and "CPH2645_16.0.0.100(EX01)" in out
 
 

@@ -19,6 +19,7 @@ class Brand:
     ou_prefix: str = ""                     # Oxygen Updater device names start with it (lower case; empty = not listed there)
     violet: str = ""                        # brand name in the VioletToolBox ROM API (empty = not listed there)
     archive: str = ""                       # spike0en GitHub repo with the boot images of its firmware (OnePlus, Nothing)
+    lolinet: str = ""                       # directory of the lolinet mirror that lists its firmware (Motorola, Lenovo)
 
     def short(self, name: str) -> str:
         """Device name of a catalog or a source ("OP 13R", "realme 16 Pro") -> device of a results row ("13R", "16 PRO")."""
@@ -44,6 +45,8 @@ BRANDS = {b.key: b for b in (
     Brand("poco", "POCO", "POCO ", catalog.is_poco),
     Brand("redmi", "Redmi", "Redmi ", catalog.is_redmi),
     Brand("nothing", "Nothing", "Nothing ", catalog.is_nothing, archive="spike0en/nothing_archive"),
+    Brand("motorola", "Motorola", "Motorola ", catalog.is_motorola, lolinet="/firmware/lenomola/"),
+    Brand("lenovo", "Lenovo", "Lenovo ", catalog.is_lenovo, lolinet="/firmware/lenowow/"),
 )}
 
 
