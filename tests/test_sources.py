@@ -85,7 +85,7 @@ def test_each_brand_lists_only_its_own_oxygen_updater_devices(oxygen):
            {(1, 10): update("CPH2653_16.0.0.210(EX01)"), (2, 10): update("CPH2700_16.0.0.100(EX01)"),
             (3, 10): update("RMX5200_16.0.0.100(EX01)"), (4, 10): update("RMX3081_11.0.0.100(EX01)")})
     found = {key: [(r["device"], r["region"]) for r in sources.ou_releases(brands.BRANDS[key], workers=1)]
-             for key in brands.BRANDS}
+             for key in ("oneplus", "oppo", "realme")}
     assert found == {"oneplus": [("OP 13", "EU")], "oppo": [("OPPO FIND X10 PRO", "EU")],
                      "realme": [("Realme 16 PRO+", "IN")]}        # the Android 11 realme is too old
 
@@ -160,3 +160,10 @@ def test_violet_down_is_reported_and_does_not_stop_the_run(monkeypatch, capsys):
     monkeypatch.setattr(sources, "_get", down)
     assert sources.violet_releases(brands.BRANDS["oppo"], pause=0) == []
     assert "VioletToolBox: OPPO not read" in capsys.readouterr().err
+
+
+def test_brands_oxygen_updater_and_violettoolbox_do_not_know_are_not_asked(oxygen):
+    oxygen([{"id": 1, "name": "OnePlus 13 (EU)"}], {1: FULL}, {(1, 10): update("CPH2653_16.0.0.210(EX01)")})
+    for key in ("xiaomi", "poco", "redmi", "nothing"):
+        assert sources.ou_releases(brands.BRANDS[key], workers=1) == []
+        assert sources.violet_releases(brands.BRANDS[key], pause=0) == []

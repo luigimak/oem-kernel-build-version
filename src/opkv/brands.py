@@ -15,10 +15,10 @@ class Brand:
     label: str                              # the `brand` of every results row
     prefix: str                             # catalogs and sources start a device name with it ("OP 13R"), results rows leave it out
     matches: Callable[[dict], bool]         # does a release / {"device": ...} belong to the brand (and is it wanted)
-    pulse: str                              # OTA Pulse model list
-    ou_prefix: str                          # Oxygen Updater device names start with it (lower case)
-    violet: str                             # brand name in the VioletToolBox ROM API
-    archive: bool = False                   # spike0en/oneplus_archive only has OnePlus firmware
+    pulse: str = ""                         # OTA Pulse model list (OnePlus, OPPO and Realme only; empty = not queried)
+    ou_prefix: str = ""                     # Oxygen Updater device names start with it (lower case; empty = not listed there)
+    violet: str = ""                        # brand name in the VioletToolBox ROM API (empty = not listed there)
+    archive: str = ""                       # spike0en GitHub repo with the boot images of its firmware (OnePlus, Nothing)
 
     def short(self, name: str) -> str:
         """Device name of a catalog or a source ("OP 13R", "realme 16 Pro") -> device of a results row ("13R", "16 PRO")."""
@@ -36,9 +36,14 @@ class Brand:
 
 
 BRANDS = {b.key: b for b in (
-    Brand("oneplus", "OnePlus", "OP ", catalog.is_oneplus, PULSE + "oneplus.json", "oneplus", "OnePlus", archive=True),
+    Brand("oneplus", "OnePlus", "OP ", catalog.is_oneplus, PULSE + "oneplus.json", "oneplus", "OnePlus",
+          archive="spike0en/oneplus_archive"),
     Brand("oppo", "OPPO", "OPPO ", catalog.is_oppo, PULSE + "oppo.json", "oppo", "OPPO"),
     Brand("realme", "Realme", "Realme ", catalog.is_realme, PULSE + "realme.json", "realme", "realme"),
+    Brand("xiaomi", "Xiaomi", "Xiaomi ", catalog.is_xiaomi),
+    Brand("poco", "POCO", "POCO ", catalog.is_poco),
+    Brand("redmi", "Redmi", "Redmi ", catalog.is_redmi),
+    Brand("nothing", "Nothing", "Nothing ", catalog.is_nothing, archive="spike0en/nothing_archive"),
 )}
 
 

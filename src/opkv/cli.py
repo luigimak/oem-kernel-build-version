@@ -118,6 +118,10 @@ def cmd_discover(a):
             letters.setdefault(r["model"], set()).add(m.group(1))
 
     for brand in brands.select(a.brand):
+        if not brand.pulse:                            # its firmware only comes from the catalog or an archive
+            if a.brand != "all":
+                print(f"{brand.label}: no source to discover from, `fetch` lists its firmware", file=sys.stderr)
+            continue
         _discover_brand(a, brand, cat, by_id, by_key, letters, oq)
     return 0
 
@@ -345,8 +349,8 @@ def _report_brand(brand: Brand, results: str, out_path: str) -> None:
 
 
 def cmd_archive(a):
-    """Add Android 14+ firmware missing from the results, from the spike0en archive (boot.7z assets).
-    The archive only has OnePlus firmware."""
+    """Add Android 14+ firmware missing from the results, from the spike0en archives (boot.7z assets).
+    The archives only have OnePlus and Nothing firmware."""
     import importlib.util
 
     if not a.dry_run and importlib.util.find_spec("py7zr") is None:
@@ -355,7 +359,7 @@ def cmd_archive(a):
         if brand.archive:
             _archive_brand(a, brand)
         elif a.brand != "all":
-            print(f"{brand.label}: the spike0en archive has no {brand.label} firmware", file=sys.stderr)
+            print(f"{brand.label}: the spike0en archives have no {brand.label} firmware", file=sys.stderr)
     return 0
 
 
@@ -368,9 +372,9 @@ def _archive_brand(a, brand: Brand) -> None:
     # a failed row is tried from the archive, unless it already failed there (--retry-failed downloads it again)
     have = {normalize.firmware_key(r) for r in rows.values()
             if r["ok"] or (r.get("origin") == "spike0en-archive" and not a.retry_failed)}
-    device_of = normalize.labels_by_model(rows.values())
+    device_of = {**normalize.labels_by_model(rows.values()), **archive.devices(brand.archive)}
     todo, seen = [], set()
-    for rel in archive.releases(os.environ.get("GITHUB_TOKEN")):
+    for rel in archive.releases(brand.archive, os.environ.get("GITHUB_TOKEN")):
         v = normalize.version(rel["version"])
         key = (v, rel["region"])
         if key in have or key in seen or v.split("_")[0] not in device_of:
@@ -379,7 +383,7 @@ def _archive_brand(a, brand: Brand) -> None:
         todo.append({**rel, "version": v})
     if a.limit:
         todo = todo[: a.limit]
-    print(f"archive: {len(todo)} missing firmware", file=sys.stderr)
+    print(f"{brand.label} archive: {len(todo)} missing firmware", file=sys.stderr)
     if a.dry_run:
         for t in todo:
             print(f"  {device_of[t['version'].split('_')[0]]} {t['version']} {t['region']}")
@@ -414,8 +418,8 @@ def _link(rel: dict) -> str:
     """Download link of a release, asked for now when its source gives links that expire within minutes."""
     if rel.get("violet"):
         from . import sources
-        return sources.violet_link(rel["violet"]) or rel.get("source_url", "")
-    return rel.get("source_url", "")
+        return sources.violet_link(rel["violet"]) or catalog.download_link(rel)
+    return catalog.download_link(rel)
 
 
 def _run_brand(a, brand: Brand) -> None:
@@ -519,7 +523,7 @@ def main(argv=None):
     dsc.add_argument("--catalog", default="data/catalog.json")
     dsc.add_argument("--workers", type=int, default=4)
     dsc.set_defaults(fn=cmd_discover)
-    ar = sub.add_parser("archive", help="add Android 14+ OnePlus firmware missing from the results (spike0en archive, boot.7z)")
+    ar = sub.add_parser("archive", help="add Android 14+ OnePlus and Nothing firmware missing from the results (spike0en archives)")
     common(ar)
     ar.add_argument("--workers", type=int, default=3)
     ar.add_argument("--limit", type=int, default=0); ar.add_argument("--dry-run", action="store_true")

@@ -86,11 +86,39 @@ def test_oppo_and_realme_have_no_old_model_cut(device, oppo, realme):
 def test_each_release_belongs_to_one_brand():
     from opkv import brands
     pick = lambda d: getattr(brands.of_release({"device": d}), "key", None)  # noqa: E731
-    assert [pick("OP 13"), pick("OPPO FIND X9"), pick("Realme GT7"), pick("OP 9"), pick("Xiaomi 15")] == [
+    assert [pick("OP 13"), pick("OPPO FIND X9"), pick("Realme GT7"), pick("OP 9"), pick("Sony 1")] == [
         "oneplus", "oppo", "realme", None, None]
+    assert [pick("Xiaomi 15T Pro"), pick("POCO F7"), pick("REDMI Note 15"), pick("Redmi Pad 2"), pick("Nothing Phone (2a)")] == [
+        "xiaomi", "poco", "redmi", "redmi", "nothing"]
 
 
 def test_brand_releases_keeps_the_matching_brand_only(tmp_path):
     oppo = {**_release("oppo"), "device": "OPPO FIND X9", "version": "CPH2659_16.0.0.100(EX01)"}
     src = _catalog(tmp_path, _release("op"), oppo)
     assert [r["id"] for r in catalog.brand_releases(src, catalog.is_oppo)] == ["oppo"]
+
+
+def _xiaomi(rid, version="OS3.0.311.0.WPSMIXM", url=None, **kw):
+    ota = "warhol_global-ota_full-" + version + "-user-16.0-e29c8ad11a"
+    return {"id": rid, "device": "Xiaomi 17T Pro", "region": "GLO", "model": "WARHOL", "version": version, "ota_version": ota,
+            "source_url": url or f"https://bigota.d.miui.com/{version}/{ota}.zip", **kw}
+
+
+def test_xiaomi_package_listed_by_the_store_page_is_read_from_the_cdn():
+    page = _xiaomi("a", url="https://sgp-api.buy.mi.com/bbs/api/global/phone/getdevicelist?phone_id=1&op13_version=2")
+    assert catalog.download_link(page) == _xiaomi("b")["source_url"]
+    assert catalog.download_link(_xiaomi("b")) == _xiaomi("b")["source_url"]       # a real package link stays as it is
+    assert catalog.download_link({"source_url": "ftp://example.invalid/x.zip"}) == ""
+    assert catalog.download_link({"source_url": "https://sgp-api.buy.mi.com/x"}) == ""    # nothing to build the path from
+
+
+def test_xiaomi_releases_are_kept_by_their_android_release(tmp_path):
+    src = _catalog(tmp_path, _xiaomi("new"), _xiaomi("old", version="V13.0.5.0.TMCMIXM"),
+                   _xiaomi("page", version="OS3.0.312.0.WPSMIXM", url="https://sgp-api.buy.mi.com/getdevicelist"))
+    assert [r["id"] for r in catalog.brand_releases(src, catalog.is_xiaomi)] == ["new", "page"]
+
+
+def test_os_major_reads_the_android_release_of_a_xiaomi_version():
+    assert os_major("OS3.0.336.0.XOSRUXM") == 17
+    assert wanted_version("OS1.0.5.0.UNQINXM") is True
+    assert wanted_version("V13.0.5.0.TMCMIXM") is False

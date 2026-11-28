@@ -19,11 +19,18 @@ def version(v: str) -> str:
     return model(head) + sep + tail
 
 
+# brands whose catalogs spell the name and the rest of the device any way: the brand gets its own spelling, the rest upper case
+_SPELLING = {"REALME ": "Realme ", "XIAOMI ": "Xiaomi ", "REDMI ": "Redmi ", "POCO ": "POCO "}
+
+
 def device(name: str) -> str:
-    """OP PAD2 PRO -> OP PAD 2 PRO, OP NORD CE4 LITE -> OP NORD CE 4 LITE, realme 16 Pro -> Realme 16 PRO."""
+    """OP PAD2 PRO -> OP PAD 2 PRO, OP NORD CE4 LITE -> OP NORD CE 4 LITE, realme 16 Pro -> Realme 16 PRO,
+    REDMI Note 15 Pro -> Redmi NOTE 15 PRO."""
     name = name.strip()
-    if name.upper().startswith("REALME "):          # sources spell it realme / Realme / REALME and the rest any way
-        name = "Realme " + name[7:].upper()
+    for prefix, spelling in _SPELLING.items():
+        if name.upper().startswith(prefix):
+            name = spelling + name[len(prefix):].upper()
+            break
     return re.sub(r"\b(PAD|CE)(\d)", r"\1 \2", name)
 
 
@@ -114,6 +121,22 @@ def relabel(rows) -> None:
             r["device"] = labels[model_of(r)]
 
 
+# the letter that opens the last field of a Xiaomi version (OS3.0.336.0.XOSRUXM) and of a Nothing or Pixel build (B4.1-...)
+# is the Android dessert initial: T = 13, U = 14, V = 15, W = 16, X = 17 (Xiaomi); T, U, V, B = 16, C = 17 (Nothing)
+_XIAOMI = re.compile(r"^(?:OS|V)\d+(?:\.\d+){3}\.([A-Z])[A-Z]{2,}")
+_NOTHING = re.compile(r"^[A-Za-z]+_([TUVBC])\d\.\d-\d{6}-\d{4}$")
+_NOTHING_ANDROID = {"T": 13, "U": 14, "V": 15, "B": 16, "C": 17}
+
+
+def other_android(version: str) -> int | None:
+    """Android release of a firmware version that does not start with the model code (Xiaomi HyperOS, Nothing OS)."""
+    m = _XIAOMI.match(version or "")
+    if m:
+        return ord(m[1]) - ord("A") - 6
+    m = _NOTHING.match(version or "")
+    return _NOTHING_ANDROID[m[1]] if m else None
+
+
 def android(r: dict) -> str | None:
     """Android release of a firmware row: from the OTA metadata, else inferred from the OS version.
 
@@ -123,4 +146,7 @@ def android(r: dict) -> str | None:
     if r.get("android_version"):
         return r["android_version"]
     m = re.match(r"^[A-Z0-9]+_(1[3-9])\.\d", r.get("version", ""))
-    return m.group(1) if m else None
+    if m:
+        return m.group(1)
+    other = other_android(r.get("version", ""))
+    return str(other) if other else None

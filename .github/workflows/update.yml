@@ -47,7 +47,7 @@ jobs:
       - name: Fetch catalog (API roms.danielspringer.at)
         run: python -m opkv fetch
 
-      - name: Extract Linux version for new OnePlus, OPPO and Realme releases
+      - name: Extract Linux version for new releases
         env:
           # failed firmware are searched under every OTA letter: a manual run does all of them today, the scheduled
           # runs take turns (each one every 7 days)
@@ -79,7 +79,7 @@ jobs:
               show = subprocess.run(["git", "show", f"HEAD:{path}"], capture_output=True, text=True)
               known = {firmware_key(r) for r in json.loads(show.stdout)} if show.returncode == 0 else set()
               new[os.path.basename(path)[:-5]] = sum(1 for r in json.load(open(path)) if firmware_key(r) not in known)
-          label = {"oneplus": "OnePlus", "oppo": "OPPO", "realme": "Realme"}
+          label = {"oneplus": "OnePlus", "oppo": "OPPO", "realme": "Realme", "xiaomi": "Xiaomi", "poco": "POCO", "redmi": "Redmi", "nothing": "Nothing"}
           parts = [f"{n} {label.get(b, b)}" for b, n in new.items() if n]
           print(f"data: add {' + '.join(parts)} new firmware kernel versions" if parts
                 else "data: update metadata of existing firmware entries")

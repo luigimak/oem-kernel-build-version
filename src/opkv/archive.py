@@ -1,6 +1,6 @@
-"""Historical firmware from the spike0en/oneplus_archive releases: boot.7z -> boot.img -> Linux version.
+"""Firmware from the spike0en archives (oneplus_archive, nothing_archive) releases: boot.7z -> boot.img -> Linux version.
 
-The archive publishes one GitHub release per firmware with an `image-boot.7z` asset (about 50 MB).
+An archive publishes one GitHub release per firmware with an `image-boot.7z` asset (about 50 MB).
 Only releases whose (version, region) is missing from the results are processed.
 """
 from __future__ import annotations
@@ -16,10 +16,34 @@ from .extract import Result, fill_banner
 from .rangehttp import check_scheme
 from .safe import redact
 
-REPO = "spike0en/oneplus_archive"
+# OnePlus: CPH2653_16.0.10.600(EX01)_ROW
 _TAG = re.compile(r"^(?P<version>[A-Za-z0-9]+_[\d.]+\([A-Z0-9]+\))_(?P<region>[A-Z]+)$")
 # the archive labels the global package "ROW"; results use GLO
 _REGION = {"ROW": "GLO"}
+# Nothing: Tetris_B4.1-261028-1606 (codename, Nothing OS build, date and time); one global package per tag
+_NOTHING_TAG = re.compile(r"^(?P<version>[A-Za-z]+_[A-Z]\d\.\d-\d{6}-\d{4})$")
+
+# codename of a Nothing phone -> device label of the results (the codenames the archive uses)
+NOTHING_DEVICES = {
+    "Spacewar": "Phone (1)", "Pong": "Phone (2)", "Pacman": "Phone (2a)", "PacmanPro": "Phone (2a) Plus",
+    "Asteroids": "Phone (3a)", "AsteroidsPro": "Phone (3a) Pro", "Metroid": "Phone (3)", "Galaxian": "Phone (3a) Lite",
+    "Frogger": "Phone (4a)", "FroggerPro": "Phone (4a) Pro", "SuperContra": "Phone (4b)",
+    "Tetris": "CMF Phone 1", "Galaga": "CMF Phone 2 Pro",
+}
+
+
+def devices(repo: str) -> dict[str, str]:
+    """Model code (or codename) -> device label, for the archives whose release names say nothing but the codename."""
+    return NOTHING_DEVICES if repo.endswith("nothing_archive") else {}
+
+
+def parse_tag(repo: str, tag: str) -> tuple[str, str] | None:
+    """(version, region) of a release tag of the archive, or None for a tag that names no firmware."""
+    if repo.endswith("nothing_archive"):
+        m = _NOTHING_TAG.match(tag)
+        return (m["version"], "GLO") if m else None
+    m = _TAG.match(tag)
+    return (m["version"], _REGION.get(m["region"], m["region"])) if m else None
 
 
 def _get(url: str, token: str | None = None) -> bytes:
@@ -28,20 +52,19 @@ def _get(url: str, token: str | None = None) -> bytes:
         return r.read()
 
 
-def releases(token: str | None = None) -> list[dict]:
-    """[{version, region, asset_url}] for every archive release that has a boot asset and is Android 14+."""
+def releases(repo: str, token: str | None = None) -> list[dict]:
+    """[{version, region, asset_url}] for every release of the archive `repo` that has a boot asset and is Android 14+."""
     out: list[dict] = []
     page = 1
     while True:
-        batch = json.loads(_get(f"https://api.github.com/repos/{REPO}/releases?per_page=100&page={page}", token))
+        batch = json.loads(_get(f"https://api.github.com/repos/{repo}/releases?per_page=100&page={page}", token))
         if not batch:
             return out
         for rel in batch:
-            m = _TAG.match(rel["tag_name"])
+            tag = parse_tag(repo, rel["tag_name"])
             boot = next((a for a in rel["assets"] if re.search(r"-(image-)?boot\.7z$", a["name"])), None)
-            if m and boot and catalog.wanted_version(m["version"]):
-                out.append({"version": m["version"], "region": _REGION.get(m["region"], m["region"]),
-                            "asset_url": boot["browser_download_url"]})
+            if tag and boot and catalog.wanted_version(tag[0]):
+                out.append({"version": tag[0], "region": tag[1], "asset_url": boot["browser_download_url"]})
         page += 1
 
 

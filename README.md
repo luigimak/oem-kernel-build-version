@@ -1,11 +1,15 @@
 # oem-kernel-build-version
 
 Extracts the `Linux version …` string (kernel version + build) from the `boot.img` inside the `payload.bin`
-of OnePlus, OPPO and Realme OTA packages, without downloading the firmware: it reads only the needed bytes over HTTP Range
+of OnePlus, OPPO, Realme, Xiaomi, POCO, Redmi and Nothing firmware packages, without downloading the firmware: it reads only the needed bytes over HTTP Range
 (about 10 MB per OTA, whose full package is several GB). Results, one pair of files per brand, updated every day by a GitHub Actions workflow:
 [`data/oneplus.md`](data/oneplus.md) / [`data/oneplus.json`](data/oneplus.json),
 [`data/oppo.md`](data/oppo.md) / [`data/oppo.json`](data/oppo.json),
-[`data/realme.md`](data/realme.md) / [`data/realme.json`](data/realme.json).
+[`data/realme.md`](data/realme.md) / [`data/realme.json`](data/realme.json),
+[`data/xiaomi.md`](data/xiaomi.md) / [`data/xiaomi.json`](data/xiaomi.json),
+[`data/poco.md`](data/poco.md) / [`data/poco.json`](data/poco.json),
+[`data/redmi.md`](data/redmi.md) / [`data/redmi.json`](data/redmi.json),
+[`data/nothing.md`](data/nothing.md) / [`data/nothing.json`](data/nothing.json).
 A searchable, filterable table of all of them is published with GitHub Pages: <https://luigimak.github.io/oem-kernel-build-version/> (source in [`docs/`](docs/)).
 
 ## Usage
@@ -14,13 +18,13 @@ python3 -m venv .venv && .venv/bin/pip install .       # '.[archive]' adds what 
 opkv fetch      # update the local release catalog (roms.danielspringer.at API)
 opkv discover   # find firmware missing from the catalog: OTA servers, Oxygen Updater, VioletToolBox; then search the failed ones again
 opkv run        # extract kernel/build of new firmware -> data/<brand>.json
-opkv archive    # add older Android 14+ OnePlus firmware missing from the results (spike0en archive, boot.7z)
+opkv archive    # add Android 14+ OnePlus and Nothing firmware missing from the results (spike0en archives, boot.7z)
 opkv report     # data/<brand>.md
 opkv url <URL>  # a single OTA zip
 ```
-`fetch`, `discover`, `run`, `archive` and `report` take `--brand oneplus|oppo|realme|all` (default `all`) and `--data-dir` (default `data`).
+`fetch`, `discover`, `run`, `archive` and `report` take `--brand oneplus|oppo|realme|xiaomi|poco|redmi|nothing|all` (default `all`) and `--data-dir` (default `data`).
 `discover` also takes `--no-ou`, `--no-violet` and `--no-scan` to skip a source or the new search of the failed firmware.
-OnePlus from the 10 series onward, every OPPO and Realme model, and only firmware from Android 14 onward (older rows are dropped). `run` is resumable.
+OnePlus from the 10 series onward, every OPPO, Realme, Xiaomi, POCO, Redmi and Nothing model, and only firmware from Android 14 onward (older rows are dropped). `run` is resumable.
 
 A GitHub Actions workflow (`.github/workflows/update.yml`) runs `fetch`, `discover`, `run --retry-failed` and `report` every day and commits
 the updated results to the default branch. `archive` is a manual command.
@@ -31,7 +35,7 @@ the updated results to the default branch. `archive` is a manual command.
 | Field | Meaning |
 |---|---|
 | `id`, `origin` | row id and where the firmware was found (`catalog`, `ota-query`, `ota-scan`, `oxygen-updater`, `violettoolbox`, `spike0en-archive`) |
-| `brand`, `device` | brand (`OnePlus`, `OPPO`, `Realme`) and device label without the brand (`13R`, `FIND X9`, `GT7 PRO`) |
+| `brand`, `device` | brand (`OnePlus`, `OPPO`, `Realme`, `Xiaomi`, `POCO`, `Redmi`, `Nothing`) and device label without the brand (`13R`, `FIND X9`, `GT7 PRO`, `15T PRO`, `Phone (2a)`) |
 | `model`, `region` | model code (`CPH2645`), region (`EU`, `GLO`, `IN`, `CN`, `NA`, …) |
 | `version`, `ota_version`, `build_timestamp` | firmware version (`CPH2645_15.0.0.840(EX01)`), OTA version string, OTA build time |
 | `android_version` | Android release, from the OTA metadata; for a firmware that could not be read, from its version |
@@ -50,7 +54,13 @@ the updated results to the default branch. `archive` is a manual command.
 - Missing `md5`/`size` are filled from Oxygen Updater, the antirollchecker database or the OTA `Content-Length`; rows whose links expired may stay empty.
 - Failed firmware (expired links, servers that refuse) are searched again through every source that allows it, a few each day; some stay failed for good.
 - VioletToolBox lists older Chinese-market (CN) firmware only; it is the one source of that history for OPPO and Realme.
-- The spike0en archive and `archive` cover OnePlus only; OPPO and Realme come from the catalog, OTA Pulse and Oxygen Updater.
+- The spike0en archives (`archive`) cover OnePlus and Nothing; OPPO and Realme come from the catalog, OTA Pulse and Oxygen Updater.
+- Xiaomi, POCO and Redmi come from the catalog only: its links point to Xiaomi's own CDN (`bigota.d.miui.com`), or name the store page that
+  announces a firmware, in which case the package is read from the same CDN path (`<version>/<ota version>.zip`). Their Android release
+  comes from the dessert letter of the version (`OS3.0.311.0.WPSMIXM`: `W` = Android 16). The OTA servers, Oxygen Updater and
+  VioletToolBox do not list these brands.
+- Nothing has no catalog: its firmware (Phone and CMF Phone, one package per build, region `GLO`) is read from the boot images
+  that the [spike0en/nothing_archive](https://github.com/spike0en/nothing_archive) releases publish.
 - Beta tracks (`taste`) cannot be found by `discover`; they depend on the catalog.
 
 ## Android app

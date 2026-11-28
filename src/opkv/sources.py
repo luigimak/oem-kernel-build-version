@@ -37,6 +37,8 @@ def _warn(title: str, msg: str) -> None:
 
 def ou_releases(brand: Brand, workers: int = 6) -> list[dict]:
     """Latest *full* firmware of every device/region of the brand known to Oxygen Updater (Android 14+ only)."""
+    if not brand.ou_prefix:                    # an empty prefix would match every device
+        return []
     devices = _get(OU_BASE + "devices/all", OU_HEADERS)
     todo = []
     for d in devices:
@@ -118,6 +120,8 @@ def violet_releases(brand: Brand, pause: float = 0.3) -> list[dict]:
     out: list[dict] = []
     seen: set[str] = set()
     failed: list[str] = []
+    if not brand.violet:
+        return out
     try:
         series = get("series", packageType="full", brand=brand.violet)["items"]
     except Exception as e:  # noqa: BLE001 - a source that is down must not stop the run

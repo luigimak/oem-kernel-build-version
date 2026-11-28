@@ -1,4 +1,4 @@
-"""Load catalog.json (releases list) and keep the entries of one brand (OnePlus, OPPO, Realme)."""
+"""Load catalog.json (releases list) and keep the entries of one brand (OnePlus, OPPO, Realme, Xiaomi, POCO, Redmi)."""
 from __future__ import annotations
 
 import json
@@ -14,9 +14,10 @@ _VER = re.compile(r"^[A-Za-z0-9]+_(\d+)\.\d")     # CPH2653_16.0.10.600(EX01) ->
 
 
 def os_major(version: str) -> int | None:
-    """OS major of a firmware version string (OxygenOS/ColorOS 14+ = Android 14+); None for old formats."""
+    """Android release of a firmware version string: the OS major of OxygenOS/ColorOS (14+ = Android 14+), the
+    dessert letter of Xiaomi and Nothing versions; None for old formats."""
     m = _VER.match(version or "")
-    return int(m.group(1)) if m else None
+    return int(m.group(1)) if m else normalize.other_android(version)
 
 
 def wanted_version(version: str, android: str | None = None) -> bool:
@@ -57,11 +58,41 @@ def is_realme(rel: dict) -> bool:
     return rel.get("device", "").upper().startswith("REALME ")
 
 
+def is_xiaomi(rel: dict) -> bool:
+    return rel.get("device", "").upper().startswith("XIAOMI ")
+
+
+def is_poco(rel: dict) -> bool:
+    return rel.get("device", "").upper().startswith("POCO ")
+
+
+def is_redmi(rel: dict) -> bool:
+    return rel.get("device", "").upper().startswith("REDMI ")
+
+
+def is_nothing(rel: dict) -> bool:
+    return rel.get("device", "").upper().startswith("NOTHING ")
+
+
+XIAOMI_CDN = "https://bigota.d.miui.com/"
+# the catalog lists some Xiaomi firmware by the page of the store that announces it, not by the package
+_NOT_A_PACKAGE = "https://sgp-api.buy.mi.com/"
+
+
+def download_link(rel: dict) -> str:
+    """Where the package of a release can be read: its own link, or for a Xiaomi firmware the CDN path every Xiaomi
+    package has (<version>/<ota version>.zip on bigota.d.miui.com) when the catalog only names the announcing page."""
+    url = rel.get("source_url", "")
+    if url.startswith(_NOT_A_PACKAGE):
+        return f"{XIAOMI_CDN}{rel['version']}/{rel['ota_version']}.zip" if rel.get("version") and rel.get("ota_version") else ""
+    return url if url.startswith("http") else ""
+
+
 def brand_releases(src: str, matches) -> list[dict]:
     """Android 14+ releases with a download link (or a reference to ask for one) whose device `matches`, one per firmware."""
     seen, out = set(), []
     for r in load(src):
-        if not matches(r) or not (r.get("source_url", "").startswith("http") or r.get("violet")):
+        if not matches(r) or not (download_link(r) or r.get("violet")):
             continue
         if not wanted_version(r.get("version", "")):
             continue

@@ -112,3 +112,20 @@ def test_violettoolbox_release_keeps_its_old_link_when_the_service_has_none(run,
     rel = release("v1", version="PHN110_14.0.0.850(CN01)", region="CN", source_url="https://example.invalid/old.zip", violet=REF)
     extracted, _ = run([rel], [])
     assert extracted == ["https://example.invalid/old.zip"]
+
+
+def test_xiaomi_firmware_is_read_from_the_cdn_and_stored_under_its_brand(tmp_path, monkeypatch):
+    from helpers import read_json, result, write_json
+    extracted = []
+    monkeypatch.setattr(cli, "extract", lambda url: extracted.append(url) or result(android_version="16"))
+    monkeypatch.setattr(cli, "extract_android", lambda url: Result())
+    monkeypatch.setattr(sources, "arb_index", lambda: {})
+    version, ota = "OS3.0.311.0.WPSMIXM", "warhol_global-ota_full-OS3.0.311.0.WPSMIXM-user-16.0-e29c8ad11a"
+    rel = {"id": "x1", "device": "Xiaomi 17T Pro", "region": "GLO", "model": "WARHOL", "version": version, "ota_version": ota,
+           "source_url": "https://sgp-api.buy.mi.com/bbs/api/global/phone/getdevicelist?phone_id=1"}
+    cat = write_json(tmp_path / "catalog.json", {"api_version": "1", "releases": [rel]})
+    assert cli.main(["run", "--brand", "xiaomi", "--data-dir", str(tmp_path), "--catalog", cat]) == 0
+    assert extracted == [f"https://bigota.d.miui.com/{version}/{ota}.zip"]
+    (stored,) = read_json(tmp_path / "xiaomi.json")
+    assert (stored["brand"], stored["device"], stored["version"], stored["android_version"]) == ("Xiaomi", "17T PRO", version, "16")
+    assert "source_url" not in stored

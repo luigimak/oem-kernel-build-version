@@ -1,3 +1,5 @@
+import pytest
+
 from opkv import normalize as n
 
 
@@ -65,3 +67,26 @@ def test_realme_labels_are_spelled_one_way():
     assert {n.device(x) for x in ("realme 16 Pro", "Realme 16 PRO", "REALME 16 Pro")} == {"Realme 16 PRO"}
     assert n.device_from_name("realme GT7 Pro") == "Realme GT7 PRO"
     assert n.device_from_name("OPPO Find X10") == "OPPO FIND X10"
+
+
+def test_xiaomi_family_names_are_spelled_one_way():
+    assert n.device("REDMI Note 15 Pro") == "Redmi NOTE 15 PRO"
+    assert n.device("Redmi Note 14 Pro+ 5G") == "Redmi NOTE 14 PRO+ 5G"
+    assert n.device("Xiaomi 15T Pro") == "Xiaomi 15T PRO"
+    assert n.device("poco f7 pro") == "POCO F7 PRO"
+    assert n.device("Nothing Phone (2a)") == "Nothing Phone (2a)"
+
+
+@pytest.mark.parametrize("version,android", [
+    ("OS3.0.336.0.XOSRUXM", 17), ("OS3.0.311.0.WPSMIXM", 16), ("OS2.0.205.0.VNPINXM", 15), ("OS1.0.5.0.UNQINXM", 14),
+    ("V14.0.5.0.TMCMIXM", 13), ("Tetris_B4.1-261028-1606", 16), ("Spacewar_V3.2-260618-1045", 15), ("Pacman_C5.0-261112-1938", 17),
+    ("CPH2653_16.0.10.600(EX01)", None), ("OS3.0", None), ("", None)])
+def test_android_release_of_a_xiaomi_or_nothing_version(version, android):
+    assert n.other_android(version) == android
+
+
+def test_android_of_a_row_falls_back_to_the_xiaomi_and_nothing_versions():
+    assert n.android({"version": "OS3.0.311.0.WPSMIXM"}) == "16"
+    assert n.android({"version": "Pong_B4.1-261014-1615"}) == "16"
+    assert n.android({"version": "OS3.0.311.0.WPSMIXM", "android_version": "17"}) == "17"
+    assert n.android({"version": "junk"}) is None

@@ -26,7 +26,7 @@ def archive_run(tmp_path, monkeypatch):
         downloaded.append(url)
         return result(source="boot.img")
 
-    monkeypatch.setattr(archive, "releases", lambda token=None: listing)
+    monkeypatch.setattr(archive, "releases", lambda repo, token=None: listing)
     monkeypatch.setattr(archive, "extract_asset", fake_extract)
 
     def go(rows, releases, *flags):
@@ -124,7 +124,7 @@ def test_releases_are_listed_across_pages_and_row_becomes_glo(monkeypatch):
         return pages[int(url.rsplit("page=", 1)[1])]
 
     monkeypatch.setattr(archive, "_get", fake_get)
-    got = archive.releases("tok")
+    got = archive.releases("spike0en/oneplus_archive", "tok")
     assert [(r["version"], r["region"]) for r in got] == [("CPH2653_16.0.0.210(EX01)", "GLO"), ("CPH2653_15.0.0.100(EX01)", "EU"),
                                                           ("PLK110_16.0.5.702(CN01)", "CN")]
     assert got[0]["asset_url"] == "https://example.invalid/CPH2653_16.0.0.210(EX01)_ROW/x-image-boot.7z"
@@ -158,3 +158,34 @@ def test_retry_failed_downloads_failed_archive_rows_again(archive_run):
     failed = row("sp-1", version=V, region="EU", ok=False, origin="spike0en-archive")
     downloaded, out = archive_run([failed], [rel()], "--retry-failed")
     assert len(downloaded) == 1 and [(r["version"], r["ok"]) for r in out] == [(V, True)]
+
+
+def test_nothing_tags_name_the_build_and_the_package_is_global():
+    repo = "spike0en/nothing_archive"
+    assert archive.parse_tag(repo, "Tetris_B4.1-261028-1606") == ("Tetris_B4.1-261028-1606", "GLO")
+    assert archive.parse_tag(repo, "SuperContra_B4.1-261111-1740") == ("SuperContra_B4.1-261111-1740", "GLO")
+    assert archive.parse_tag(repo, "CPH2653_16.0.0.210(EX01)_ROW") is None
+    assert archive.parse_tag("spike0en/oneplus_archive", "Tetris_B4.1-261028-1606") is None
+
+
+def test_nothing_releases_older_than_android_14_are_left_out(monkeypatch):
+    listing = page(("Pong_B4.1-261014-1615", ["x-image-boot.7z"]),            # B = Android 16
+                   ("Spacewar_V3.2-260618-1045", ["x-image-boot.7z"]),        # V = Android 15
+                   ("Pong_T2.5-240101-1000", ["x-image-boot.7z"]))            # T = Android 13
+    monkeypatch.setattr(archive, "_get", lambda url, token=None: listing if url.endswith("page=1") else b"[]")
+    assert [r["version"] for r in archive.releases("spike0en/nothing_archive")] == ["Pong_B4.1-261014-1615", "Spacewar_V3.2-260618-1045"]
+
+
+def test_nothing_firmware_is_added_with_the_device_of_its_codename(tmp_path, monkeypatch):
+    monkeypatch.setattr(archive, "releases", lambda repo, token=None: [
+        rel("Pacman_C5.0-261112-1938", "GLO"), rel("Unknown_C5.0-261112-1938", "GLO")])
+    monkeypatch.setattr(archive, "extract_asset", lambda url: result(source="boot.img"))
+    assert cli.main(["archive", "--brand", "nothing", "--data-dir", str(tmp_path), "--workers", "1"]) == 0
+    (new,) = read_json(tmp_path / "nothing.json")
+    assert (new["brand"], new["device"], new["model"], new["android_version"], new["origin"]) == (
+        "Nothing", "Phone (2a)", "Pacman", "17", "spike0en-archive")
+
+
+def test_brands_without_an_archive_are_said_so(tmp_path, capsys):
+    assert cli.main(["archive", "--brand", "xiaomi", "--data-dir", str(tmp_path), "--dry-run"]) == 0
+    assert "no Xiaomi firmware" in capsys.readouterr().err
