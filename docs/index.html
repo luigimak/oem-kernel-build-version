@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OnePlus, OPPO and Realme kernel build versions</title>
-<meta name="description" content="Linux kernel version and build of OnePlus, OPPO and Realme firmware, extracted from the OTA packages.">
+<title>Android kernel build versions by brand</title>
+<meta name="description" content="Linux kernel version and build of OnePlus, OPPO, Realme, Xiaomi, POCO, Redmi, Nothing, Motorola and Lenovo firmware, extracted from the firmware packages.">
 <style>
 :root {
   --bg: #fff; --fg: #1b1f24; --muted: #59636e; --line: #d0d7de; --head: #f6f8fa; --hover: #f3f6fa;
@@ -57,8 +57,8 @@ footer { color: var(--muted); margin-top: 16px; font-size: .9rem; }
 </head>
 <body>
 <main>
-  <h1>OnePlus, OPPO and Realme kernel build versions</h1>
-  <p class="sub">Linux kernel and build of OnePlus, OPPO and Realme firmware, read from the OTA packages.
+  <h1>Android kernel build versions</h1>
+  <p class="sub">Linux kernel and build of OnePlus, OPPO, Realme, Xiaomi, POCO, Redmi, Nothing, Motorola and Lenovo firmware, read from the firmware packages.
     <a href="https://github.com/luigimak/oem-kernel-build-version">Source and method on GitHub</a>.</p>
   <p class="app"><strong>Android app:</strong> choose your device and get a notification when new firmware appears for it.
     <a href="https://github.com/luigimak/oem-kernel-build-version/releases/latest">Download the APK</a>.
@@ -86,7 +86,9 @@ footer { color: var(--muted); margin-top: 16px; font-size: .9rem; }
   </div>
 
   <footer>Click a row for details. Data: <a href="oneplus.json">oneplus.json</a>, <a href="oppo.json">oppo.json</a>,
-    <a href="realme.json">realme.json</a>, refreshed daily.</footer>
+    <a href="realme.json">realme.json</a>, <a href="xiaomi.json">xiaomi.json</a>, <a href="poco.json">poco.json</a>,
+    <a href="redmi.json">redmi.json</a>, <a href="nothing.json">nothing.json</a>, <a href="motorola.json">motorola.json</a>,
+    <a href="lenovo.json">lenovo.json</a>, refreshed daily.</footer>
 </main>
 
 <script>
@@ -96,6 +98,12 @@ const BRANDS = [
   { key: "oneplus", label: "OnePlus" },
   { key: "oppo", label: "OPPO" },
   { key: "realme", label: "Realme" },
+  { key: "xiaomi", label: "Xiaomi" },
+  { key: "poco", label: "POCO" },
+  { key: "redmi", label: "Redmi" },
+  { key: "nothing", label: "Nothing" },
+  { key: "motorola", label: "Motorola" },
+  { key: "lenovo", label: "Lenovo" },
 ];
 const COLUMNS = [
   { key: "brand", label: "Brand" },
@@ -120,13 +128,17 @@ const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "bas
 const $ = (id) => document.getElementById(id);
 const state = { rows: [], sort: "built", dir: -1, open: null };
 
-const ZONES = { UTC: "+0000", CST: "+0800" };   // CST: China Standard Time, as in the CN builds
+// CST is China Standard Time in the builds of Chinese build servers; Motorola builds in US Central time
+const ZONES = { UTC: "+0000", CST: "+0800", HKT: "+0800" };
+const US_CENTRAL = { ...ZONES, CST: "-0600", CDT: "-0500" };
+const zonesOf = (brand) => (brand === "Motorola" ? US_CENTRAL : ZONES);
 
 // "#1 SMP PREEMPT Mon Dec 25 12:31:09 UTC 2023" -> epoch ms, NaN when it does not match
-function buildTime(build) {
+function buildTime(build, brand) {
+  const zones = zonesOf(brand);
   const m = /([A-Z][a-z]{2}) +(\d{1,2}) (\d\d:\d\d:\d\d) ([A-Z]{2,4}) (\d{4})/.exec(build || "");
-  if (!m || !MONTHS.includes(m[1]) || !(m[4] in ZONES)) return NaN;
-  return Date.parse(`${m[1]} ${m[2]} ${m[5]} ${m[3]} ${ZONES[m[4]]}`);
+  if (!m || !MONTHS.includes(m[1]) || !(m[4] in zones)) return NaN;
+  return Date.parse(`${m[1]} ${m[2]} ${m[5]} ${m[3]} ${zones[m[4]]}`);
 }
 
 function prepare(r, fileBrand) {
@@ -144,7 +156,7 @@ function prepare(r, fileBrand) {
     version: r.version || "",
     kernel,
     build: r.build || "",
-    builtMs: buildTime(r.build),
+    builtMs: buildTime(r.build, brand),
     branch: branch ? branch[0] : "",
     ok: r.ok === true,
     haystack: [brand, r.device, r.model, r.region, r.version, r.ota_version, kernel, r.build]
